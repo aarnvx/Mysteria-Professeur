@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Résultats de Session - Poudlard RP</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=EB+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    :root { --accent: #a78bfa; --accent-dim: rgba(167,139,250,0.15); --accent-border: rgba(167,139,250,0.35); }
+    body { font-family: 'Outfit', sans-serif; min-height: 100vh; background: var(--bg); color: var(--text); }
+    
+    .header {
+      padding: 1.5rem 2rem; border-bottom: 1px solid var(--border);
+      background: rgba(10,10,18,0.85); backdrop-filter: blur(10px);
+      display: flex; align-items: center; justify-content: space-between;
+      position: sticky; top: 0; z-index: 50;
+    }
+    .header-left { display: flex; align-items: center; gap: 1rem; }
+    .back-btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-family: 'Cinzel', serif; font-size: 0.75rem; letter-spacing: 0.1em;
+      color: var(--text-dim); text-decoration: none; padding: 0.4rem 0.9rem;
+      border: 1px solid var(--border); border-radius: 6px; transition: all 0.3s;
+    }
+    .back-btn:hover { color: var(--gold); border-color: var(--border-bright); }
+    .title { font-family: 'Cinzel', serif; font-size: 1.2rem; color: var(--gold); margin: 0; }
+    
+    .code-badge {
+      font-family: 'Cinzel', serif; font-size: 0.9rem; font-weight: 700;
+      letter-spacing: 0.2em; color: var(--accent); background: var(--accent-dim);
+      border: 1px solid var(--accent-border); padding: 0.4rem 1.2rem; border-radius: 100px;
+    }
+
+    .main { padding: 2rem; max-width: 1000px; margin: 0 auto; }
+    
+    .controls {
+      display: flex; gap: 1rem; margin-bottom: 2rem; align-items: center;
+      background: var(--bg-card); padding: 1rem; border-radius: 12px; border: 1px solid var(--border);
+    }
+
+    .answer-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px;
+      padding: 1.5rem; margin-bottom: 1rem; box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .ac-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; border-bottom: 1px solid var(--border); padding-bottom: 0.75rem; }
+    .ac-student { font-family: 'Cinzel', serif; font-size: 1rem; color: var(--gold-light); }
+    .ac-meta { font-size: 0.75rem; color: var(--text-dim); }
+
+    .ac-content { font-family: 'EB Garamond', serif; font-size: 1.05rem; line-height: 1.6; margin-bottom: 1rem; }
+    .ac-img { max-width: 100%; max-height: 300px; border-radius: 8px; border: 1px solid var(--border-bright); }
+
+    .ac-correction {
+      background: rgba(10,10,18,0.5); padding: 1rem; border-radius: 8px;
+      border: 1px dashed var(--border-bright);
+    }
+    
+    .form-group { margin-bottom: 0.75rem; }
+    .form-label { font-size: 0.75rem; color: var(--text-dim); font-family: 'Cinzel', serif; text-transform: uppercase; margin-bottom: 0.4rem; display: block; }
+    .form-input { 
+      width: 100%; background: var(--bg); border: 1px solid var(--border); 
+      color: var(--text); padding: 0.5rem; border-radius: 6px; font-family: 'Outfit', sans-serif;
+    }
+    .form-input:focus { border-color: var(--gold); outline: none; }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <a href="dashboard.html" class="back-btn">← Retour</a>
+      <h1 class="title" id="page-title">Résultats de la Session</h1>
+    </div>
+    <div>
+      <span class="code-badge" id="session-code">---</span>
+    </div>
+  </header>
+
+  <main class="main">
+    <div class="controls">
+      <div style="flex:1;">
+        <label class="form-label">Filtrer par Question</label>
+        <select class="form-input" id="slide-filter" onchange="loadAnswers()"></select>
+      </div>
+      <button class="btn btn-primary" onclick="loadAnswers()">🔄 Rafraîchir</button>
+    </div>
+
+    <div id="answers-container">
+      <div style="text-align:center; color:var(--text-dim); padding:2rem; font-family:'Cinzel',serif;">Chargement des réponses...</div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script>
+    requireAuthOrRedirect();
+    if (!Auth.hasPermission('create_content')) { window.location.href = 'dashboard.html'; }
+
+    let sessionId = null;
+    let slides = [];
+    
+    async function init() {
+      const params = new URLSearchParams(window.location.search);
+      sessionId = params.get('id');
+      const code = params.get('code');
+      if (!sessionId) { window.location.href = 'dashboard.html'; return; }
+      
+      document.getElementById('session-code').textContent = code || ('ID: ' + sessionId);
+
+      slides = await DataStore.getSlides(sessionId);
+      const filter = document.getElementById('slide-filter');
+      filter.innerHTML = '<option value="all">Toutes les questions</option>';
+      slides.forEach((s, i) => {
+        if (s.type !== 'diapo') {
+          filter.innerHTML += `<option value="${s.id}">${i + 1}. ${escHtml(s.title || 'Question sans titre')}</option>`;
+        }
+      });
+
+      loadAnswers();
+      // Auto refresh every 10s
+      setInterval(loadAnswers, 10000);
+    }
+
+    async function loadAnswers() {
+      const filterId = document.getElementById('slide-filter').value;
+      let answers = [];
+      if (filterId === 'all') {
+        answers = await DataStore.getAnswers(sessionId);
+      } else {
+        answers = await DataStore.getAnswersBySlide(filterId);
+      }
+
+      const cont = document.getElementById('answers-container');
+      if (answers.length === 0) {
+        cont.innerHTML = `<div style="text-align:center; color:var(--text-dim); padding:2rem; font-family:'Cinzel',serif;">Aucune réponse pour le moment.</div>`;
+        return;
+      }
+
+      cont.innerHTML = answers.map(a => {
+        const slide = slides.find(s => s.id === a.slide_id);
+        const title = slide ? slide.title : 'Question inconnue';
+        
+        let contentHtml = '';
+        if (a.answer && a.answer.startsWith('data:image')) {
+          contentHtml = `<img src="${a.answer}" class="ac-img" />`;
+        } else {
+          contentHtml = `<div>${escHtml(a.answer || '(Aucune réponse)')}</div>`;
+        }
+
+        return `
+          <div class="answer-card">
+            <div class="ac-header">
+              <div class="ac-student">🧙‍♂️ ${escHtml(a.student_name)}</div>
+              <div class="ac-meta">Question: ${escHtml(title)}</div>
+            </div>
+            <div class="ac-content">${contentHtml}</div>
+            
+            <div class="ac-correction">
+              <div style="display:flex; gap:1rem;">
+                <div class="form-group" style="width:120px;">
+                  <label class="form-label">Note / Points</label>
+                  <input class="form-input" id="grade-${a.id}" type="number" value="${a.grade || ''}" />
+                </div>
+                <div class="form-group" style="flex:1;">
+                  <label class="form-label">Commentaire de correction</label>
+                  <input class="form-input" id="feedback-${a.id}" type="text" value="${escHtml(a.feedback || '')}" placeholder="Feedback (optionnel)..." />
+                </div>
+                <div style="display:flex; align-items:flex-end; padding-bottom:0.75rem;">
+                  <button class="btn btn-sm btn-primary" onclick="saveCorrection(${a.id})">💾 Valider</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function saveCorrection(ansId) {
+      const grade = document.getElementById(`grade-${ansId}`).value;
+      const feedback = document.getElementById(`feedback-${ansId}`).value;
+      const ok = await DataStore.gradeAnswer(ansId, grade ? parseFloat(grade) : null, feedback);
+      if (ok) {
+        alert('Correction sauvegardée !');
+      } else {
+        alert('Erreur lors de la sauvegarde.');
+      }
+    }
+
+    function escHtml(str) {
+      if (!str) return '';
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    init();
+  </script>
+</body>
+</html>
