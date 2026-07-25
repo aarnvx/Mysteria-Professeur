@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tableau de Bord - Poudlard RP</title>
+  <meta name="description" content="Tableau de bord professoral du serveur Poudlard RP Gmod." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .dashboard-hero {
+      background:
+        radial-gradient(ellipse at 20% 60%, rgba(45,0,96,0.4), transparent 55%),
+        radial-gradient(ellipse at 80% 30%, rgba(116,0,1,0.15), transparent 50%);
+      border-bottom: 1px solid var(--border);
+      padding: 3rem 0 2.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .welcome-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+    }
+
+    .welcome-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.12);
+      border: 2px solid var(--border-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+      box-shadow: var(--glow);
+    }
+
+    .welcome-info { flex: 1; }
+    .welcome-greeting {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+    .welcome-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      color: var(--cream);
+    }
+    .welcome-role {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      color: var(--text-dim);
+      font-size: 0.95rem;
+      margin-top: 0.2rem;
+    }
+
+    .quick-stats {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .quick-stat {
+      background: rgba(201,168,76,0.07);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1.25rem;
+      text-align: center;
+      min-width: 90px;
+    }
+
+    .quick-stat-num {
+      font-family: 'Cinzel', serif;
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--gold-light);
+    }
+
+    .quick-stat-label {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-top: 0.1rem;
+    }
+
+    /* Nav cards */
+    .nav-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .nav-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 2rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: block;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .nav-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: var(--card-color, var(--gold));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+
+    .nav-card:hover {
+      border-color: var(--border-bright);
+      box-shadow: var(--glow);
+      transform: translateY(-3px);
+    }
+
+    .nav-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .nav-card-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+      display: block;
+    }
+
+    .nav-card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 0.4rem;
+    }
+
+    .nav-card-desc {
+      font-size: 0.88rem;
+      color: var(--text-dim);
+      line-height: 1.5;
+    }
+
+    .nav-card-arrow {
+      position: absolute;
+      top: 1.5rem;
+      right: 1.5rem;
+      color: var(--border-bright);
+      font-size: 1rem;
+      transition: transform 0.3s, color 0.3s;
+    }
+
+    .nav-card:hover .nav-card-arrow {
+      transform: translateX(4px);
+      color: var(--gold);
+    }
+
+    /* Activity feed */
+    .section-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .activity-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.9rem 1.2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: border-color 0.3s;
+      animation: fadeIn 0.4s ease;
+    }
+
+    .activity-item:hover { border-color: var(--border-bright); }
+
+    .activity-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .activity-text { flex: 1; }
+    .activity-main {
+      font-size: 0.9rem;
+      color: var(--text);
+    }
+    .activity-meta {
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.05em;
+      margin-top: 0.15rem;
+    }
+
+    .house-mini-bar {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .house-mini {
+      border-radius: 10px;
+      padding: 1rem;
+      border: 1px solid;
+      text-align: center;
+    }
+
+    .house-mini-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .house-mini-pts {
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .house-gryf-mini { background: rgba(116,0,1,0.2); border-color: rgba(211,166,37,0.3); color: var(--gryffindor-gold); }
+    .house-sly-mini  { background: rgba(26,71,42,0.2); border-color: rgba(170,170,170,0.2); color: var(--slytherin-silver); }
+    .house-rav-mini  { background: rgba(14,26,64,0.3); border-color: rgba(148,107,45,0.3); color: #c49a5a; }
+    .house-huff-mini { background: rgba(236,185,57,0.1); border-color: rgba(236,185,57,0.25); color: var(--hufflepuff-yellow); }
+
+    @media (max-width: 600px) {
+      .house-mini-bar { grid-template-columns: repeat(2, 1fr); }
+      .welcome-row { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">Mysteria Professeur</div>
+        <div class="navbar-subtitle">Portail Académique</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html" class="active">🏠 Accueil</a></li>
+      <li><a href="courses.html">📚 Cours</a></li>
+      <li><a href="points.html">⚡ Points</a></li>
+      <li><a href="blames.html">📜 Carnet</a></li>
+      <li><a href="roles.html">🎓 Équipe</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <!-- Hero -->
+  <div class="dashboard-hero">
+    <div class="container">
+      <div class="welcome-row">
+        <div style="display:flex; align-items:center; gap:1.25rem;">
+          <div class="welcome-avatar" id="user-avatar">🧙‍♂️</div>
+          <div class="welcome-info">
+            <div class="welcome-greeting">Bienvenue de retour</div>
+            <div class="welcome-name" id="user-name">Professeur</div>
+            <div class="welcome-role" id="user-role">Chargement…</div>
+          </div>
+        </div>
+        <div class="quick-stats">
+          <div class="quick-stat">
+            <div class="quick-stat-num" id="stat-courses">12</div>
+            <div class="quick-stat-label">Cours</div>
+          </div>
+          <div class="quick-stat">
+            <div class="quick-stat-num" id="stat-profs">5</div>
+            <div class="quick-stat-label">Profs</div>
+          </div>
+          <div class="quick-stat">
+            <div class="quick-stat-num" id="stat-sessions">3</div>
+            <div class="quick-stat-label">Sessions</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mini house bar -->
+      <div class="house-mini-bar" id="house-mini-bar">
+        <div class="house-mini house-gryf-mini">
+          <img src="../img/gryffindor.png" alt="Gryffondor" style="width:40px;height:40px;object-fit:contain;margin-bottom:0.3rem;filter:drop-shadow(0 0 6px rgba(211,166,37,0.5));">
+          <div class="house-mini-name">Gryffondor</div>
+          <div class="house-mini-pts" id="mini-gryf">-</div>
+        </div>
+        <div class="house-mini house-sly-mini">
+          <img src="../img/slytherin.png" alt="Serpentard" style="width:40px;height:40px;object-fit:contain;margin-bottom:0.3rem;filter:drop-shadow(0 0 6px rgba(170,170,170,0.4));">
+          <div class="house-mini-name">Serpentard</div>
+          <div class="house-mini-pts" id="mini-sly">-</div>
+        </div>
+        <div class="house-mini house-rav-mini">
+          <img src="../img/ravenclaw.png" alt="Serdaigle" style="width:40px;height:40px;object-fit:contain;margin-bottom:0.3rem;filter:drop-shadow(0 0 6px rgba(148,107,45,0.5));">
+          <div class="house-mini-name">Serdaigle</div>
+          <div class="house-mini-pts" id="mini-rav">-</div>
+        </div>
+        <div class="house-mini house-huff-mini">
+          <img src="../img/hufflepuff.png" alt="Poufsouffle" style="width:40px;height:40px;object-fit:contain;margin-bottom:0.3rem;filter:drop-shadow(0 0 6px rgba(236,185,57,0.5));">
+          <div class="house-mini-name">Poufsouffle</div>
+          <div class="house-mini-pts" id="mini-huff">-</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="container" style="padding-bottom:4rem; position:relative; z-index:1;">
+
+    <!-- Navigation cards -->
+    <div class="nav-cards">
+      <a href="courses.html" class="nav-card" style="--card-color: var(--gold);">
+        <span class="nav-card-icon">📚</span>
+        <span class="nav-card-arrow">→</span>
+        <div class="nav-card-title">Bibliothèque de Cours</div>
+        <div class="nav-card-desc">Consultez et gérez tous les cours du serveur. Recherche rapide par matière.</div>
+      </a>
+
+      <a href="points.html" class="nav-card" style="--card-color: #d3a625;">
+        <span class="nav-card-icon">⚡</span>
+        <span class="nav-card-arrow">→</span>
+        <div class="nav-card-title">Points de Maison</div>
+        <div class="nav-card-desc">Gérez les points et les blâmes pour chaque maison. Historique complet.</div>
+      </a>
+
+      <a href="roles.html" class="nav-card" style="--card-color: #7ddb8c;">
+        <span class="nav-card-icon">🎓</span>
+        <span class="nav-card-arrow">→</span>
+        <div class="nav-card-title">Tableau des Rôles</div>
+        <div class="nav-card-desc">Qui occupe quel poste ? Directeurs, gérants de clubs, doyens et plus.</div>
+      </a>
+
+      <div id="card-create-session" class="nav-card" style="--card-color: #a78bfa; cursor:pointer; display:none;" onclick="openManageSessions()">
+        <span class="nav-card-icon">📋</span>
+        <span class="nav-card-arrow">→</span>
+        <div class="nav-card-title">Gérer les Sessions</div>
+        <div class="nav-card-desc">Créez des examens, lancez vos sessions et suivez les résultats en direct.</div>
+      </div>
+    </div>
+
+    <!-- Recent activity -->
+    <div class="section-title-row">
+      <div>
+        <div class="page-title-small">Journal</div>
+        <h2>Activité Récente</h2>
+      </div>
+    </div>
+
+    <div class="activity-list" id="activity-list">
+      <div class="activity-item">
+        <div class="activity-icon" style="background:rgba(211,166,37,0.15);">⚡</div>
+        <div class="activity-text">
+          <div class="activity-main">Gryffondor <strong>+10 points</strong> - Excellente participation en cours de Sortilèges</div>
+          <div class="activity-meta">Prof. Flitwick &middot; il y a 12 min</div>
+        </div>
+        <span class="badge badge-gold">Points</span>
+      </div>
+      <div class="activity-item">
+        <div class="activity-icon" style="background:rgba(80,180,100,0.12);">📋</div>
+        <div class="activity-text">
+          <div class="activity-main">Session <strong>EXAM-POTIONS-01</strong> créée - Examen de Potions Semestre 1</div>
+          <div class="activity-meta">Prof. Rogue &middot; il y a 34 min</div>
+        </div>
+        <span class="badge badge-green">Session</span>
+      </div>
+      <div class="activity-item">
+        <div class="activity-icon" style="background:rgba(200,80,80,0.12);">⚠️</div>
+        <div class="activity-text">
+          <div class="activity-main">Serpentard <strong>-5 points</strong> - Comportement inapproprié en couloir</div>
+          <div class="activity-meta">Prof. McGonagall &middot; il y a 1h</div>
+        </div>
+        <span class="badge badge-red">Blâme</span>
+      </div>
+      <div class="activity-item">
+        <div class="activity-icon" style="background:rgba(201,168,76,0.12);">📚</div>
+        <div class="activity-text">
+          <div class="activity-main">Nouveau cours ajouté - <strong>Histoire de la Magie, Chapitre 7</strong></div>
+          <div class="activity-meta">Admin &middot; il y a 2h</div>
+        </div>
+        <span class="badge badge-gold">Cours</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Modale Gestion des sessions -->
+  <div class="modal-overlay" id="manage-sessions-modal">
+    <div class="modal" style="max-width:600px;">
+      <button class="modal-close" onclick="closeManageSessions()">✕</button>
+      <h3>📋 Gérer les Sessions</h3>
+      <p style="margin-bottom:1.25rem;">Créez, modifiez ou lancez vos sessions.</p>
+
+      <button class="btn btn-primary" onclick="createNewSessionPrompt()" style="width:100%; margin-bottom:1.5rem;">+ Nouvelle Session</button>
+
+      <div id="sessions-list-container" style="display:flex; flex-direction:column; gap:0.75rem; max-height:400px; overflow-y:auto;">
+        <div style="text-align:center; color:var(--text-dim); padding:2rem;">Chargement...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script>
+    const user = requireAuthOrRedirect();
+    if (user) {
+      document.getElementById('user-avatar').textContent = user.avatar || '🎓';
+      document.getElementById('user-name').textContent = user.name;
+      // Afficher le grade ET la fonction
+      const roleText = [user.rank, user.role && user.role !== 'Aucune' ? user.role : null, user.house ? user.house : null].filter(Boolean).join(' - ');
+      document.getElementById('user-role').textContent = roleText || 'Professeur';
+    }
+
+    // House points mini display
+    async function loadMiniPoints() {
+      const pts = await DataStore.getPoints();
+      document.getElementById('mini-gryf').textContent = pts.gryffondor?.points || 0;
+      document.getElementById('mini-sly').textContent  = pts.serpentard?.points || 0;
+      document.getElementById('mini-rav').textContent  = pts.serdaigle?.points || 0;
+      document.getElementById('mini-huff').textContent = pts.poufsouffle?.points || 0;
+    }
+    loadMiniPoints();
+
+    // Afficher carte "Créer une session" selon les droits
+    if (Auth.hasPermission('create_content')) {
+      document.getElementById('card-create-session').style.display = 'block';
+    }
+
+    // Modale Gestion Session
+    async function openManageSessions() {
+      document.getElementById('manage-sessions-modal').classList.add('active');
+      const cont = document.getElementById('sessions-list-container');
+      cont.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:2rem;">Chargement...</div>';
+      
+      const teacher = user ? user.name : null;
+      const sessions = await DataStore.getSessions(teacher);
+      
+      if (sessions.length === 0) {
+        cont.innerHTML = '<div style="text-align:center; color:var(--text-dim); padding:2rem;">Aucune session trouvée.</div>';
+        return;
+      }
+
+      cont.innerHTML = sessions.map(s => `
+        <div style="background:var(--bg-card); border:1px solid var(--border); border-radius:8px; padding:1rem; display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-family:'Cinzel',serif; color:var(--gold); margin-bottom:0.25rem;">${s.label || '(Sans titre)'}</div>
+            <div style="font-size:0.75rem; color:var(--text-dim);">Code: <strong style="color:var(--accent-session); letter-spacing:0.1em;">${s.code}</strong> · Type: ${s.type || 'examen'}</div>
+          </div>
+          <div style="display:flex; gap:0.5rem; flex-wrap:wrap;">
+            <a href="session_builder.html?code=${s.code}&id=${s.id}" class="btn btn-sm">✍️ Modifier</a>
+            <a href="session_results.html?code=${s.code}&id=${s.id}" class="btn btn-sm btn-primary">🚀 Lancer & Suivre</a>
+            <button class="btn btn-sm" style="color:#e87070; border-color:#e87070;" onclick="deleteSession(${s.id})">🗑</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function closeManageSessions() {
+      document.getElementById('manage-sessions-modal').classList.remove('active');
+    }
+
+    async function createNewSessionPrompt() {
+      const label = prompt("Entrez le titre de la nouvelle session :");
+      if (!label) return;
+      
+      const suffix = Math.random().toString(36).toUpperCase().slice(2, 7);
+      const code = 'EXM-' + suffix;
+      const teacher = user ? user.name : 'Inconnu';
+      
+      const res = await DataStore.createSession(code, label, 'examen', teacher);
+      if (res.ok) {
+        window.location.href = \`session_builder.html?code=\${code}&id=\${res.session.id}\`;
+      } else {
+        alert("Erreur: " + res.error);
+      }
+    }
+
+    async function deleteSession(id) {
+      if (confirm("Supprimer cette session ?")) {
+        await DataStore.deleteSession(id);
+        openManageSessions();
+      }
+    }
+
+    // Particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      function createParticle() {
+        return { x: Math.random()*canvas.width, y: Math.random()*canvas.height,
+          size: Math.random()*1.2+0.3, speedY:-(Math.random()*0.25+0.08),
+          speedX:(Math.random()-0.5)*0.15, opacity:Math.random()*0.5+0.15,
+          life:0, maxLife:Math.random()*350+200 };
+      }
+      function init() { resize(); for(let i=0;i<60;i++) particles.push(createParticle()); window.addEventListener('resize',resize); }
+      function animate() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        particles.forEach((p,i) => {
+          p.x+=p.speedX; p.y+=p.speedY; p.life++;
+          const ratio=p.life/p.maxLife;
+          const alpha=ratio<0.2?ratio/0.2:ratio>0.8?(1-ratio)/0.2:1;
+          ctx.globalAlpha=p.opacity*alpha; ctx.fillStyle='#c9a84c';
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+          if(p.life>=p.maxLife||p.y<0) particles[i]=createParticle();
+        });
+        ctx.globalAlpha=1; requestAnimationFrame(animate);
+      }
+      init(); animate();
+    })();
+  </script>
+</body>
+</html>
+
+
+
