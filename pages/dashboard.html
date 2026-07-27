@@ -419,6 +419,7 @@
       <li><a href="points.html">⚡ Points</a></li>
       <li><a href="blames.html">📜 Carnet</a></li>
       <li><a href="roles.html">🎓 Équipe</a></li>
+      <li><a href="hiboux.html">🦉 Hiboux <span id="missive-badge" class="nav-badge" style="display:none;">0</span></a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
   </nav>
@@ -536,6 +537,10 @@
       <div class="missive-form-card">
         <div class="missive-form-label">Nouvelle missive</div>
         <div class="missive-form-grid">
+          <label class="missive-form-label" for="missive-recipient">Destinataire</label>
+          <select id="missive-recipient" class="missive-input">
+            <option value="">Tous les professeurs</option>
+          </select>
           <input id="missive-title" class="missive-input" type="text" placeholder="Titre de la missive (optionnel)" />
           <textarea id="missive-message" class="missive-textarea" placeholder="Entrez le message ici..."></textarea>
         </div>
@@ -645,6 +650,244 @@
       }
     }
     loadDashboardStats();
+    loadMissiveRecipients();
+
+    let missiveSubscription = null;
+    const realtimeChannels = [];
+    const missiveCache = new Map();
+    let unreadMissiveCount = 0;
+ 
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function normalizeString(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function updateMissiveBadge() {
+      const badge = document.getElementById('missive-badge');
+      if (!badge) return;
+      if (unreadMissiveCount > 0) {
+        badge.textContent = unreadMissiveCount;
+        badge.style.display = 'inline-flex';
+      } else {
+        badge.style.display = 'none';
+      }
+    }
+
+    function isMissiveRelevant(missive) {
+      if (!missive) return false;
+      if (!missive.recipient || missive.recipient === '') return true;
+      if (!user) return false;
+      const recipient = normalizeString(missive.recipient);
+      const author = normalizeString(missive.author);
+      const email = normalizeString(user.email);
+      const name = normalizeString(user.name);
+      return recipient === email || recipient === name || author === email || author === name;
+    }
+
+    function notifyMissiveArrival(missive) {
+      if (!missive || !isMissiveRelevant(missive)) return;
+      const sender = missive.author || 'un professeur';
+      showToast(`Vous avez reçu une missive de ${sender}`, 'success');
+      unreadMissiveCount += 1;
+      updateMissiveBadge();
+    }
+
+    function renderMissiveCard(missive) {
+      const recipient = missive?.recipient ? missive.recipient : 'Tous les professeurs';
+      const title = missive?.title ? `<div class="missive-card-title">${escapeHtml(missive.title)}</div>` : '';
+      const meta = [`Auteur: ${escapeHtml(missive.author || 'Anonyme')}`, `Destinataire: ${escapeHtml(recipient)}`, escapeHtml(formatActivityDate(missive.created_at || missive.updated_at || new Date().toISOString()))].join(' · ');
+
+      return `
+        <div class="missive-card" id="missive-card-${escapeHtml(missive.id || Math.random().toString(36).slice(2))}">
+          ${title}
+          <div class="missive-card-message">${escapeHtml(missive.message)}</div>
+          <div class="missive-card-meta">${meta}</div>
+        </div>
+      `;
+    }
+
+    function setMissiveListEmpty(message) {
+      const missiveList = document.getElementById('missive-list');
+      if (missiveList) {
+        missiveList.innerHTML = `<div class="missive-empty">${message}</div>`;
+      }
+    }
+
+    function addMissiveToList(missive) {
+      if (!missive || !document.getElementById('missive-list')) return;
+      if (missive.id && missiveCache.has(missive.id)) return;
+      missiveCache.set(missive.id, missive);
+      const list = document.getElementById('missive-list');
+      if (!list) return;
+      if (list.firstChild && list.firstChild.classList && list.firstChild.classList.contains('missive-empty')) {
+        list.innerHTML = '';
+      }
+      list.insertAdjacentHTML('afterbegin', renderMissiveCard(missive));
+    }
+
+    async function loadMissiveRecipients() {
+      try {
+        const professors = await DataStore.getAllProfessors();
+        const select = document.getElementById('missive-recipient');
+        if (!select) return;
+        select.innerHTML = '';
+        const allOption = document.createElement('option');
+        allOption.value = '';
+        allOption.textContent = 'Tous les professeurs';
+        select.appendChild(allOption);
+        professors.forEach(prof => {
+          const option = document.createElement('option');
+          option.value = prof.email || prof.id;
+          option.textContent = prof.name || prof.email || prof.id;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Erreur lors du chargement des destinataires de missive :', err);
+      }
+    }
+
+    async function loadMissives() {
+      try {
+        const missives = await DataStore.getMissives(20);
+        const list = document.getElementById('missive-list');
+        if (!list) return;
+        missiveCache.clear();
+        if (!Array.isArray(missives) || missives.length === 0) {
+          setMissiveListEmpty('Aucune missive disponible pour le moment.');
+          return;
+        }
+        list.innerHTML = '';
+        missives.forEach(missive => addMissiveToList(missive));
+      } catch (err) {
+        console.error('Erreur lors du chargement des missives :', err);
+        setMissiveListEmpty('Impossible de charger les missives.');
+      }
+    }
+
+    async function submitMissive() {
+      const title = document.getElementById('missive-title')?.value || '';
+      const message = document.getElementById('missive-message')?.value || '';
+      const recipient = document.getElementById('missive-recipient')?.value || '';
+      if (!message.trim()) {
+        alert('Veuillez saisir un message pour la missive.');
+        return;
+      }
+      const button = document.getElementById('missive-submit');
+      if (button) button.disabled = true;
+      try {
+        const hasSession = await Auth.hasValidSession();
+        if (!hasSession) {
+          Auth.logout();
+          return;
+        }
+
+        const result = await DataStore.addMissive({
+          title,
+          message,
+          author: user?.email || user?.name || 'Anonyme',
+          recipient: recipient || ''
+        });
+        if (!result.ok) {
+          alert('Erreur : ' + result.error);
+          if (result.error && result.error.toLowerCase().includes('session')) {
+            localStorage.removeItem('Mysteria_auth');
+            window.location.href = '../index.html';
+          }
+          return;
+        }
+        if (result.missive) {
+          addMissiveToList(result.missive);
+        } else {
+          await loadMissives();
+        }
+        document.getElementById('missive-title').value = '';
+        document.getElementById('missive-message').value = '';
+        document.getElementById('missive-recipient').value = '';
+      } catch (err) {
+        console.error('Erreur lors de l\'envoi de la missive :', err);
+        alert('Erreur lors de l\'envoi de la missive. Veuillez réessayer.');
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    function setupMissiveRealtime() {
+      if (missiveSubscription) return;
+      missiveSubscription = DataStore.subscribeMissives(newMissive => {
+        if (!newMissive) return;
+        addMissiveToList(newMissive);
+        notifyMissiveArrival(newMissive);
+      });
+      if (missiveSubscription) {
+        realtimeChannels.push(missiveSubscription);
+      } else {
+        console.warn('Le realtime des missives n\'a pas pu être initialisé.');
+      }
+    }
+
+    function setupDashboardRealtime() {
+      if (!DataStore.subscribeTable) return;
+
+      realtimeChannels.push(
+        DataStore.subscribeTable({
+          table: 'house_points',
+          events: ['INSERT', 'UPDATE', 'DELETE'],
+          onEvent: () => loadMiniPoints()
+        })
+      );
+
+      realtimeChannels.push(
+        DataStore.subscribeTable({
+          table: 'house_log',
+          events: ['INSERT', 'UPDATE', 'DELETE'],
+          onEvent: loadRecentActivity
+        })
+      );
+
+      realtimeChannels.push(
+        DataStore.subscribeTable({
+          table: 'courses',
+          events: ['INSERT', 'UPDATE', 'DELETE'],
+          onEvent: async () => {
+            await loadDashboardStats();
+            await loadRecentActivity();
+          }
+        })
+      );
+
+      realtimeChannels.push(
+        DataStore.subscribeTable({
+          table: 'session_codes',
+          events: ['INSERT', 'UPDATE', 'DELETE'],
+          onEvent: async () => {
+            await loadDashboardStats();
+            await loadRecentActivity();
+          }
+        })
+      );
+
+      realtimeChannels.push(
+        DataStore.subscribeTable({
+          table: 'professors',
+          events: ['INSERT', 'UPDATE', 'DELETE'],
+          onEvent: loadMissiveRecipients
+        })
+      );
+    }
+
+    function cleanupRealtimeChannels() {
+      realtimeChannels.forEach(channel => DataStore.unsubscribeChannel(channel));
+      realtimeChannels.length = 0;
+      missiveSubscription = null;
+    }
 
     function formatActivityDate(rawDate) {
       const ts = new Date(rawDate);
@@ -727,8 +970,11 @@
     }
     loadRecentActivity();
     loadMissives();
+    updateMissiveBadge();
     setupMissiveRealtime();
-
+    setupDashboardRealtime();
+    window.addEventListener('beforeunload', cleanupRealtimeChannels);
+ 
     // Modale Gestion Session
     async function openManageSessions() {
       document.getElementById('manage-sessions-modal').classList.add('active');
