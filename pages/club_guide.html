@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Interface Club - Poudlard RP</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .guide-section {
+      margin-top: 3rem;
+    }
+
+    .guide-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .guide-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.5rem;
+      color: var(--gold);
+      margin-bottom: 1rem;
+    }
+
+    .feature-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+
+    .feature-item {
+      background: rgba(201,168,76,0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+    }
+
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .feature-name {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .feature-desc {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body class="club-page">
+  <canvas id="particles-canvas"></canvas>
+
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">🎭 INTERFACE CLUB</div>
+        <div class="navbar-subtitle">Guide de navigation</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="../index.html">🏠 Accueil</a></li>
+      <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
+    </ul>
+  </nav>
+
+  <main class="container" style="padding-top:3.5rem; padding-bottom:4rem; position:relative; z-index:1;">
+
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="page-title-small">📚 Documentation</div>
+          <h1>Interface Club - Guide Complet</h1>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dashboard Club -->
+    <div class="guide-card guide-section">
+      <h2 class="guide-title">🏠 Dashboard Club</h2>
+      <p>Votre point d'entrée principal après la connexion. Affiche :</p>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">👤</div>
+          <div class="feature-name">Votre Profil</div>
+          <div class="feature-desc">Nom, rôle et statut dans le club</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">📊</div>
+          <div class="feature-name">Statistiques</div>
+          <div class="feature-desc">Nombre de membres, événements et sessions</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">⚡</div>
+          <div class="feature-name">Accès Rapide</div>
+          <div class="feature-desc">Boutons vers les fonctionnalités principales</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">🛡️</div>
+          <div class="feature-name">Catégories</div>
+          <div class="feature-desc">Tous les clubs disponibles sur le serveur</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">📜</div>
+          <div class="feature-name">Activité Récente</div>
+          <div class="feature-desc">Historique des actions et événements</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Members Page -->
+    <div class="guide-card guide-section">
+      <h2 class="guide-title">👥 Annuaire des Membres</h2>
+      <p>Consultez et gérez tous les membres du club :</p>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">🔍</div>
+          <div class="feature-name">Recherche</div>
+          <div class="feature-desc">Trouvez rapidement un membre par nom ou email</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">📋</div>
+          <div class="feature-name">Filtrage par Rôle</div>
+          <div class="feature-desc">Affichez uniquement les membres d'un rôle spécifique</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">💳</div>
+          <div class="feature-name">Cartes Membres</div>
+          <div class="feature-desc">Informations détaillées de chaque membre</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">📊</div>
+          <div class="feature-name">Statistiques</div>
+          <div class="feature-desc">Total, membres actifs et nombre de rôles</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Club Categories -->
+    <div class="guide-card guide-section">
+      <h2 class="guide-title">🛡️ Catégories de Club</h2>
+      <p>Les clubs disponibles sur le serveur :</p>
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin-top: 1.5rem;">
+        <div style="text-align: center; padding: 1rem; background: rgba(201,168,76,0.05); border-radius: 8px;">📰 Club de la Gazette</div>
+        <div style="text-align: center; padding: 1rem; background: rgba(201,168,76,0.05); border-radius: 8px;">⚔️ Club de Duel</div>
+        <div style="text-align: center; padding: 1rem; background: rgba(201,168,76,0.05); border-radius: 8px;">🎭 Club de Théâtre</div>
+        <div style="text-align: center; padding: 1rem; background: rgba(201,168,76,0.05); border-radius: 8px;">🎵 Club de Musique</div>
+        <div style="text-align: center; padding: 1rem; background: rgba(201,168,76,0.05); border-radius: 8px;">🔮 Club de Divination</div>
+        <div style="text-align: center; padding: 1rem; background: rgba(201,168,76,0.05); border-radius: 8px;">🧪 Club de Potions</div>
+        <div style="text-align: center; padding: 1rem; background: rgba(201,168,76,0.05); border-radius: 8px;">🌿 Club de Botanique</div>
+      </div>
+    </div>
+
+    <!-- Structure Organisationnelle -->
+    <div class="guide-card guide-section">
+      <h2 class="guide-title">🏗️ Structure de l'Interface Club</h2>
+      <div style="background: rgba(201,168,76,0.03); border: 1px solid var(--border); border-radius: 10px; padding: 2rem; margin-top: 1.5rem; font-family: monospace; font-size: 0.9rem; overflow-x: auto;">
+        <pre>
+MYSTERIA CLUB
+├── 🏠 Dashboard Club
+│   ├── Profil utilisateur
+│   ├── Statistiques en temps réel
+│   ├── Accès rapide
+│   │   ├── 👥 Annuaire
+│   │   ├── ⚡ Nouvelles Sessions
+│   │   ├── 📊 Points & Classements
+│   │   └── 📅 Calendrier
+│   ├── Catégories de club
+│   └── Activité récente
+│
+├── 👥 Annuaire des Membres
+│   ├── Recherche par nom/email
+│   ├── Filtrage par rôle
+│   ├── Cartes de profil
+│   └── Statistiques
+│
+└── ⚙️ Paramètres (si gestionnaire)
+    ├── Gestion des rôles
+    └── Permissions
+        </pre>
+      </div>
+    </div>
+
+    <!-- Permissions -->
+    <div class="guide-card guide-section">
+      <h2 class="guide-title">🔐 Permissions et Rôles</h2>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">👤</div>
+          <div class="feature-name">Membre Simple</div>
+          <div class="feature-desc">Consultez les annuaires, participez aux sessions</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">⭐</div>
+          <div class="feature-name">Officier de Club</div>
+          <div class="feature-desc">Gérez les événements du club</div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">👑</div>
+          <div class="feature-name">Gérant de Club</div>
+          <div class="feature-desc">Accès complet à la gestion du club</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Links -->
+    <div class="guide-card guide-section" style="background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(167,139,250,0.08) 100%); border: 1px solid var(--border-bright);">
+      <h2 class="guide-title">🚀 Accès Rapide</h2>
+      <p style="margin-bottom: 1.5rem;">Cliquez sur l'un de ces liens pour accéder directement aux fonctionnalités :</p>
+      <div class="button-group">
+        <a href="club.html" class="btn btn-primary">🎭 Espace Club</a>
+        <a href="club_dashboard.html" class="btn btn-secondary">📊 Dashboard</a>
+        <a href="club_members.html" class="btn btn-secondary">👥 Membres</a>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/global-sound.js"></script>
+  <script>
+    function isClubManagerUser(user) {
+      return Auth.isClubManagerUser(user);
+    }
+
+    (async () => {
+      const currentUser = await Auth.getCurrentUser();
+      const configNavLink = document.getElementById('club-config-nav-link');
+      if (configNavLink && currentUser && Auth.canAccessClubConfiguration(currentUser)) {
+        configNavLink.style.display = 'list-item';
+      }
+    })();
+
+    // Particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      function createParticle() {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.3,
+          speedY: -(Math.random() * 0.3 + 0.1),
+          speedX: (Math.random() - 0.5) * 0.2,
+          opacity: Math.random() * 0.6 + 0.2,
+          life: 0,
+          maxLife: Math.random() * 300 + 200
+        };
+      }
+      function init() {
+        resize();
+        for (let i = 0; i < 80; i++) particles.push(createParticle());
+        window.addEventListener('resize', resize);
+      }
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.life++;
+          const ratio = p.life / p.maxLife;
+          const alpha = ratio < 0.2 ? ratio / 0.2 : ratio > 0.8 ? (1 - ratio) / 0.2 : 1;
+          ctx.globalAlpha = p.opacity * alpha;
+          ctx.fillStyle = '#c9a84c';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          if (p.life >= p.maxLife || p.y < 0) particles[i] = createParticle();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(animate);
+      }
+      init();
+      animate();
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,141 @@
+/**
+ * security.js - Protection anti-copie et anti-screenshot
+ */
+
+(function() {
+    // 1. Désactiver le clic droit
+    document.addEventListener('contextmenu', event => event.preventDefault());
+
+    let screenProtectActive = false;
+    let screenProtectWatcher = null;
+
+    function isBlockedKey(e) {
+      const key = (e.key || '').toLowerCase();
+      const ctrlOrMeta = e.ctrlKey || e.metaKey;
+      const shift = e.shiftKey;
+
+      if (key === 'printscreen' || key === 'snapshot' || key === 'f12' || key === 'f11') return true;
+      if (key === 'u' && ctrlOrMeta) return true;
+      if (key === 'i' && ctrlOrMeta && shift) return true;
+      if (key === 'j' && ctrlOrMeta && shift) return true;
+      if (key === 'k' && ctrlOrMeta && shift) return true;
+      if (key === 'c' && ctrlOrMeta && shift) return true;
+      if (key === 's' && ctrlOrMeta) return true;
+      if (key === 'p' && ctrlOrMeta) return true;
+      if (key === 'r' && ctrlOrMeta) return true;
+      return false;
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (!screenProtectActive) return;
+
+        if (isBlockedKey(e)) {
+            e.preventDefault();
+            e.stopPropagation();
+            triggerAntiScreen();
+        }
+    }, true);
+
+    document.addEventListener('visibilitychange', () => {
+      if (!screenProtectActive) return;
+      if (document.hidden) {
+        triggerAntiScreen();
+      } else {
+        removeAntiScreen();
+      }
+    });
+
+    function startScreenProtectWatcher() {
+      if (screenProtectWatcher) return;
+      screenProtectWatcher = setInterval(() => {
+        if (!screenProtectActive) return;
+        if (document.hidden || !document.hasFocus()) {
+          triggerAntiScreen();
+        }
+      }, 500);
+    }
+
+    function stopScreenProtectWatcher() {
+      if (!screenProtectWatcher) return;
+      clearInterval(screenProtectWatcher);
+      screenProtectWatcher = null;
+    }
+
+    // 3. Protection "Écran noir" type Netflix lors d'une capture (basé sur la perte de focus)
+    // De nombreux outils de capture (Snipping Tool, outil Mac) font perdre le focus à la page.
+    
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'black';
+    overlay.style.color = 'red';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.fontSize = '2rem';
+    overlay.style.fontFamily = 'Cinzel, serif';
+    overlay.style.zIndex = '999999';
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.transition = 'opacity 0.2s ease';
+    overlay.innerText = '⚠️ CAPTURE D\'ÉCRAN INTERDITE ⚠️';
+    document.body.appendChild(overlay);
+
+    function triggerAntiScreen() {
+        overlay.style.opacity = '1';
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText('Contenu protégé - Poudlard RP').catch(() => {});
+        }
+    }
+
+    function removeAntiScreen() {
+        overlay.style.opacity = '0';
+    }
+
+    window.ScreenProtect = {
+      activate() {
+        screenProtectActive = true;
+        window.addEventListener('blur', triggerAntiScreen);
+        window.addEventListener('focus', removeAntiScreen);
+        document.addEventListener('mouseleave', triggerAntiScreen);
+        document.addEventListener('mouseenter', removeAntiScreen);
+        document.addEventListener('copy', preventClipboardEvent, true);
+        document.addEventListener('cut', preventClipboardEvent, true);
+        document.addEventListener('keydown', preventDevToolsKeys, true);
+        startScreenProtectWatcher();
+      },
+      deactivate() {
+        screenProtectActive = false;
+        window.removeEventListener('blur', triggerAntiScreen);
+        window.removeEventListener('focus', removeAntiScreen);
+        document.removeEventListener('mouseleave', triggerAntiScreen);
+        document.removeEventListener('mouseenter', removeAntiScreen);
+        document.removeEventListener('copy', preventClipboardEvent, true);
+        document.removeEventListener('cut', preventClipboardEvent, true);
+        document.removeEventListener('keydown', preventDevToolsKeys, true);
+        stopScreenProtectWatcher();
+        removeAntiScreen();
+      }
+    };
+
+    function preventClipboardEvent(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      triggerAntiScreen();
+    }
+
+    function preventDevToolsKeys(event) {
+      if (!screenProtectActive) return;
+      if (isBlockedKey(event)) {
+        event.preventDefault();
+        event.stopPropagation();
+        triggerAntiScreen();
+      }
+    }
+
+
+})();
+

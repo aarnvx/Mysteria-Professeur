@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration du Profil - Poudlard RP</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    body {
+      background: #02030a url('img/fond2.jpg') center center / cover no-repeat fixed;
+      background-attachment: fixed;
+    }
+
+    .setup-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      backdrop-filter: blur(5px);
+    }
+
+    .setup-modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: 16px;
+      padding: 2.5rem;
+      max-width: 500px;
+      width: 90%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8), 0 0 40px rgba(201,168,76,0.3);
+      animation: slideUp 0.4s ease;
+    }
+
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .setup-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .setup-icon {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .setup-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.6rem;
+      color: var(--gold-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .setup-desc {
+      color: var(--text-dim);
+      font-size: 0.9rem;
+    }
+
+    .setup-step {
+      margin-bottom: 2rem;
+    }
+
+    .step-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--gold);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.6rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 24px;
+      height: 24px;
+      background: rgba(201,168,76,0.2);
+      border: 1px solid var(--border-bright);
+      border-radius: 50%;
+      font-size: 0.8rem;
+      color: var(--gold);
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: rgba(10,10,18,0.9);
+      color: var(--gold);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+    }
+
+    .discord-connect-btn {
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 0.9rem 1.25rem;
+      background: linear-gradient(135deg, #5865F2 0%, #4752C4 100%);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+    }
+
+    .discord-connect-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(88,101,242,0.4);
+    }
+
+    .discord-connect-btn:active {
+      transform: translateY(0);
+    }
+
+    .discord-status {
+      margin-top: 0.75rem;
+      padding: 0.6rem;
+      border-radius: 8px;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .discord-status.connected {
+      background: rgba(76,175,80,0.15);
+      border: 1px solid rgba(76,175,80,0.3);
+      color: #7ddb8c;
+    }
+
+    .discord-status.not-connected {
+      background: rgba(232,112,112,0.1);
+      border: 1px solid rgba(232,112,112,0.3);
+      color: #e87070;
+      display: none;
+    }
+
+    .form-error {
+      color: #e87070;
+      font-size: 0.8rem;
+      margin-top: 0.3rem;
+      display: none;
+    }
+
+    .form-error.show {
+      display: block;
+    }
+
+    .setup-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+
+    .btn {
+      flex: 1;
+      padding: 0.9rem 1.25rem;
+      border: none;
+      border-radius: 10px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: all 0.3s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #111827;
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--glow);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--gold);
+      border: 1px solid rgba(201,168,76,0.3);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--border-bright);
+    }
+
+    .mandatory-badge {
+      display: inline-block;
+      background: rgba(232,112,112,0.2);
+      color: #e87070;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-left: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+
+  <div class="setup-overlay" id="setup-overlay">
+    <div class="setup-modal">
+      <div class="setup-header">
+        <div class="setup-icon">⚙️</div>
+        <div class="setup-title">Configuration du Profil</div>
+        <div class="setup-desc">Complétez votre profil pour accéder à Poudlard RP</div>
+      </div>
+
+      <form id="setup-form" novalidate>
+        <!-- Step 1: Name & House -->
+        <div class="setup-step">
+          <label class="step-label">
+            <span class="step-number">1</span>
+            Informations de Base
+          </label>
+
+          <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Nom RP</label>
+          <input type="text" id="setup-name" class="form-input" placeholder="ex: Severus Rogue" required>
+          <div class="form-error" id="error-name"></div>
+
+          <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Maison <span class="mandatory-badge">Optionnel</span></label>
+          <select id="setup-house" class="form-select">
+            <option value="">Aucune</option>
+            <option value="Gryffondor">🦁 Gryffondor</option>
+            <option value="Serpentard">🐍 Serpentard</option>
+            <option value="Serdaigle">🦅 Serdaigle</option>
+            <option value="Poufsouffle">🦡 Poufsouffle</option>
+          </select>
+        </div>
+
+        <!-- Step 2: Discord Connection -->
+        <div class="setup-step">
+          <label class="step-label">
+            <span class="step-number">2</span>
+            Lien Discord <span class="mandatory-badge">OBLIGATOIRE</span>
+          </label>
+
+          <button type="button" class="discord-connect-btn" id="discord-connect-btn" onclick="connectDiscord(); return false;">
+            <span>🔗</span>
+            <span id="discord-btn-text">Connecter mon compte Discord</span>
+          </button>
+
+          <div class="discord-status not-connected" id="discord-status-not-connected">
+            ❌ Discord non connecté
+          </div>
+          <div class="discord-status connected" id="discord-status-connected" style="display: none;">
+            ✅ Discord connecté: <span id="discord-username"></span>
+          </div>
+
+          <div class="form-error" id="error-discord"></div>
+        </div>
+
+        <!-- Actions -->
+        <div class="setup-actions">
+          <button type="button" class="btn btn-secondary" onclick="logout()">Retour</button>
+          <button type="submit" class="btn btn-primary" id="setup-submit-btn">Continuer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/discord-auth.js"></script>
+  <script src="js/global-sound.js"></script>
+  <script>
+    let discordLinked = false;
+    let discordData = null;
+
+    function showError(fieldId, message) {
+      const errorEl = document.getElementById(`error-${fieldId}`);
+      if (errorEl) {
+        errorEl.textContent = message;
+        errorEl.classList.add('show');
+      }
+    }
+
+    function clearError(fieldId) {
+      const errorEl = document.getElementById(`error-${fieldId}`);
+      if (errorEl) {
+        errorEl.classList.remove('show');
+      }
+    }
+
+    function connectDiscord() {
+      DiscordAuth.openDiscordLogin();
+      
+      // Attendre la réponse Discord
+      const checkInterval = setInterval(() => {
+        if (window.discordAuthData) {
+          clearInterval(checkInterval);
+          discordData = window.discordAuthData;
+          discordLinked = true;
+
+          document.getElementById('discord-status-not-connected').style.display = 'none';
+          document.getElementById('discord-status-connected').style.display = 'block';
+          document.getElementById('discord-username').textContent = discordData.username + '#' + discordData.discriminator;
+          
+          clearError('discord');
+          window.discordAuthData = null;
+        }
+      }, 500);
+
+      // Timeout après 30 secondes
+      setTimeout(() => {
+        clearInterval(checkInterval);
+      }, 30000);
+    }
+
+    function logout() {
+      Auth.logout();
+    }
+
+    document.getElementById('setup-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const name = document.getElementById('setup-name').value.trim();
+      const house = document.getElementById('setup-house').value;
+
+      // Validation
+      if (!name) {
+        showError('name', 'Veuillez entrer votre nom RP');
+        return;
+      }
+
+      if (!discordLinked) {
+        showError('discord', 'Vous devez connecter votre compte Discord');
+        return;
+      }
+
+      const btn = document.getElementById('setup-submit-btn');
+      btn.disabled = true;
+      btn.textContent = '⏳ Configuration...';
+
+      try {
+        const currentUser = Auth.getCurrentUser();
+        if (!currentUser) {
+          throw new Error('Session expirée');
+        }
+
+        // Mettre à jour le profil
+        const updateResult = await Auth.setupProfile(
+          currentUser.email,
+          name,
+          null,
+          null,
+          house
+        );
+
+        if (!updateResult.ok) {
+          throw new Error(updateResult.error);
+        }
+
+        // Lier Discord
+        const linkResult = await DiscordAuth.linkDiscordToUser(
+          currentUser.email,
+          discordData.id,
+          discordData.username
+        );
+
+        if (!linkResult.ok) {
+          console.warn('Discord link failed:', linkResult.error);
+        }
+
+        // Redirection
+        btn.textContent = '✅ Configuration terminée !';
+        setTimeout(() => {
+          window.location.href = 'pages/dashboard.html';
+        }, 800);
+
+      } catch (err) {
+        console.error('Erreur configuration:', err);
+        showError('discord', err.message || 'Erreur lors de la configuration');
+        btn.disabled = false;
+        btn.textContent = 'Continuer';
+      }
+    });
+
+    // Particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      function createParticle() {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.3,
+          speedY: -(Math.random() * 0.3 + 0.1),
+          speedX: (Math.random() - 0.5) * 0.2,
+          opacity: Math.random() * 0.6 + 0.2,
+          life: 0,
+          maxLife: Math.random() * 300 + 200
+        };
+      }
+      function init() {
+        resize();
+        for (let i = 0; i < 80; i++) particles.push(createParticle());
+        window.addEventListener('resize', resize);
+      }
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.life++;
+          const ratio = p.life / p.maxLife;
+          const alpha = ratio < 0.2 ? ratio / 0.2 : ratio > 0.8 ? (1 - ratio) / 0.2 : 1;
+          ctx.globalAlpha = p.opacity * alpha;
+          ctx.fillStyle = '#c9a84c';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          if (p.life >= p.maxLife || p.y < 0) particles[i] = createParticle();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(animate);
+      }
+      init();
+      animate();
+    })();
+  </script>
+</body>
+</html>

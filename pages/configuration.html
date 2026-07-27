@@ -1,0 +1,743 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration - Poudlard RP</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ── Config Styles ── */
+    .config-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .config-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+    }
+
+    .config-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .config-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      color: var(--gold-dim);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: rgba(10,10,18,0.85);
+      color: var(--gold);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+    }
+
+    .form-input.error {
+      border-color: #e87070;
+      background: rgba(232,112,112,0.05);
+    }
+
+    .form-error {
+      display: none;
+      color: #e87070;
+      font-size: 0.8rem;
+      margin-top: 0.3rem;
+    }
+
+    .form-error.show {
+      display: block;
+    }
+
+    .generated-field {
+      background: rgba(201,168,76,0.05);
+      border: 1px solid var(--border-bright);
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .generated-value {
+      color: var(--gold-light);
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      background: rgba(167,139,250,0.2);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.3s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(167,139,250,0.4);
+    }
+
+    .copy-btn.copied {
+      background: rgba(76,175,80,0.3);
+      border-color: #4caf50;
+      color: #4caf50;
+    }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-box {
+      background: rgba(201,168,76,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.35rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Users List ── */
+    .users-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .user-item {
+      background: rgba(201,168,76,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .user-info {
+      flex: 1;
+    }
+
+    .user-name {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .user-email {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      font-family: monospace;
+    }
+
+    .user-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      background: rgba(201,168,76,0.2);
+      border: 1px solid var(--border-bright);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: var(--gold-dim);
+      margin-top: 0.25rem;
+    }
+
+    .user-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .btn-icon:hover {
+      background: rgba(201,168,76,0.1);
+      color: var(--gold);
+      border-color: var(--border-bright);
+    }
+
+    /* ── Alerts ── */
+    .alert {
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .alert.show {
+      display: flex;
+    }
+
+    .alert-success {
+      background: rgba(76,175,80,0.1);
+      border: 1px solid rgba(76,175,80,0.3);
+      color: #4caf50;
+    }
+
+    .alert-error {
+      background: rgba(232,112,112,0.1);
+      border: 1px solid rgba(232,112,112,0.3);
+      color: #e87070;
+    }
+
+    .alert-icon {
+      font-size: 1.2rem;
+    }
+
+    @media (max-width: 1024px) {
+      .config-container {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">⚙️ CONFIGURATION</div>
+        <div class="navbar-subtitle">Gestion des utilisateurs et paramètres</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html">🏠 Accueil</a></li>
+      <li><a href="configuration.html" class="active">⚙️ Configuration</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <main class="container" style="padding-top:3.5rem; padding-bottom:4rem; position:relative; z-index:1;">
+
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="page-title-small">⚙️ Administration</div>
+          <h1>Configuration & Gestion des Utilisateurs</h1>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-container">
+      <div class="stat-box">
+        <div class="stat-number" id="stat-professors">0</div>
+        <div class="stat-label">PROFESSEURS</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-clubs">0</div>
+        <div class="stat-label">GÉRANTS CLUB</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-total">0</div>
+        <div class="stat-label">TOTAL</div>
+      </div>
+    </div>
+
+    <!-- Main Config Grid -->
+    <div class="config-container">
+
+      <!-- User Creation Card -->
+      <div class="config-card">
+        <h2 class="config-title">➕ Créer un Nouvel Utilisateur</h2>
+        <div class="config-subtitle">Générez automatiquement un identifiant et un mot de passe sécurisé</div>
+
+        <div id="alert-create" class="alert alert-success">
+          <div class="alert-icon">✅</div>
+          <span id="alert-create-text"></span>
+        </div>
+
+        <div id="alert-error" class="alert alert-error">
+          <div class="alert-icon">❌</div>
+          <span id="alert-error-text"></span>
+        </div>
+
+        <form id="user-creation-form" novalidate>
+          <!-- Name -->
+          <div class="form-group">
+            <label class="form-label">Nom Complet (RP)</label>
+            <input type="text" id="new-name" class="form-input" placeholder="ex: Severus Rogue" required>
+            <div class="form-error" id="error-name"></div>
+          </div>
+
+          <!-- Type Selection -->
+          <div class="form-group">
+            <label class="form-label">Type d'Utilisateur</label>
+            <select id="new-type" class="form-select" required>
+              <option value="">-- Sélectionner --</option>
+              <option value="prof">🎓 Professeur</option>
+              <option value="club">🎭 Gérant de Club</option>
+            </select>
+            <div class="form-error" id="error-type"></div>
+          </div>
+
+          <!-- Rank Selection -->
+          <div class="form-group">
+            <label class="form-label">Grade / Rôle</label>
+            <select id="new-rank" class="form-select" required>
+              <option value="">-- Sélectionner --</option>
+            </select>
+            <div class="form-error" id="error-rank"></div>
+          </div>
+
+          <!-- House Selection (optional for professors) -->
+          <div class="form-group" id="house-group" style="display: none;">
+            <label class="form-label">Maison (Optionnel)</label>
+            <select id="new-house" class="form-select">
+              <option value="">Aucune</option>
+              <option value="Gryffondor">🦁 Gryffondor</option>
+              <option value="Serpentard">🐍 Serpentard</option>
+              <option value="Serdaigle">🦅 Serdaigle</option>
+              <option value="Poufsouffle">🦡 Poufsouffle</option>
+            </select>
+          </div>
+
+          <!-- Generated Email -->
+          <div class="form-group">
+            <label class="form-label">Email Généré</label>
+            <div class="generated-field">
+              <span class="generated-value" id="generated-email">-</span>
+              <button type="button" class="copy-btn" id="copy-email" onclick="copyToClipboard('generated-email', 'copy-email')">📋 Copier</button>
+            </div>
+          </div>
+
+          <!-- Generated Password -->
+          <div class="form-group">
+            <label class="form-label">Mot de Passe Généré</label>
+            <div class="generated-field">
+              <span class="generated-value" id="generated-password">-</span>
+              <button type="button" class="copy-btn" id="copy-password" onclick="copyToClipboard('generated-password', 'copy-password')">📋 Copier</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
+            🎫 Créer l'Utilisateur
+          </button>
+        </form>
+      </div>
+
+      <!-- Users List Card -->
+      <div class="config-card">
+        <h2 class="config-title">📋 Utilisateurs Récents</h2>
+        <div class="config-subtitle">Les 10 derniers utilisateurs créés</div>
+
+        <div id="users-list-container" class="users-list">
+          <p style="text-align: center; color: var(--text-dim);">Chargement des utilisateurs…</p>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/global-sound.js"></script>
+  <script>
+    const currentUser = requireAuthOrRedirect();
+    if (!currentUser) return;
+
+    // Check permissions
+    const canManageRoles = Auth.hasPermission('manage_roles');
+    if (!canManageRoles) {
+      window.location.href = 'dashboard.html';
+      return;
+    }
+
+    // Rank options
+    const RANK_OPTIONS = {
+      prof: [
+        'Professeur Apprenti',
+        'Professeur',
+        'Professeur Confirmé',
+        'Professeur Expérimenté',
+        'Grand Professeur',
+        'Directeur'
+      ],
+      club: [
+        'Officier de club',
+        'Président de club',
+        'Gérant de club'
+      ]
+    };
+
+    // Generate random password
+    function generatePassword(length = 12) {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+      let password = '';
+      for (let i = 0; i < length; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    }
+
+    // Generate email from name
+    function generateEmail(name, type) {
+      const normalized = name
+        .trim()
+        .toLowerCase()
+        .replace(/\s+/g, '')
+        .replace(/[^a-z0-9]/g, '');
+      
+      const domain = type === 'prof' ? '@mysteria.prof' : '@mysteria.club';
+      return normalized + domain;
+    }
+
+    // Copy to clipboard
+    function copyToClipboard(elementId, btnId) {
+      const element = document.getElementById(elementId);
+      const btn = document.getElementById(btnId);
+      const text = element.textContent;
+      
+      navigator.clipboard.writeText(text).then(() => {
+        btn.textContent = '✅ Copié !';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 Copier';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // Show alert
+    function showAlert(type, message) {
+      const alertEl = document.getElementById(`alert-${type}`);
+      const textEl = document.getElementById(`alert-${type}-text`);
+      textEl.textContent = message;
+      alertEl.classList.add('show');
+      
+      setTimeout(() => {
+        alertEl.classList.remove('show');
+      }, 4000);
+    }
+
+    // Show error
+    function showError(fieldId, message) {
+      const errorEl = document.getElementById(`error-${fieldId}`);
+      const inputEl = document.getElementById(`new-${fieldId}`);
+      if (errorEl && inputEl) {
+        errorEl.textContent = message;
+        errorEl.classList.add('show');
+        inputEl.classList.add('error');
+      }
+    }
+
+    function clearError(fieldId) {
+      const errorEl = document.getElementById(`error-${fieldId}`);
+      const inputEl = document.getElementById(`new-${fieldId}`);
+      if (errorEl && inputEl) {
+        errorEl.classList.remove('show');
+        inputEl.classList.remove('error');
+      }
+    }
+
+    // Update generated fields
+    document.getElementById('new-name').addEventListener('input', (e) => {
+      clearError('name');
+      const name = e.target.value;
+      const type = document.getElementById('new-type').value;
+      if (name && type) {
+        const email = generateEmail(name, type);
+        document.getElementById('generated-email').textContent = email;
+      }
+    });
+
+    document.getElementById('new-type').addEventListener('change', (e) => {
+      clearError('type');
+      const type = e.target.value;
+      
+      // Update rank options
+      const rankSelect = document.getElementById('new-rank');
+      rankSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+      if (type && RANK_OPTIONS[type]) {
+        RANK_OPTIONS[type].forEach(rank => {
+          const option = document.createElement('option');
+          option.value = rank;
+          option.textContent = rank;
+          rankSelect.appendChild(option);
+        });
+      }
+
+      // Show/hide house for professors
+      const houseGroup = document.getElementById('house-group');
+      houseGroup.style.display = type === 'prof' ? 'block' : 'none';
+
+      // Update email
+      const name = document.getElementById('new-name').value;
+      if (name && type) {
+        const email = generateEmail(name, type);
+        document.getElementById('generated-email').textContent = email;
+      }
+    });
+
+    document.getElementById('new-rank').addEventListener('change', () => {
+      clearError('rank');
+    });
+
+    // Generate password on page load
+    function initPassword() {
+      const password = generatePassword();
+      document.getElementById('generated-password').textContent = password;
+    }
+
+    // Form submission
+    document.getElementById('user-creation-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      // Validation
+      const name = document.getElementById('new-name').value.trim();
+      const type = document.getElementById('new-type').value;
+      const rank = document.getElementById('new-rank').value;
+      const house = document.getElementById('new-house')?.value || null;
+
+      let isValid = true;
+
+      if (!name) {
+        showError('name', 'Champ requis');
+        isValid = false;
+      }
+      if (!type) {
+        showError('type', 'Veuillez sélectionner un type');
+        isValid = false;
+      }
+      if (!rank) {
+        showError('rank', 'Veuillez sélectionner un grade');
+        isValid = false;
+      }
+
+      if (!isValid) return;
+
+      const email = generateEmail(name, type);
+      const password = document.getElementById('generated-password').textContent;
+
+      try {
+        // Create Auth user in Supabase
+        const { data: authData, error: authError } = await window.supabaseClient.auth.admin.createUser({
+          email: email,
+          password: password,
+          email_confirm: true
+        });
+
+        if (authError) throw authError;
+
+        // Insert into appropriate table
+        const table = type === 'prof' ? 'professors' : 'club_members';
+        const { error: dbError } = await window.supabaseClient
+          .from(table)
+          .insert([{
+            email: email,
+            name: name,
+            rank: rank,
+            role: type === 'prof' ? 'Professeur' : 'Gérant',
+            house: house,
+            avatar: type === 'prof' ? '🎓' : '👑'
+          }]);
+
+        if (dbError) throw dbError;
+
+        showAlert('create', `✅ Utilisateur créé ! Email: ${email}`);
+        document.getElementById('user-creation-form').reset();
+        document.getElementById('generated-email').textContent = '-';
+        initPassword();
+        loadRecentUsers();
+        updateStats();
+
+      } catch (err) {
+        console.error('Erreur création utilisateur:', err);
+        showAlert('error', err.message || 'Erreur lors de la création');
+      }
+    });
+
+    // Load recent users
+    async function loadRecentUsers() {
+      try {
+        const { data: professors } = await window.supabaseClient
+          .from('professors')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        const { data: clubs } = await window.supabaseClient
+          .from('club_members')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        const users = [
+          ...(professors || []).map(p => ({ ...p, type: 'prof' })),
+          ...(clubs || []).map(c => ({ ...c, type: 'club' }))
+        ]
+          .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+          .slice(0, 10);
+
+        const container = document.getElementById('users-list-container');
+        if (users.length === 0) {
+          container.innerHTML = '<p style="text-align: center; color: var(--text-dim);">Aucun utilisateur encore.</p>';
+          return;
+        }
+
+        container.innerHTML = users.map(user => `
+          <div class="user-item">
+            <div class="user-info">
+              <div class="user-name">${user.avatar || (user.type === 'prof' ? '🎓' : '👑')} ${user.name}</div>
+              <div class="user-email">${user.email}</div>
+              <div class="user-badge">${user.type === 'prof' ? '🎓 Prof' : '👑 Gérant'} • ${user.rank}</div>
+            </div>
+            <div class="user-actions">
+              <button class="btn-icon" onclick="copyToClipboard('${user.id}', null); return false;" title="Copier l'email">📋</button>
+            </div>
+          </div>
+        `).join('');
+
+        // Add hidden elements for copy
+        users.forEach(user => {
+          const hidden = document.createElement('span');
+          hidden.id = user.id;
+          hidden.style.display = 'none';
+          hidden.textContent = user.email;
+          container.appendChild(hidden);
+        });
+
+      } catch (err) {
+        console.error('Erreur chargement utilisateurs:', err);
+      }
+    }
+
+    // Update stats
+    async function updateStats() {
+      try {
+        const { data: profs } = await window.supabaseClient.from('professors').select('id', { count: 'exact' });
+        const { data: clubs } = await window.supabaseClient.from('club_members').select('id', { count: 'exact' });
+
+        document.getElementById('stat-professors').textContent = profs?.length || 0;
+        document.getElementById('stat-clubs').textContent = clubs?.length || 0;
+        document.getElementById('stat-total').textContent = (profs?.length || 0) + (clubs?.length || 0);
+      } catch (err) {
+        console.error('Erreur stats:', err);
+      }
+    }
+
+    // Init
+    initPassword();
+    loadRecentUsers();
+    updateStats();
+
+    // Particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      function createParticle() {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.3,
+          speedY: -(Math.random() * 0.3 + 0.1),
+          speedX: (Math.random() - 0.5) * 0.2,
+          opacity: Math.random() * 0.6 + 0.2,
+          life: 0,
+          maxLife: Math.random() * 300 + 200
+        };
+      }
+      function init() {
+        resize();
+        for (let i = 0; i < 80; i++) particles.push(createParticle());
+        window.addEventListener('resize', resize);
+      }
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.life++;
+          const ratio = p.life / p.maxLife;
+          const alpha = ratio < 0.2 ? ratio / 0.2 : ratio > 0.8 ? (1 - ratio) / 0.2 : 1;
+          ctx.globalAlpha = p.opacity * alpha;
+          ctx.fillStyle = '#c9a84c';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          if (p.life >= p.maxLife || p.y < 0) particles[i] = createParticle();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(animate);
+      }
+      init();
+      animate();
+    })();
+  </script>
+</body>
+</html>

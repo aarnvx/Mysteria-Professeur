@@ -1,0 +1,895 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Poudlard RP - Portail Académique</title>
+  <meta name="description" content="Portail académique du serveur Poudlard RP Gmod. Espace réservé aux professeurs et à l'équipe professorale." />
+  <link rel="stylesheet" href="css/style.css" />
+  <style>
+    /* ── Index-specific ── */
+    .login-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    /* Left panel - deco */
+    .login-deco {
+      position: relative;
+      background: url('img/bg-login.png') center center / cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      border-right: 1px solid rgba(201, 168, 76, 0.15);
+      overflow: hidden;
+    }
+
+    /* Overlay sombre pour la lisibilité du texte */
+    .login-deco::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to right,
+        rgba(6,6,15,0.45) 0%,
+        rgba(6,6,15,0.2) 100%
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .deco-crest {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 1rem;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .deco-crest img {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid rgba(201,168,76,0.5);
+      box-shadow: 0 0 20px rgba(201,168,76,0.3), 0 4px 20px rgba(0,0,0,0.6);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .deco-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 0.2rem;
+      text-shadow: 0 0 20px rgba(201,168,76,0.6), 0 2px 5px rgba(0,0,0,0.8);
+      position: relative;
+      z-index: 1;
+    }
+
+    .deco-subtitle {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      color: var(--cream-dim);
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+
+    .deco-houses {
+      display: flex;
+      gap: 1.5rem;
+      position: relative;
+      z-index: 1;
+      margin-top: 1rem;
+    }
+
+    .house-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.6rem;
+      border: 1px solid;
+      transition: transform 0.3s;
+    }
+    .house-icon:hover { transform: translateY(-4px) scale(1.05); }
+
+    .house-gryf { background: rgba(116,0,1,0.25); border-color: rgba(211,166,37,0.4); }
+    .house-sly  { background: rgba(26,71,42,0.25); border-color: rgba(170,170,170,0.3); }
+    .house-rav  { background: rgba(14,26,64,0.4); border-color: rgba(148,107,45,0.4); }
+    .house-huff { background: rgba(236,185,57,0.15); border-color: rgba(236,185,57,0.3); }
+
+    .deco-quote {
+      position: absolute;
+      bottom: 1rem;
+      left: 0;
+      right: 0;
+      text-align: center;
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 0.8rem;
+      color: rgba(240,230,200,0.85);
+      padding: 0 1rem;
+      z-index: 1;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+
+    /* Right panel - forms */
+    .login-forms {
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+    }
+
+    .login-section {
+      margin-bottom: 0.8rem;
+    }
+
+    .login-section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-section-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .login-section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .login-section-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-family: 'EB Garamond', serif;
+    }
+
+    .input-icon-wrapper {
+      position: relative;
+    }
+
+    .input-prefix {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .input-icon-wrapper .form-input {
+      padding-left: 2.5rem;
+    }
+
+    .session-badge {
+      display: none;
+      margin-top: 1rem;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      background: rgba(26,71,42,0.2);
+      border: 1px solid rgba(80,180,100,0.3);
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.05em;
+      color: #7ddb8c;
+    }
+
+    .session-badge.visible { display: flex; align-items: center; gap: 0.5rem; animation: fadeIn 0.4s ease; }
+
+    .portal-footer {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+    }
+
+    .login-transition-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.98);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    .login-transition-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .login-transition-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: black;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .login-transition-video.visible {
+      opacity: 1;
+    }
+
+    .login-transition-message {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.92);
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      z-index: 1;
+      opacity: 0.92;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .login-transition-hint {
+      position: absolute;
+      bottom: 4.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.72);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .login-transition-overlay.active .login-transition-hint {
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      .login-page { grid-template-columns: 1fr; }
+      .login-deco { display: none; }
+      .login-forms { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+  <div id="login-transition-overlay" class="login-transition-overlay" aria-hidden="true">
+    <video id="login-transition-video" class="login-transition-video" playsinline preload="auto"></video>
+    <div class="login-transition-message">Chargement...</div>
+    <div class="login-transition-hint">Appuyez sur n'importe quel bouton pour passer</div>
+  </div>
+
+  <div class="login-page">
+
+    <!-- LEFT - Déco -->
+    <div class="login-deco">
+      <div class="deco-crest">
+        <img src="img/logo.png" alt="MYSTERIA PROF Logo" />
+      </div>
+      <div class="deco-title">MYSTERIA PROF</div>
+      <div class="deco-subtitle">Portail Académique Officiel</div>
+
+      <div class="deco-houses">
+        <div class="house-icon house-gryf" title="Gryffondor"><img src="img/gryffindor.png" alt="Gryffondor" style="width:36px;height:36px;object-fit:contain;"></div>
+        <div class="house-icon house-sly"  title="Serpentard"><img src="img/slytherin.png"  alt="Serpentard" style="width:36px;height:36px;object-fit:contain;"></div>
+        <div class="house-icon house-rav"  title="Serdaigle" ><img src="img/ravenclaw.png"  alt="Serdaigle"  style="width:36px;height:36px;object-fit:contain;"></div>
+        <div class="house-icon house-huff" title="Poufsouffle"><img src="img/hufflepuff.png" alt="Poufsouffle" style="width:36px;height:36px;object-fit:contain;"></div>
+      </div>
+
+      <div class="deco-quote">
+        « Ce n'est pas nos capacités qui montrent ce que nous sommes vraiment,<br>
+        ce sont nos choix. »
+      </div>
+    </div>
+
+    <!-- RIGHT - Formulaires -->
+    <div class="login-forms">
+
+      <div style="margin-bottom:1rem;">
+        <div class="page-title-small" style="font-size:0.7rem; margin-bottom:0.2rem;">Bienvenue</div>
+        <h1 style="font-size:1.2rem; margin-bottom:0.2rem;">Connexion</h1>
+        <p style="font-size:0.78rem;">Accès réservé à l'équipe du serveur Mysteria Prof.</p>
+      </div>
+
+      <!-- Formulaire Professeur -->
+      <div class="login-section" id="prof-section">
+        <div class="login-section-header">
+          <div class="login-section-icon">🎓</div>
+          <div>
+            <div class="login-section-title">Espace Professoral</div>
+            <div class="login-section-desc">Professeurs & équipe pédagogique</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:1.2rem;">
+          <form id="prof-form" novalidate>
+            <div class="form-group" style="margin-bottom:0.8rem;">
+              <label class="form-label" for="prof-email" style="font-size:0.75rem;">Adresse E-mail</label>
+              <div class="input-icon-wrapper">
+                <span class="input-prefix">✉️</span>
+                <input class="form-input" type="text" id="email" name="email"
+                  placeholder="nom@poudlard.rp"username" />
+              </div>
+              <div class="form-error" id="email-error" style="display:none;"></div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:0.8rem;">
+              <label class="form-label" for="prof-password" style="font-size:0.75rem;">Mot de Passe</label>
+              <div class="input-icon-wrapper">
+                <span class="input-prefix">🔒</span>
+                <input class="form-input" type="password" id="password" name="password"
+                  placeholder="••••••••" autocomplete="current-password" />
+              </div>
+              <div class="form-error" id="password-error" style="display:none;"></div>
+            </div>
+
+            <div class="form-error" id="login-error" style="display:none; margin-bottom:0.75rem;"></div>
+
+            <button class="btn btn-primary" type="submit" id="login-btn">
+              <span>🔓</span> Accéder à l'espace professoral
+            </button>
+          </form>
+        </div>
+
+        <div style="margin-top:1rem; text-align:center;">
+          <a href="pages/club.html" class="btn btn-secondary" style="width:100%; border-color: rgba(201,168,76,0.25); color: var(--gold);">
+            🛡️ Membre d'un club ?
+          </a>
+        </div>
+      </div>
+
+      <!-- Formulaire Configuration Profil (Première connexion) -->
+      <div class="login-section" id="setup-section" style="display:none;">
+        <div class="login-section-header">
+          <div class="login-section-icon">📜</div>
+          <div>
+            <div class="login-section-title">Création du Profil RP</div>
+            <div class="login-section-desc">Première connexion détectée</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:1.2rem;">
+          <form id="setup-form" novalidate>
+            <div class="form-group" style="margin-bottom:0.8rem;">
+              <label class="form-label" for="setup-name" style="font-size:0.75rem;">Prénom et Nom RP</label>
+              <div class="input-icon-wrapper">
+                <span class="input-prefix">✍️</span>
+                <input class="form-input" type="text" id="setup-name" name="setup-name"
+                  placeholder="ex: Minerva McGonagall" autocomplete="name" />
+              </div>
+              <div class="form-error" id="setup-name-error" style="display:none;"></div>
+            </div>
+
+            <div class="form-group" style="margin-bottom:1.5rem;">
+              <label class="form-label" style="font-size:0.75rem; margin-bottom:0.5rem; display:block;">Maison de rattachement (optionnel)</label>
+              <div style="display:flex; gap:1rem; align-items:center; justify-content:center;">
+                <img src="img/gryffindor.png" alt="Gryffondor" class="house-choice" data-house="gryffondor" title="Gryffondor" style="width:45px;height:45px;cursor:pointer;opacity:0.4;transition:all 0.3s;filter:grayscale(100%);" onclick="selectHouse(this)">
+                <img src="img/slytherin.png" alt="Serpentard" class="house-choice" data-house="serpentard" title="Serpentard" style="width:45px;height:45px;cursor:pointer;opacity:0.4;transition:all 0.3s;filter:grayscale(100%);" onclick="selectHouse(this)">
+                <img src="img/ravenclaw.png" alt="Serdaigle" class="house-choice" data-house="serdaigle" title="Serdaigle" style="width:45px;height:45px;cursor:pointer;opacity:0.4;transition:all 0.3s;filter:grayscale(100%);" onclick="selectHouse(this)">
+                <img src="img/hufflepuff.png" alt="Poufsouffle" class="house-choice" data-house="poufsouffle" title="Poufsouffle" style="width:45px;height:45px;cursor:pointer;opacity:0.4;transition:all 0.3s;filter:grayscale(100%);" onclick="selectHouse(this)">
+              </div>
+              <input type="hidden" id="setup-house" value="">
+            </div>
+
+            <div class="form-group" style="margin-bottom:0.8rem;">
+              <label class="form-label" for="setup-password" style="font-size:0.75rem;">Nouveau mot de passe</label>
+              <div class="input-icon-wrapper">
+                <span class="input-prefix">🔒</span>
+                <input class="form-input" type="password" id="setup-password" name="setup-password"
+                  placeholder="••••••••" autocomplete="new-password" />
+              </div>
+              <div class="form-error" id="setup-password-error" style="display:none;"></div>
+            </div>
+
+            <div class="form-error" id="setup-error" style="display:none; margin-bottom:0.75rem;"></div>
+
+            <button class="btn btn-primary" type="submit" id="setup-btn">
+              <span>✅</span> Finaliser l'inscription
+            </button>
+          </form>
+        </div>
+
+        <div style="margin-top:1rem; text-align:center;">
+          <a href="pages/club.html" class="btn btn-secondary" style="width:100%; border-color: rgba(201,168,76,0.25); color: var(--gold);">
+            🛡️ Membre d'un club ?
+          </a>
+        </div>
+      </div>
+
+      <div class="divider" id="login-divider">ou</div>
+
+      <!-- Formulaire Code de Session -->
+      <div class="login-section">
+        <div class="login-section-header">
+          <div class="login-section-icon">📋</div>
+          <div>
+            <div class="login-section-title">Code de Session</div>
+            <div class="login-section-desc">Devoir, examen, exercice en cours</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:1.2rem;">
+          <form id="session-form" novalidate>
+            <div class="form-group" style="margin-bottom:0.8rem;">
+              <label class="form-label" for="session-code" style="font-size:0.75rem;">Code à 8 caractères</label>
+              <div class="input-icon-wrapper">
+                <span class="input-prefix">🔑</span>
+                <input class="form-input" type="text" id="session-code" name="session-code"
+                  placeholder="ex: EXAM-POTIONS-01" autocomplete="off"
+                  style="text-transform:uppercase; letter-spacing:0.12em;" />
+              </div>
+              <div class="form-error" id="session-error" style="display:none;"></div>
+            </div>
+
+            <div class="session-badge" id="session-success">
+              <span>✅</span>
+              <div>
+                <div id="session-label" style="font-weight:600;"></div>
+                <div id="session-teacher" style="font-size:0.72rem; color:var(--text-dim); margin-top:2px;"></div>
+              </div>
+            </div>
+
+            <button class="btn btn-primary" type="submit" id="session-btn" style="margin-top:1rem;">
+              <span>📖</span> Rejoindre la session
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <div class="portal-footer">
+        Poudlard RP Gmod &mdash; Portail Académique &mdash; Usage interne uniquement
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/supabaseClient.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/global-sound.js"></script>
+  <script>
+    // Redirect si déjà connecté
+    if (Auth.isLoggedIn()) {
+      const currentUser = Auth.getCurrentUser();
+      const currentRole = (currentUser?.role || '').toString().toLowerCase();
+      const currentRank = (currentUser?.rank || '').toString().toLowerCase();
+      // Check if user is a club member/manager
+      const isClub = currentRole.includes('club') || currentRank.includes('club') || currentRole === 'club_member' || currentRole === 'club_manager';
+      if (isClub) {
+        window.location.href = 'pages/club_dashboard.html';
+      } else {
+        window.location.href = 'pages/dashboard.html';
+      }
+    }
+
+    // Particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+
+      function resize() {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+
+      function createParticle() {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.3,
+          speedY: -(Math.random() * 0.3 + 0.1),
+          speedX: (Math.random() - 0.5) * 0.2,
+          opacity: Math.random() * 0.6 + 0.2,
+          life: 0,
+          maxLife: Math.random() * 300 + 200,
+        };
+      }
+
+      function init() {
+        resize();
+        for (let i = 0; i < 80; i++) particles.push(createParticle());
+        window.addEventListener('resize', resize);
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.life++;
+          const ratio = p.life / p.maxLife;
+          const alpha = ratio < 0.2 ? ratio / 0.2 : ratio > 0.8 ? (1 - ratio) / 0.2 : 1;
+          ctx.globalAlpha = p.opacity * alpha;
+          ctx.fillStyle = '#c9a84c';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          if (p.life >= p.maxLife || p.y < 0) particles[i] = createParticle();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(animate);
+      }
+
+      init();
+      animate();
+    })();
+
+    const loginTransitionOverlay = document.getElementById('login-transition-overlay');
+    const loginTransitionVideo = document.getElementById('login-transition-video');
+    const loginTransitionMessage = loginTransitionOverlay.querySelector('.login-transition-message');
+    let loginTransitionCallback = null;
+    let loginTransitionCleanupTimer = null;
+    let loginTransitionFallbackTimer = null;
+    let loginTransitionPrepared = false;
+    let loginTransitionSkipped = false;
+    let loginTransitionSkipHandler = null;
+    const loginTransitionBasePath = window.location.pathname.includes('/pages/') ? '../videos/' : 'videos/';
+
+    function resolveLoginTransitionAsset(relativePath) {
+      return new URL(relativePath, window.location.href).toString();
+    }
+
+    const loginTransitionFallback = resolveLoginTransitionAsset(`${loginTransitionBasePath}Harry Potter Ambient Music  Hogwarts  Relaxing, Studying, Sleeping.mp4`);
+
+    function pauseLoginBackgroundAudio() {
+      if (window.PoudlardGlobalSound?.pauseForTransition) {
+        window.PoudlardGlobalSound.pauseForTransition();
+      }
+    }
+
+    function resumeLoginBackgroundAudio() {
+      if (window.PoudlardGlobalSound?.resumeAfterTransition) {
+        window.PoudlardGlobalSound.resumeAfterTransition();
+      }
+    }
+
+    function cleanupLoginTransition() {
+      clearTimeout(loginTransitionCleanupTimer);
+      clearTimeout(loginTransitionFallbackTimer);
+      loginTransitionCleanupTimer = null;
+      loginTransitionFallbackTimer = null;
+      if (loginTransitionSkipHandler) {
+        document.removeEventListener('keydown', loginTransitionSkipHandler);
+        window.removeEventListener('mousedown', loginTransitionSkipHandler);
+        window.removeEventListener('touchstart', loginTransitionSkipHandler);
+        loginTransitionSkipHandler = null;
+      }
+      loginTransitionVideo.classList.remove('visible');
+      loginTransitionOverlay.classList.remove('active');
+      loginTransitionCleanupTimer = setTimeout(() => {
+        loginTransitionVideo.pause();
+        loginTransitionVideo.removeAttribute('src');
+        loginTransitionVideo.load();
+        resumeLoginBackgroundAudio();
+        loginTransitionPrepared = false;
+        loginTransitionSkipped = false;
+        if (typeof loginTransitionCallback === 'function') {
+          const cb = loginTransitionCallback;
+          loginTransitionCallback = null;
+          cb();
+        }
+      }, 900);
+    }
+
+    function showLoginTransitionVideo() {
+      loginTransitionVideo.classList.add('visible');
+    }
+
+    function skipLoginTransition() {
+      if (loginTransitionSkipped) return;
+      loginTransitionSkipped = true;
+      loginTransitionMessage.textContent = 'Transition passée';
+      cleanupLoginTransition();
+    }
+
+    function attachLoginTransitionSkip() {
+      if (loginTransitionSkipHandler) return;
+      loginTransitionSkipHandler = (event) => {
+        if (event.target && event.target.closest && event.target.closest('button, input, select, textarea, a')) {
+          return;
+        }
+        if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') {
+          return;
+        }
+        skipLoginTransition();
+      };
+      document.addEventListener('keydown', loginTransitionSkipHandler);
+      window.addEventListener('mousedown', loginTransitionSkipHandler);
+      window.addEventListener('touchstart', loginTransitionSkipHandler);
+    }
+
+    function startLoginTransition(callback) {
+      loginTransitionCallback = callback;
+      loginTransitionSkipped = false;
+      pauseLoginBackgroundAudio();
+      loginTransitionOverlay.setAttribute('aria-hidden', 'false');
+      loginTransitionOverlay.classList.add('active');
+      loginTransitionMessage.textContent = 'Chargement de votre entrée...';
+      loginTransitionVideo.classList.remove('visible');
+      loginTransitionVideo.onloadeddata = showLoginTransitionVideo;
+      loginTransitionVideo.oncanplay = showLoginTransitionVideo;
+      loginTransitionVideo.onplaying = showLoginTransitionVideo;
+      loginTransitionVideo.onended = () => {
+        loginTransitionMessage.textContent = 'Redirection...';
+        cleanupLoginTransition();
+      };
+      loginTransitionVideo.onerror = () => {
+        console.warn('Erreur de lecture de la vidéo de transition.');
+        cleanupLoginTransition();
+      };
+      attachLoginTransitionSkip();
+      loginTransitionVideo.play().then(() => {
+        if (loginTransitionVideo.readyState >= 2) {
+          showLoginTransitionVideo();
+        }
+      }).catch(() => {
+        cleanupLoginTransition();
+      });
+      loginTransitionFallbackTimer = setTimeout(() => {
+        if (!loginTransitionVideo.classList.contains('visible')) {
+          console.warn('La vidéo de transition n\'a pas encore rendu de contenu, on poursuit avec le fallback.');
+          showLoginTransitionVideo();
+        }
+      }, 3500);
+    }
+
+    function resetLoginTransitionVideo(src) {
+      loginTransitionVideo.pause();
+      loginTransitionVideo.currentTime = 0;
+      loginTransitionVideo.removeAttribute('src');
+      loginTransitionVideo.load();
+      loginTransitionVideo.src = src;
+      loginTransitionVideo.load();
+      loginTransitionVideo.currentTime = 0;
+    }
+
+    async function prepareLoginTransition() {
+      if (loginTransitionPrepared) return;
+      const videoIndex = Math.floor(Math.random() * 5) + 1;
+      const primarySrc = resolveLoginTransitionAsset(`${loginTransitionBasePath}${videoIndex}.mp4`);
+      resetLoginTransitionVideo(primarySrc);
+      loginTransitionVideo.muted = true;
+      loginTransitionVideo.loop = false;
+      loginTransitionVideo.setAttribute('playsinline', '');
+      loginTransitionVideo.classList.remove('visible');
+      loginTransitionMessage.textContent = 'Préparation de la transition...';
+      try {
+        await loginTransitionVideo.play();
+        loginTransitionPrepared = true;
+      } catch (err) {
+        console.warn('Préparation de la vidéo de transition échouée :', err);
+        if (loginTransitionVideo.src !== loginTransitionFallback) {
+          resetLoginTransitionVideo(loginTransitionFallback);
+          try {
+            await loginTransitionVideo.play();
+            loginTransitionPrepared = true;
+          } catch (err2) {
+            console.warn('Fallback vidéo échoué :', err2);
+          }
+        }
+      }
+    }
+
+    async function playLoginTransition(callback) {
+      if (!loginTransitionPrepared) {
+        await prepareLoginTransition();
+      }
+      if (!loginTransitionPrepared) {
+        callback();
+        return;
+      }
+      loginTransitionVideo.muted = false;
+      startLoginTransition(callback);
+    }
+
+    // Prof login
+    document.getElementById('prof-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // Try to prepare transition within the user gesture to satisfy autoplay policies
+      try { prepareLoginTransition(); } catch (err) { console.warn('prepareLoginTransition call failed', err); }
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      const errEl = document.getElementById('login-error');
+      const btn = document.getElementById('login-btn');
+
+      document.getElementById('email').classList.remove('error');
+      document.getElementById('password').classList.remove('error');
+      errEl.style.display = 'none';
+
+      if (!email) {
+        document.getElementById('email').classList.add('error');
+        document.getElementById('email-error').textContent = 'Champ requis.';
+        document.getElementById('email-error').style.display = 'block';
+        return;
+      }
+      if (!password) {
+        document.getElementById('password').classList.add('error');
+        document.getElementById('password-error').textContent = 'Champ requis.';
+        document.getElementById('password-error').style.display = 'block';
+        return;
+      }
+
+      btn.textContent = 'Vérification…';
+      btn.disabled = true;
+
+      setTimeout(async () => {
+        const result = await Auth.login(email, password, 'prof');
+        if (result.ok) {
+          if (result.requireSetup) {
+            document.getElementById('prof-section').style.display = 'none';
+            document.getElementById('login-divider').style.display = 'none';
+            document.getElementById('setup-section').style.display = 'block';
+            window.tempSetupEmail = email;
+            window.tempEmailRole = result.emailRole;
+          } else {
+            btn.textContent = '✨ Connexion réussie !';
+            const currentUser = Auth.getCurrentUser ? Auth.getCurrentUser() : null;
+            const currentRole = (currentUser?.role || '').toString().toLowerCase();
+            const currentRank = (currentUser?.rank || '').toString().toLowerCase();
+            const isClub = currentRole.includes('club') || currentRank.includes('club') || currentRole === 'club_member' || currentRole === 'club_manager';
+            const redirectUrl = isClub ? 'pages/club_dashboard.html' : 'pages/dashboard.html';
+            playLoginTransition(() => {
+              window.location.href = redirectUrl;
+            });
+          }
+        } else {
+          errEl.textContent = result.error;
+          errEl.style.display = 'block';
+          document.getElementById('email').classList.add('error');
+          document.getElementById('password').classList.add('error');
+          btn.textContent = '🔓 Accéder à l\'espace professoral';
+          btn.disabled = false;
+        }
+      }, 600);
+    });
+
+    // Sélection de maison (visuel)
+    function selectHouse(imgEl) {
+      document.querySelectorAll('.house-choice').forEach(el => {
+        el.style.opacity = '0.4';
+        el.style.filter = 'grayscale(100%)';
+        el.style.transform = 'scale(1)';
+      });
+      imgEl.style.opacity = '1';
+      imgEl.style.filter = 'grayscale(0%) drop-shadow(0 0 8px rgba(201,168,76,0.6))';
+      imgEl.style.transform = 'scale(1.15)';
+      document.getElementById('setup-house').value = imgEl.getAttribute('data-house');
+    }
+
+    // Setup form submit
+    document.getElementById('setup-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      // Prepare transition during the setup submit gesture as well
+      try { prepareLoginTransition(); } catch (err) { console.warn('prepareLoginTransition call failed', err); }
+      const name = document.getElementById('setup-name').value.trim();
+      const errEl = document.getElementById('setup-error');
+      const btn = document.getElementById('setup-btn');
+
+      document.getElementById('setup-name').classList.remove('error');
+      errEl.style.display = 'none';
+
+      if (!name) {
+        document.getElementById('setup-name').classList.add('error');
+        document.getElementById('setup-name-error').textContent = 'Champ requis.';
+        document.getElementById('setup-name-error').style.display = 'block';
+        return;
+      }
+
+      btn.textContent = 'Création…';
+      btn.disabled = true;
+
+      setTimeout(async () => {
+        const house = document.getElementById('setup-house').value || null;
+        const password = document.getElementById('setup-password').value;
+        const emailRole = window.tempEmailRole || null;
+        const finalRank = emailRole?.rank || 'Professeur Apprenti';
+        const finalRole = emailRole?.role || 'Aucune';
+        const result = await Auth.setupProfile(window.tempSetupEmail, name, finalRank, finalRole, house, password);
+        if (result.ok) {
+          btn.textContent = '✨ Bienvenue à Poudlard !';
+          playLoginTransition(() => {
+            window.location.href = 'pages/dashboard.html';
+          });
+        } else {
+          errEl.textContent = result.error;
+          errEl.style.display = 'block';
+          btn.textContent = '✅ Finaliser l\'inscription';
+          btn.disabled = false;
+        }
+      }, 600);
+    });
+
+    // Session code
+    document.getElementById('session-form').addEventListener('submit', function(e) {
+      e.preventDefault();
+      const code = document.getElementById('session-code').value;
+      const errEl = document.getElementById('session-error');
+      const btn = document.getElementById('session-btn');
+      const successEl = document.getElementById('session-success');
+
+      errEl.style.display = 'none';
+      successEl.classList.remove('visible');
+
+      if (!code.trim()) {
+        errEl.textContent = 'Veuillez entrer un code de session.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.textContent = 'Vérification…';
+      btn.disabled = true;
+
+      setTimeout(async () => {
+        const result = await Auth.checkSessionCode(code);
+        if (result.ok) {
+          document.getElementById('session-label').textContent = result.session.label;
+          document.getElementById('session-teacher').textContent = 'Par ' + result.session.teacher;
+          successEl.classList.add('visible');
+          btn.disabled = false;
+          if (result.session.active) {
+            btn.textContent = '🔓 Accéder à la session';
+            setTimeout(() => { window.location.href = 'pages/session_live.html?code=' + encodeURIComponent(code); }, 1000);
+          } else {
+            btn.textContent = '⏳ Salle d\'attente';
+            setTimeout(() => { window.location.href = 'pages/session.html'; }, 1000);
+          }
+        } else {
+          errEl.textContent = result.error;
+          errEl.style.display = 'block';
+          document.getElementById('session-code').classList.add('error');
+          btn.textContent = '📖 Rejoindre la session';
+          btn.disabled = false;
+        }
+      }, 500);
+    });
+
+    document.getElementById('session-code').addEventListener('input', function() {
+      this.value = this.value.toUpperCase();
+      this.classList.remove('error');
+      document.getElementById('session-error').style.display = 'none';
+    });
+  </script>
+</body>
+</html>
+
