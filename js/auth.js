@@ -341,6 +341,25 @@ const Auth = {
     window.location.href = '../index.html';
   },
 
+  async getActiveAuthSession() {
+    try {
+      const { data, error } = await window.supabaseClient.auth.getSession();
+      if (error) {
+        console.warn('Unable to retrieve Supabase session:', error);
+        return null;
+      }
+      return data?.session || null;
+    } catch (err) {
+      console.warn('Unable to retrieve Supabase session:', err);
+      return null;
+    }
+  },
+
+  async hasValidSession() {
+    const session = await this.getActiveAuthSession();
+    return !!session?.access_token;
+  },
+
   getCurrentUser() {
     const raw = localStorage.getItem(AUTH_KEY);
     if (!raw) return null;
