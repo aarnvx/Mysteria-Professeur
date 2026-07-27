@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hiboux - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .hiboux-hero {
+      background: rgba(7, 10, 24, 0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 26px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+    .hiboux-hero h1 {
+      margin-bottom: 0.4rem;
+      font-size: clamp(2rem, 3vw, 2.8rem);
+    }
+    .hiboux-hero p {
+      color: var(--text-dim);
+      line-height: 1.8;
+    }
+    .hiboux-grid {
+      display: grid;
+      gap: 1.75rem;
+      grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.5fr);
+    }
+    .hiboux-panel {
+      background: rgba(11, 14, 35, 0.84);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 24px 50px rgba(0,0,0,0.16);
+    }
+    .section-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.35rem;
+      gap: 1rem;
+    }
+    .section-title-row h2 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+    .missive-form-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    .missive-input,
+    .missive-textarea,
+    .missive-select {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(7, 10, 21, 0.9);
+      color: var(--text);
+      padding: 1rem 1rem;
+      font-family: 'EB Garamond', serif;
+      font-size: 0.95rem;
+      resize: vertical;
+    }
+    .missive-textarea { min-height: 160px; }
+    .missive-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+    .missive-list {
+      display: grid;
+      gap: 1rem;
+    }
+    .missive-card {
+      background: rgba(14, 18, 44, 0.78);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 1.35rem;
+      box-shadow: 0 18px 28px rgba(0,0,0,0.15);
+      transition: transform 0.2s ease;
+    }
+    .missive-card:hover { transform: translateY(-1px); }
+    .missive-card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+    }
+    .missive-card-message {
+      color: var(--cream);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+      white-space: pre-wrap;
+    }
+    .missive-card-meta {
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .missive-empty {
+      padding: 1.4rem 1rem;
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 14px;
+      background: rgba(7, 10, 21, 0.7);
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      background: rgba(201,168,76,0.14);
+      color: var(--gold);
+    }
+    @media (max-width: 960px) {
+      .hiboux-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">Mysteria Professeur</div>
+        <div class="navbar-subtitle">Portail Académique</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html">🏠 Accueil</a></li>
+      <li><a href="courses.html">📚 Cours</a></li>
+      <li><a href="points.html">⚡ Points</a></li>
+      <li><a href="blames.html">📜 Carnet</a></li>
+      <li><a href="roles.html">🎓 Équipe</a></li>
+      <li><a href="hiboux.html" class="active">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+    <div class="hiboux-grid">
+      <section class="hiboux-panel">
+        <div class="section-title-row">
+          <div>
+            <span class="page-title-small">Envoyer</span>
+            <h2>Rédiger une missive</h2>
+          </div>
+        </div>
+
+        <div class="missive-form-grid">
+          <label class="missive-form-label" for="missive-recipient">Destinataire</label>
+          <select id="missive-recipient" class="missive-select">
+            <option value="">Tous les professeurs</option>
+          </select>
+          <label class="missive-form-label" for="missive-title">Titre</label>
+          <input id="missive-title" class="missive-input" type="text" placeholder="Titre de la missive (optionnel)" />
+          <label class="missive-form-label" for="missive-message">Message</label>
+          <textarea id="missive-message" class="missive-textarea" placeholder="Écrivez votre missive ici..."></textarea>
+          <div class="missive-form-actions">
+            <button id="missive-submit" class="btn btn-primary" type="button" onclick="submitMissive()">Envoyer la missive</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="hiboux-panel">
+        <div class="section-title-row">
+          <div>
+            <span class="page-title-small">Réception</span>
+            <h2>Vos missives</h2>
+          </div>
+        </div>
+        <div class="missive-list" id="missive-list">
+          <div class="missive-empty">Chargement des missives…</div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script>
+    const user = requireAuthOrRedirect();
+    if (user && Auth.isClubContextUser(user) && !Auth.isProfessorContextUser(user)) {
+      window.location.href = 'club_dashboard.html';
+    }
+
+    const missiveCache = new Map();
+    let missiveSubscription = null;
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatActivityDate(rawDate) {
+      const ts = new Date(rawDate);
+      if (Number.isNaN(ts.getTime())) return 'Date inconnue';
+      return ts.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function normalizeString(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function isMissiveRelevant(missive) {
+      if (!missive) return false;
+      if (!missive.recipient || missive.recipient === '') return true;
+      if (!user) return false;
+      const recipient = normalizeString(missive.recipient);
+      const author = normalizeString(missive.author);
+      const email = normalizeString(user.email);
+      const name = normalizeString(user.name);
+      return recipient === email || recipient === name || author === email || author === name;
+    }
+
+    function renderMissiveCard(missive) {
+      const recipient = missive?.recipient ? missive.recipient : 'Tous les professeurs';
+      const title = missive?.title ? `<div class="missive-card-title">${escapeHtml(missive.title)}</div>` : '';
+      const label = !missive.recipient || missive.recipient === ''
+        ? 'Envoi global'
+        : missive.recipient === user.email || missive.recipient === user.name
+          ? 'Reçu'
+          : 'Envoyé';
+      const meta = [`Auteur: ${escapeHtml(missive.author || 'Anonyme')}`, `Destinataire: ${escapeHtml(recipient)}`, `${label}`, escapeHtml(formatActivityDate(missive.created_at || missive.updated_at || new Date().toISOString()))].join(' · ');
+
+      return `
+        <div class="missive-card" id="missive-card-${escapeHtml(missive.id || Math.random().toString(36).slice(2))}">
+          ${title}
+          <div class="missive-card-message">${escapeHtml(missive.message)}</div>
+          <div class="missive-card-meta">${meta}</div>
+        </div>
+      `;
+    }
+
+    function setMissiveListEmpty(message) {
+      const list = document.getElementById('missive-list');
+      if (list) {
+        list.innerHTML = `<div class="missive-empty">${message}</div>`;
+      }
+    }
+
+    function addMissiveToList(missive) {
+      if (!missive || !document.getElementById('missive-list')) return;
+      if (missive.id && missiveCache.has(missive.id)) return;
+      if (!isMissiveRelevant(missive)) return;
+      missiveCache.set(missive.id, missive);
+      const list = document.getElementById('missive-list');
+      if (!list) return;
+      if (list.firstChild && list.firstChild.classList && list.firstChild.classList.contains('missive-empty')) {
+        list.innerHTML = '';
+      }
+      list.insertAdjacentHTML('afterbegin', renderMissiveCard(missive));
+    }
+
+    async function loadMissiveRecipients() {
+      try {
+        const professors = await DataStore.getAllProfessors();
+        const select = document.getElementById('missive-recipient');
+        if (!select) return;
+        select.innerHTML = '';
+        const allOption = document.createElement('option');
+        allOption.value = '';
+        allOption.textContent = 'Tous les professeurs';
+        select.appendChild(allOption);
+        professors.forEach(prof => {
+          const option = document.createElement('option');
+          option.value = prof.email || prof.id;
+          option.textContent = prof.name || prof.email || prof.id;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Erreur lors du chargement des destinataires de missive :', err);
+      }
+    }
+
+    async function loadMissives() {
+      try {
+        const missives = await DataStore.getMissives(80);
+        const list = document.getElementById('missive-list');
+        if (!list) return;
+        missiveCache.clear();
+        if (!Array.isArray(missives) || missives.length === 0) {
+          setMissiveListEmpty('Aucune missive pour le moment.');
+          return;
+        }
+        list.innerHTML = '';
+        missives.forEach(missive => addMissiveToList(missive));
+        if (!list.firstChild) {
+          setMissiveListEmpty('Aucune missive pour le moment.');
+        }
+      } catch (err) {
+        console.error('Erreur lors du chargement des missives :', err);
+        setMissiveListEmpty('Impossible de charger les missives.');
+      }
+    }
+
+    async function submitMissive() {
+      const title = document.getElementById('missive-title')?.value || '';
+      const message = document.getElementById('missive-message')?.value || '';
+      const recipient = document.getElementById('missive-recipient')?.value || '';
+      if (!message.trim()) {
+        alert('Veuillez saisir un message pour la missive.');
+        return;
+      }
+      const button = document.getElementById('missive-submit');
+      if (button) button.disabled = true;
+      try {
+        const result = await DataStore.addMissive({
+          title,
+          message,
+          author: user?.email || user?.name || 'Anonyme',
+          recipient: recipient || ''
+        });
+        if (!result.ok) {
+          alert('Erreur : ' + result.error);
+          if (result.error && result.error.toLowerCase().includes('session')) {
+            localStorage.removeItem('Mysteria_auth');
+            window.location.href = '../index.html';
+          }
+          return;
+        }
+        if (result.missive) {
+          addMissiveToList(result.missive);
+        } else {
+          await loadMissives();
+        }
+        showToast('Missive envoyée.', 'success');
+        document.getElementById('missive-title').value = '';
+        document.getElementById('missive-message').value = '';
+        document.getElementById('missive-recipient').value = '';
+      } catch (err) {
+        console.error('Erreur lors de l\'envoi de la missive :', err);
+        alert('Erreur lors de l\'envoi de la missive. Veuillez réessayer.');
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    function notifyMissiveArrival(missive) {
+      if (!missive || !isMissiveRelevant(missive)) return;
+      addMissiveToList(missive);
+      const sender = missive.author || 'un professeur';
+      showToast(`Nouvelle missive de ${sender}`, 'success');
+    }
+
+    function setupMissiveRealtime() {
+      if (missiveSubscription) return;
+      missiveSubscription = DataStore.subscribeMissives(newMissive => {
+        if (!newMissive) return;
+        notifyMissiveArrival(newMissive);
+      });
+    }
+
+    (async () => {
+      try {
+        if (!user) return;
+        const hasSession = await Auth.hasValidSession();
+        if (!hasSession) {
+          Auth.logout();
+          return;
+        }
+        await loadMissiveRecipients();
+        await loadMissives();
+        setupMissiveRealtime();
+        window.addEventListener('beforeunload', () => {
+          if (missiveSubscription) DataStore.unsubscribeChannel(missiveSubscription);
+        });
+      } catch (err) {
+        console.error('Erreur initialisation hiboux :', err);
+      }
+    })();
+  </script>
+</body>
+</html>
