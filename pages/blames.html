@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carnet de Correspondance - Mysteria Prof</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* Blames styling */
+    .blame-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .blame-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 1rem;
+      border-bottom: 1px dashed rgba(201,168,76,0.3);
+      padding-bottom: 0.8rem;
+    }
+    
+    .blame-student {
+      font-family: 'Cinzel', serif;
+      font-size: 1.2rem;
+      color: var(--gold);
+    }
+    
+    .blame-house {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.3rem;
+    }
+    
+    .blame-house img {
+      width: 24px;
+      height: 24px;
+      object-fit: contain;
+    }
+    
+    .blame-meta {
+      text-align: right;
+    }
+    
+    .blame-teacher {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--cream-dim);
+    }
+    
+    .blame-date {
+      font-size: 0.7rem;
+      color: var(--text-dim);
+      margin-top: 0.2rem;
+    }
+    
+    .blame-reason {
+      font-family: 'EB Garamond', serif;
+      font-size: 1.1rem;
+      color: var(--cream);
+      line-height: 1.5;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body class="protected-content">
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">Mysteria Professeur</div>
+        <div class="navbar-subtitle">Portail Académique</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html">🏠 Accueil</a></li>
+      <li><a href="courses.html">📚 Cours</a></li>
+      <li><a href="points.html">⚡ Points</a></li>
+      <li><a href="blames.html" class="active">📜 Carnet</a></li>
+      <li><a href="roles.html">🎓 Équipe</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <div class="container" style="padding-top:3rem; padding-bottom:4rem; position:relative; z-index:1;">
+
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="page-title-small">Discipline</div>
+          <h1>📜 Carnet de Correspondance</h1>
+        </div>
+        <div style="display:flex; align-items:center; gap:1rem;">
+          <button id="btn-add-blame" class="btn btn-primary btn-sm" style="display:none;" onclick="openAddBlame()">➕ Rédiger un mot</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="search-wrapper" style="max-width:800px; margin: 0 auto 1.5rem auto;">
+      <span class="search-icon">🔍</span>
+      <input type="text" class="search-input" id="search-blames"
+        placeholder="Rechercher par nom ou Steam ID..."
+        autocomplete="off" onkeyup="filterBlames()" />
+    </div>
+
+    <!-- Grid -->
+    <div id="blames-list" style="max-width: 800px; margin: 0 auto;">
+      <!-- Loaded dynamically -->
+      <div style="text-align:center; padding:3rem; color:var(--text-dim); font-family:'Cinzel',serif;">Chargement du registre...</div>
+    </div>
+
+  </div>
+
+  <!-- Modal Add Blame -->
+  <div class="modal-overlay" id="add-blame-modal">
+    <div class="modal" style="max-width:600px;">
+      <button class="modal-close" onclick="closeAddBlame()">✕</button>
+      <h3>📜 Rédiger un Mot</h3>
+      <p style="margin-bottom:1.5rem;">Ce blâme sera inscrit au dossier de l'élève.</p>
+
+      <div class="form-group">
+        <label class="form-label" for="blame-student">Nom de l'élève (RP)</label>
+        <input class="form-input" type="text" id="blame-student" placeholder="ex: Harry Potter" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="blame-steamid">Steam ID 64 (Optionnel)</label>
+        <input class="form-input" type="text" id="blame-steamid" placeholder="ex: 76561198000000000" />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="blame-house">Maison de l'élève</label>
+        <select class="form-input" id="blame-house">
+          <option value="gryffondor">Gryffondor</option>
+          <option value="serpentard">Serpentard</option>
+          <option value="serdaigle">Serdaigle</option>
+          <option value="poufsouffle">Poufsouffle</option>
+          <option value="aucune">Aucune / Inconnue</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="blame-reason">Motif / Rapport disciplinaire</label>
+        <textarea class="form-input" id="blame-reason" rows="4" placeholder="Description de l'infraction..."></textarea>
+      </div>
+
+      <div class="form-error" id="blame-error" style="display:none; margin-bottom:1rem;"></div>
+
+      <div style="display:flex; gap:1rem; margin-top:2rem;">
+        <button class="btn btn-primary" onclick="submitBlame()">Inscrire au registre</button>
+        <button class="btn" onclick="closeAddBlame()" style="flex:0.3; justify-content:center;">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/dompurify@2/dist/purify.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/security.js"></script>
+  <script src="../js/global-sound.js"></script>
+
+  <script>
+    const user = requireAuthOrRedirect();
+
+    if (user) {
+      document.getElementById('btn-add-blame').style.display = 'block';
+    }
+
+    const houseImages = {
+      'gryffondor': '../img/gryffindor.png',
+      'serpentard': '../img/slytherin.png',
+      'serdaigle': '../img/ravenclaw.png',
+      'poufsouffle': '../img/hufflepuff.png'
+    };
+
+    const houseNames = {
+      'gryffondor': 'Gryffondor',
+      'serpentard': 'Serpentard',
+      'serdaigle': 'Serdaigle',
+      'poufsouffle': 'Poufsouffle',
+      'aucune': 'Aucune'
+    };
+
+    let allBlames = [];
+
+    async function loadBlames() {
+      const grid = document.getElementById('blames-list');
+      allBlames = await DataStore.getBlames();
+      renderBlames(allBlames);
+    }
+
+    function filterBlames() {
+      const q = document.getElementById('search-blames').value.toLowerCase();
+      if (!q) {
+        renderBlames(allBlames);
+        return;
+      }
+      const filtered = allBlames.filter(b => 
+        (b.student_name && b.student_name.toLowerCase().includes(q)) ||
+        (b.steam_id && b.steam_id.toLowerCase().includes(q))
+      );
+      renderBlames(filtered);
+    }
+
+    function renderBlames(blames) {
+      const grid = document.getElementById('blames-list');
+      grid.innerHTML = '';
+      
+      if (blames.length === 0) {
+        grid.innerHTML = '<div style="text-align:center; padding:3rem; color:var(--text-dim); font-family:\'Cinzel\',serif;">Aucun blâme trouvé.</div>';
+        return;
+      }
+      
+      blames.forEach(b => {
+        const dateStr = new Date(b.created_at).toLocaleDateString('fr-FR', {
+          day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit'
+        });
+        
+        const houseImg = houseImages[b.house] ? `<img src="${houseImages[b.house]}" alt="${b.house}">` : '<span style="font-size:1.2rem;">🏰</span>';
+        const houseName = houseNames[b.house] || b.house;
+        const steamHtml = b.steam_id ? `<div style="font-size:0.75rem; color:var(--text-dim); margin-top:0.2rem; font-family:monospace;">SteamID: ${b.steam_id}</div>` : '';
+
+        const el = document.createElement('div');
+        el.className = 'blame-card';
+        el.innerHTML = `
+          <div class="blame-header">
+            <div>
+              <div class="blame-student">${b.student_name}</div>
+              ${steamHtml}
+              <div class="blame-house">${houseImg} <span>${houseName}</span></div>
+            </div>
+            <div class="blame-meta">
+              <div class="blame-teacher">Rédigé par ${b.teacher}</div>
+              <div class="blame-date">${dateStr}</div>
+            </div>
+          </div>
+          <div class="blame-reason">"${b.reason}"</div>
+        `;
+        grid.appendChild(el);
+      });
+    }
+
+    function openAddBlame() {
+      document.getElementById('add-blame-modal').classList.add('active');
+      document.getElementById('blame-error').style.display = 'none';
+      document.getElementById('blame-student').value = '';
+      document.getElementById('blame-steamid').value = '';
+      document.getElementById('blame-reason').value = '';
+    }
+
+    function closeAddBlame() {
+      document.getElementById('add-blame-modal').classList.remove('active');
+    }
+
+    async function submitBlame() {
+      const student = document.getElementById('blame-student').value.trim();
+      const steamId = document.getElementById('blame-steamid').value.trim();
+      const house = document.getElementById('blame-house').value;
+      const reason = document.getElementById('blame-reason').value.trim();
+      const errEl = document.getElementById('blame-error');
+      
+      if (!student || !reason) {
+        errEl.textContent = 'Le nom de l\'élève et le motif sont obligatoires.';
+        errEl.style.display = 'block';
+        return;
+      }
+      
+      errEl.style.display = 'none';
+      
+      const result = await DataStore.addBlame(student, steamId, house, reason, user.name);
+      
+      if (result.ok) {
+        const total = await DataStore.countStudentBlames(student);
+        const plural = total > 1 ? 's' : '';
+        showToast(`Blâme ajouté. L'élève ${student} a désormais ${total} blâme${plural}.`, 'success');
+        closeAddBlame();
+        loadBlames();
+      } else {
+        errEl.textContent = 'Erreur : ' + result.error;
+        errEl.style.display = 'block';
+      }
+    }
+
+    loadBlames();
+
+    // Background particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      function createParticle() {
+        return {
+          x: Math.random() * canvas.width, y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.5, speedY: -(Math.random() * 0.5 + 0.1),
+          speedX: (Math.random() - 0.5) * 0.3, opacity: Math.random() * 0.5 + 0.1,
+          life: 0, maxLife: Math.random() * 200 + 100
+        };
+      }
+      function init() { resize(); for(let i=0;i<40;i++) particles.push(createParticle()); window.addEventListener('resize', resize); }
+      function animate() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        particles.forEach((p,i) => {
+          p.x += p.speedX; p.y += p.speedY; p.life++;
+          const ratio = p.life/p.maxLife;
+          const alpha = ratio < 0.2 ? ratio/0.2 : ratio > 0.8 ? (1-ratio)/0.2 : 1;
+          ctx.globalAlpha = p.opacity * alpha; ctx.fillStyle = '#c9a84c';
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+          if(p.life >= p.maxLife || p.y < 0) particles[i] = createParticle();
+        });
+        ctx.globalAlpha = 1; requestAnimationFrame(animate);
+      }
+      init(); animate();
+    })();
+  </script>
+</body>
+</html>
