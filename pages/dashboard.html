@@ -438,7 +438,7 @@
         </div>
         <div class="quick-stats">
             <div class="quick-stat">
-              <div class="quick-stat-num" id="stat-courses">12</div>
+              <div class="quick-stat-num" id="courses-count"></div>
               <div class="quick-stat-label">Cours</div>
             </div>
             <div class="quick-stat">
@@ -614,13 +614,18 @@
           DataStore.getSessions(null)
         ]);
 
-        document.getElementById('stat-courses').textContent = courses.length;
-        document.getElementById('stat-profs').textContent = roles.length;
-        document.getElementById('stat-sessions').textContent = sessions.length;
+        const coursesCountEl = document.getElementById('courses-count');
+        const profsCountEl = document.getElementById('stat-profs');
+        const sessionsCountEl = document.getElementById('stat-sessions');
+
+        if (coursesCountEl) coursesCountEl.textContent = courses.length;
+        if (profsCountEl) profsCountEl.textContent = roles.length;
+        if (sessionsCountEl) sessionsCountEl.textContent = sessions.length;
       } catch (err) {
         console.error('Erreur lors du chargement des compteurs du tableau de bord :', err);
       }
     }
+    loadDashboardStats();
     const realtimeChannels = [];
 
     function setupDashboardRealtime() {
