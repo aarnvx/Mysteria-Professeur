@@ -90,7 +90,7 @@ const Auth = {
         id: authData.user.id,
         email: authData.user.email,
         name: profile.name || emailRole?.defaultName || 'Membre',
-        rank: profile.rank || emailRole?.rank || 'Professeur Apprenti',
+        rank: profile.rank || emailRole?.rank || 'Professeur',
         role: profile.role || emailRole?.role || 'Aucune',
         house: profile.house || null,
         avatar: profile.avatar || emailRole?.avatar || '🎓',
@@ -121,7 +121,7 @@ const Auth = {
         finalName = 'Professeur ' + finalName;
       }
 
-      const finalRank = rank || emailRole?.rank || 'Professeur Apprenti';
+      const finalRank = rank || emailRole?.rank || 'Professeur';
       const finalRole = role || emailRole?.role || 'Aucune';
       const finalAvatar = emailRole?.avatar || '🎓';
 
@@ -216,6 +216,9 @@ const Auth = {
   getEmailRoleFromAddress(email) {
     if (!email || typeof email !== 'string') return null;
     const normalized = this.normalizeMysteriaId(email);
+    if (normalized.endsWith('.admin') || normalized.includes('mysteria.admin') || normalized.endsWith('.fonda') || normalized.includes('mysteria.fonda')) {
+      return { role: 'admin', rank: 'Admin', defaultName: 'Administrateur', avatar: '🛡️' };
+    }
     if (normalized.endsWith('.staff') || normalized.includes('mysteria.staff')) {
       return { role: 'staff', rank: 'Staff', defaultName: 'Membre Staff', avatar: '🛡️' };
     }
@@ -270,7 +273,7 @@ const Auth = {
 
   isProfessorContextUser(user) {
     const { role, rank } = this.getRoleSignals(user);
-    return role.includes('prof') || rank.includes('professeur') || role === 'staff' || rank.includes('staff') || this.hasRoleSignal(user, ['prof_manager', 'gp', 'directeur', 'co_directeur']);
+    return role.includes('prof') || rank.includes('professeur') || role === 'staff' || rank.includes('staff') || role === 'admin' || rank.includes('admin') || rank.includes('fonda') || role.includes('fonda') || this.hasRoleSignal(user, ['prof_manager', 'gp', 'directeur', 'co_directeur', 'admin', 'fonda', 'fondateur']);
   },
 
   hasPermission(action) {
@@ -282,10 +285,10 @@ const Auth = {
     const email = (user.email || '').toString();
     const combined = `${rank} ${role} ${email}`.toLowerCase();
 
-    const matchesHighRank = /(grand\s*professeur|grand\s*prof|directeur\s*adjoint|directeur|co-directeur|co\s*directeur)/i.test(combined);
+    const matchesHighRank = /((grand\s*professeur|grand\s*prof|directeur\s*adjoint|directeur\s*\[[^\]]+\]|directeur|co-directeur\s*\[[^\]]+\]|co-directeur|co\s*directeur|admin|fonda|fondateur))/i.test(combined);
     const matchesWriter = /(redacteur|rédacteur)/i.test(combined);
     const matchesProfessor = /(professeur|\.prof|prof)/i.test(combined);
-    const matchesStaff = /(staff|\.staff)/i.test(combined);
+    const matchesStaff = /(staff|\.staff|admin|fonda|fondateur|directeur|co-directeur)/i.test(combined);
 
     if (action === 'manage_roles') {
       return matchesHighRank;
