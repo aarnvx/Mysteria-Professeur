@@ -1,7 +1,7 @@
 /**
- * security.js - Protection anti-copie et anti-screenshot
+ * security.js - Protection anti-copie et anti-capture d'écran
  * Version légère : activée uniquement pendant la lecture d'un cours,
- * sans bloquer la navigation entre pages.
+ * sans bloquer la navigation entre les pages.
  */
 
 (function() {
