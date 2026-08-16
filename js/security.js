@@ -48,11 +48,6 @@
     function triggerAntiScreen() {
       if (!screenProtectActive) return;
       overlay.style.opacity = '1';
-      try {
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-          navigator.clipboard.writeText('Contenu protégé - Mysteria RP').catch(() => {});
-        }
-      } catch (err) {}
     }
 
     function removeAntiScreen() {
@@ -63,9 +58,6 @@
       if (screenProtectWatcher) return;
       screenProtectWatcher = setInterval(() => {
         if (!screenProtectActive) return;
-        if (document.hidden || !document.hasFocus()) {
-          triggerAntiScreen();
-        }
       }, 500);
     }
 
@@ -92,13 +84,6 @@
     }
 
     function attachCourseProtection() {
-      window.addEventListener('blur', triggerAntiScreen);
-      window.addEventListener('focus', removeAntiScreen);
-      document.addEventListener('visibilitychange', () => {
-        if (!screenProtectActive) return;
-        if (document.hidden) triggerAntiScreen();
-        else removeAntiScreen();
-      });
       document.addEventListener('copy', preventClipboardEvent, true);
       document.addEventListener('cut', preventClipboardEvent, true);
       document.addEventListener('keydown', preventDevToolsKeys, true);
@@ -106,9 +91,6 @@
     }
 
     function detachCourseProtection() {
-      window.removeEventListener('blur', triggerAntiScreen);
-      window.removeEventListener('focus', removeAntiScreen);
-      document.removeEventListener('visibilitychange', triggerAntiScreen);
       document.removeEventListener('copy', preventClipboardEvent, true);
       document.removeEventListener('cut', preventClipboardEvent, true);
       document.removeEventListener('keydown', preventDevToolsKeys, true);
@@ -131,7 +113,11 @@
     };
 
     if (window.location.pathname.includes('courses.html')) {
-      document.addEventListener('contextmenu', (event) => event.preventDefault());
+      document.addEventListener('contextmenu', (event) => {
+        if (screenProtectActive) {
+          event.preventDefault();
+        }
+      });
     }
 })();
 
