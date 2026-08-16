@@ -1,5 +1,6 @@
 /**
  * data.js - Données persistantes via Supabase
+ * Version française : commentaires traduits pour la maintenance du projet.
  */
 
 const DataStore = {
@@ -72,8 +73,8 @@ const DataStore = {
       return null;
     }
 
-    // Use a unique channel name to avoid attempting to re-use the same channel
-    // object which would prevent adding handlers after subscribe() was called.
+    // Utilise un nom de canal unique pour éviter de réutiliser le même canal
+    // et empêcher l'ajout de nouveaux gestionnaires après un subscribe().
     const uniq = Math.random().toString(36).slice(2, 9);
     const channelName = `realtime-${schema}-${table}-${Array.isArray(events) ? events.join('-') : events}-${uniq}`;
     const channel = window.supabaseClient.channel(channelName);
