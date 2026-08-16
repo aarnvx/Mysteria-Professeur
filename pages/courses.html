@@ -344,7 +344,7 @@
     }
   </style>
 </head>
-<body oncontextmenu="return false;">
+<body>
   <canvas id="particles-canvas"></canvas>
 
   <!-- Navbar -->
@@ -387,7 +387,7 @@
       <span class="search-icon">🔍</span>
       <input type="text" class="search-input" id="search-input"
         placeholder="Rechercher un cours, une matière, un professeur…"
-        autocomplete="off" oncontextmenu="return false;" />
+        autocomplete="off" />
     </div>
 
     <!-- Status filters -->
@@ -745,13 +745,13 @@
         return;
       }
 
-      const ok = await DataStore.addCourse({ subject, teacher, level, tag, status, icon, content });
-      if (ok) {
+      const result = await DataStore.addCourse({ subject, teacher, level, tag, status, icon, content });
+      if (result.ok) {
         closeAddCourse();
         showToast('Cours publié avec succès !', 'success');
         await initData();
       } else {
-        errEl.textContent = 'Erreur lors de la publication. Vérifiez vos permissions Supabase.';
+        errEl.textContent = result.error || 'Erreur lors de la publication. Vérifiez vos permissions Supabase.';
         errEl.style.display = 'block';
       }
     }
