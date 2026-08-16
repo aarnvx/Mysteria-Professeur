@@ -200,10 +200,14 @@
 
     let allBlames = [];
     let blamesRealtimeChannel = null;
+    let blameLoadVersion = 0;
  
     async function loadBlames() {
+      const currentVersion = ++blameLoadVersion;
       const grid = document.getElementById('blames-list');
-      allBlames = await DataStore.getBlames();
+      const fetchedBlames = await DataStore.getBlames();
+      if (currentVersion !== blameLoadVersion) return;
+      allBlames = fetchedBlames || [];
       renderBlames(allBlames);
     }
 
@@ -264,15 +268,17 @@
           const btn = el.querySelector('.btn-delete-blame');
           if (btn) {
             btn.addEventListener('click', async () => {
+              const deleteId = String(btn.dataset.id);
               try {
-                const res = await DataStore.deleteBlame(btn.dataset.id);
+                const res = await DataStore.deleteBlame(deleteId);
                 console.log('deleteBlame result', res);
                 if (!res.ok) return alert('Erreur lors de la suppression : ' + (res.error || 'Unknown'));
-                // remove from DOM and refresh
+
+                allBlames = (allBlames || []).filter(item => String(item.id) !== deleteId);
                 if (el && el.parentNode) el.parentNode.removeChild(el);
-                // reload list to keep counts accurate
-                loadBlames();
+                renderBlames(allBlames);
                 showToast('Blâme supprimé.', 'success');
+                loadBlames();
               } catch (err) {
                 console.error('Erreur suppression blame:', err);
                 alert('Erreur lors de la suppression : ' + (err && err.message ? err.message : String(err)));
