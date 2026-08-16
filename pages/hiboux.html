@@ -665,36 +665,5 @@
       }
     })();
   </script>
-  <script>
-    // Hiboux music toggle
-    (function() {
-      const btn = document.getElementById('hiboux-sound-toggle');
-      if (!btn) return;
-      function updateLabel() {
-        const audio = document.querySelector('audio');
-        if (!audio) { btn.textContent = '🔊 Musique'; return; }
-        btn.textContent = audio.paused ? '🔈 Jouer' : '🔊 Pause';
-      }
-      btn.addEventListener('click', () => {
-        const audio = document.querySelector('audio');
-        if (!audio) {
-          // try to initialize via global helper
-          if (window.MysteriaGlobalSound && typeof window.MysteriaGlobalSound.resumeAfterTransition === 'function') {
-            window.MysteriaGlobalSound.resumeAfterTransition();
-          }
-          setTimeout(updateLabel, 300);
-          return;
-        }
-        if (audio.paused) {
-          audio.play().catch(()=>{});
-        } else {
-          audio.pause();
-        }
-        setTimeout(updateLabel, 100);
-      });
-      // update state periodically
-      setInterval(updateLabel, 1000);
-    })();
-  </script>
 </body>
 </html>
