@@ -1,11 +1,10 @@
 /**
  * security.js - Protection anti-copie et anti-screenshot
+ * Version légère : activée uniquement pendant la lecture d'un cours,
+ * sans bloquer la navigation entre pages.
  */
 
 (function() {
-    // 1. Désactiver le clic droit
-    document.addEventListener('contextmenu', event => event.preventDefault());
-
     let screenProtectActive = false;
     let screenProtectWatcher = null;
 
@@ -26,24 +25,39 @@
       return false;
     }
 
-    document.addEventListener('keydown', (e) => {
-        if (!screenProtectActive) return;
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100vw';
+    overlay.style.height = '100vh';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.95)';
+    overlay.style.color = '#f0c36d';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.fontSize = '2rem';
+    overlay.style.fontFamily = 'Cinzel, serif';
+    overlay.style.zIndex = '999999';
+    overlay.style.opacity = '0';
+    overlay.style.pointerEvents = 'none';
+    overlay.style.transition = 'opacity 0.2s ease';
+    overlay.innerText = "⚠️ CAPTURE D'ÉCRAN INTERDITE ⚠️";
+    document.body.appendChild(overlay);
 
-        if (isBlockedKey(e)) {
-            e.preventDefault();
-            e.stopPropagation();
-            triggerAntiScreen();
-        }
-    }, true);
-
-    document.addEventListener('visibilitychange', () => {
+    function triggerAntiScreen() {
       if (!screenProtectActive) return;
-      if (document.hidden) {
-        triggerAntiScreen();
-      } else {
-        removeAntiScreen();
-      }
-    });
+      overlay.style.opacity = '1';
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          navigator.clipboard.writeText('Contenu protégé - Mysteria RP').catch(() => {});
+        }
+      } catch (err) {}
+    }
+
+    function removeAntiScreen() {
+      overlay.style.opacity = '0';
+    }
 
     function startScreenProtectWatcher() {
       if (screenProtectWatcher) return;
@@ -61,67 +75,8 @@
       screenProtectWatcher = null;
     }
 
-    // 3. Protection "Écran noir" type Netflix lors d'une capture (basé sur la perte de focus)
-    // De nombreux outils de capture (Snipping Tool, outil Mac) font perdre le focus à la page.
-    
-    const overlay = document.createElement('div');
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100vw';
-    overlay.style.height = '100vh';
-    overlay.style.backgroundColor = 'black';
-    overlay.style.color = 'red';
-    overlay.style.display = 'flex';
-    overlay.style.alignItems = 'center';
-    overlay.style.justifyContent = 'center';
-    overlay.style.fontSize = '2rem';
-    overlay.style.fontFamily = 'Cinzel, serif';
-    overlay.style.zIndex = '999999';
-    overlay.style.opacity = '0';
-    overlay.style.pointerEvents = 'none';
-    overlay.style.transition = 'opacity 0.2s ease';
-    overlay.innerText = '⚠️ CAPTURE D\'ÉCRAN INTERDITE ⚠️';
-    document.body.appendChild(overlay);
-
-    function triggerAntiScreen() {
-        overlay.style.opacity = '1';
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText('Contenu protégé - Mysteria RP').catch(() => {});
-        }
-    }
-
-    function removeAntiScreen() {
-        overlay.style.opacity = '0';
-    }
-
-    window.ScreenProtect = {
-      activate() {
-        screenProtectActive = true;
-        window.addEventListener('blur', triggerAntiScreen);
-        window.addEventListener('focus', removeAntiScreen);
-        document.addEventListener('mouseleave', triggerAntiScreen);
-        document.addEventListener('mouseenter', removeAntiScreen);
-        document.addEventListener('copy', preventClipboardEvent, true);
-        document.addEventListener('cut', preventClipboardEvent, true);
-        document.addEventListener('keydown', preventDevToolsKeys, true);
-        startScreenProtectWatcher();
-      },
-      deactivate() {
-        screenProtectActive = false;
-        window.removeEventListener('blur', triggerAntiScreen);
-        window.removeEventListener('focus', removeAntiScreen);
-        document.removeEventListener('mouseleave', triggerAntiScreen);
-        document.removeEventListener('mouseenter', removeAntiScreen);
-        document.removeEventListener('copy', preventClipboardEvent, true);
-        document.removeEventListener('cut', preventClipboardEvent, true);
-        document.removeEventListener('keydown', preventDevToolsKeys, true);
-        stopScreenProtectWatcher();
-        removeAntiScreen();
-      }
-    };
-
     function preventClipboardEvent(event) {
+      if (!screenProtectActive) return;
       event.preventDefault();
       event.stopPropagation();
       triggerAntiScreen();
@@ -136,7 +91,48 @@
       }
     }
 
+    function attachCourseProtection() {
+      window.addEventListener('blur', triggerAntiScreen);
+      window.addEventListener('focus', removeAntiScreen);
+      document.addEventListener('visibilitychange', () => {
+        if (!screenProtectActive) return;
+        if (document.hidden) triggerAntiScreen();
+        else removeAntiScreen();
+      });
+      document.addEventListener('copy', preventClipboardEvent, true);
+      document.addEventListener('cut', preventClipboardEvent, true);
+      document.addEventListener('keydown', preventDevToolsKeys, true);
+      startScreenProtectWatcher();
+    }
 
+    function detachCourseProtection() {
+      window.removeEventListener('blur', triggerAntiScreen);
+      window.removeEventListener('focus', removeAntiScreen);
+      document.removeEventListener('visibilitychange', triggerAntiScreen);
+      document.removeEventListener('copy', preventClipboardEvent, true);
+      document.removeEventListener('cut', preventClipboardEvent, true);
+      document.removeEventListener('keydown', preventDevToolsKeys, true);
+      stopScreenProtectWatcher();
+      removeAntiScreen();
+    }
+
+    window.ScreenProtect = {
+      activate() {
+        if (screenProtectActive) return;
+        screenProtectActive = true;
+        attachCourseProtection();
+        triggerAntiScreen();
+      },
+      deactivate() {
+        if (!screenProtectActive) return;
+        screenProtectActive = false;
+        detachCourseProtection();
+      }
+    };
+
+    if (window.location.pathname.includes('courses.html')) {
+      document.addEventListener('contextmenu', (event) => event.preventDefault());
+    }
 })();
 
 
