@@ -289,10 +289,17 @@
       display: flex;
       gap: 0.5rem;
       flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
+    .status-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
       margin-bottom: 1.5rem;
     }
 
-    .pill {
+    .pill, .status-pill {
       font-family: 'Cinzel', serif;
       font-size: 0.72rem;
       letter-spacing: 0.1em;
@@ -305,10 +312,35 @@
       transition: all 0.2s;
     }
 
-    .pill:hover, .pill.active {
+    .pill:hover, .pill.active,
+    .status-pill:hover, .status-pill.active {
       border-color: var(--border-bright);
       color: var(--gold);
       background: rgba(201,168,76,0.08);
+    }
+
+    .status-badge {
+      display: inline-block;
+      margin-bottom: 0.6rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+    }
+
+    .status-badge.actif {
+      color: #7de39d;
+      border-color: rgba(125, 227, 157, 0.35);
+      background: rgba(125, 227, 157, 0.08);
+    }
+
+    .status-badge.passif {
+      color: #d7b976;
+      border-color: rgba(215, 185, 118, 0.35);
+      background: rgba(215, 185, 118, 0.08);
     }
   </style>
 </head>
@@ -356,6 +388,13 @@
       <input type="text" class="search-input" id="search-input"
         placeholder="Rechercher un cours, une matière, un professeur…"
         autocomplete="off" oncontextmenu="return false;" />
+    </div>
+
+    <!-- Status filters -->
+    <div class="status-row" id="status-row">
+      <button class="status-pill active" data-status="all">Tous</button>
+      <button class="status-pill" data-status="actif">Actif</button>
+      <button class="status-pill" data-status="passif">Passif</button>
     </div>
 
     <!-- Filters -->
@@ -436,6 +475,13 @@
           </select>
         </div>
         <div class="form-group">
+          <label class="form-label" for="new-status">Statut du cours</label>
+          <select class="form-input" id="new-status">
+            <option value="actif">Actif</option>
+            <option value="passif">Passif</option>
+          </select>
+        </div>
+        <div class="form-group">
           <label class="form-label" for="new-icon">Icône (Emoji ou lien Image)</label>
           <input class="form-input" type="text" id="new-icon" placeholder="ex: 📖 ou https://..." />
         </div>
@@ -474,19 +520,16 @@
       document.getElementById('btn-add-course').style.display = 'inline-block';
     }
 
-    // Anti-copy keyboard shortcuts
-    document.addEventListener('keydown', function(e) {
-      if ((e.ctrlKey || e.metaKey) && ['c','a','p','s','u'].includes(e.key.toLowerCase())) {
-        e.preventDefault();
-      }
-      if (e.key === 'F12') e.preventDefault();
-      if (e.key === 'PrintScreen') e.preventDefault();
-    });
-
     let courses = [];
     let currentFilter = 'all';
+    let currentStatusFilter = 'all';
     let currentSearch = '';
     let courseRealtimeChannel = null;
+
+    function normalizeCourseStatus(course) {
+      const raw = String(course?.status || 'actif').trim().toLowerCase();
+      return raw === 'passif' ? 'passif' : 'actif';
+    }
 
     async function initData() {
       courses = await DataStore.getCourses();
@@ -534,20 +577,33 @@
       renderCourses();
     }
 
+    function setStatusFilter(status, btn) {
+      currentStatusFilter = status;
+      document.querySelectorAll('.status-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      renderCourses();
+    }
+
     document.querySelector('.pill[data-tag="all"]').addEventListener('click', function() {
       setFilter('all', this);
+    });
+
+    document.querySelectorAll('.status-pill').forEach(btn => {
+      btn.addEventListener('click', () => setStatusFilter(btn.dataset.status, btn));
     });
 
     function renderCourses() {
       const query = currentSearch.toLowerCase();
       const filtered = courses.filter(c => {
+        const courseStatus = normalizeCourseStatus(c);
         const matchTag = currentFilter === 'all' || c.tag === currentFilter;
+        const matchStatus = currentStatusFilter === 'all' || courseStatus === currentStatusFilter;
         const matchSearch = !query ||
-          c.subject.toLowerCase().includes(query) ||
-          c.teacher.toLowerCase().includes(query) ||
-          c.tag.toLowerCase().includes(query) ||
-          c.level.toLowerCase().includes(query);
-        return matchTag && matchSearch;
+          (c.subject || '').toLowerCase().includes(query) ||
+          (c.teacher || '').toLowerCase().includes(query) ||
+          (c.tag || '').toLowerCase().includes(query) ||
+          (c.level || '').toLowerCase().includes(query);
+        return matchTag && matchStatus && matchSearch;
       });
 
       document.getElementById('course-count').textContent = filtered.length + ' cours';
@@ -570,8 +626,10 @@
         const iconVal = c.icon || '';
         const isUrl = iconVal.startsWith('http') || iconVal.includes('/');
         const iconHtml = isUrl ? `<img src="${iconVal}" style="width:40px; height:40px; object-fit:contain; border-radius:4px;">` : iconVal;
+        const courseStatus = normalizeCourseStatus(c);
 
         card.innerHTML = `
+          <div class="status-badge ${courseStatus}">${courseStatus === 'passif' ? 'Passif' : 'Actif'}</div>
           <div class="course-card-header">
             <div class="course-icon">${iconHtml}</div>
             <div class="course-card-meta">
@@ -608,10 +666,11 @@
     function openViewer(course) {
       const cIcon = course.icon || '';
       const isUrl = cIcon.startsWith('http') || cIcon.includes('/');
+      const courseStatus = normalizeCourseStatus(course);
       document.getElementById('viewer-icon').innerHTML = isUrl ? `<img src="${cIcon}" style="width:48px; height:48px; object-fit:contain; border-radius:4px;">` : cIcon;
       
       document.getElementById('viewer-title').textContent = course.subject;
-      document.getElementById('viewer-teacher').textContent = 'Prof. ' + course.teacher + ' · ' + course.level;
+      document.getElementById('viewer-teacher').textContent = 'Prof. ' + course.teacher + ' · ' + course.level + ' · ' + (courseStatus === 'passif' ? 'Passif' : 'Actif');
       document.getElementById('viewer-content').innerHTML = parseMarkdown(course.content);
       
       const deleteBtn = document.getElementById('btn-delete-course');
@@ -627,8 +686,6 @@
 
       document.getElementById('viewer-overlay').classList.add('open');
       document.body.style.overflow = 'hidden';
-      // Activer la protection anti-screenshot pendant la lecture du cours
-      if (window.ScreenProtect) window.ScreenProtect.activate();
     }
 
     async function confirmDeleteCourse(id, subject) {
@@ -646,8 +703,6 @@
     function closeViewer() {
       document.getElementById('viewer-overlay').classList.remove('open');
       document.body.style.overflow = '';
-      // Désactiver la protection quand le cours est fermé
-      if (window.ScreenProtect) window.ScreenProtect.deactivate();
     }
 
     document.getElementById('viewer-overlay').addEventListener('click', function(e) {
@@ -679,6 +734,7 @@
       const teacher = document.getElementById('new-teacher').value.trim();
       const level   = document.getElementById('new-level').value.trim();
       const tag     = document.getElementById('new-tag').value;
+      const status  = document.getElementById('new-status').value;
       const icon    = document.getElementById('new-icon').value.trim() || '📚';
       const content = document.getElementById('new-content').value.trim();
       const errEl   = document.getElementById('add-course-error');
@@ -689,7 +745,7 @@
         return;
       }
 
-      const ok = await DataStore.addCourse({ subject, teacher, level, tag, icon, content });
+      const ok = await DataStore.addCourse({ subject, teacher, level, tag, status, icon, content });
       if (ok) {
         closeAddCourse();
         showToast('Cours publié avec succès !', 'success');
@@ -728,7 +784,6 @@
       init(); animate();
     })();
   </script>
-  <script src="../js/security.js"></script>
 </body>
 </html>
 
