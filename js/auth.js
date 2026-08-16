@@ -276,35 +276,35 @@ const Auth = {
   hasPermission(action) {
     const user = this.getCurrentUser();
     if (!user) return false;
-    
+
     const rank = (user.rank || '').toString();
     const role = (user.role || '').toString();
-    const isHighRank = rank.includes('Grand Professeur') || rank.includes('Directeur') || role.includes('Directeur');
-    const isWriter = rank.includes('Rédacteur') || role.includes('Rédacteur');
-    const isProfessor = role === 'prof' || rank.toLowerCase().includes('professeur');
-    const isStaff = role === 'staff';
+    const email = (user.email || '').toString();
+    const combined = `${rank} ${role} ${email}`.toLowerCase();
+
+    const matchesHighRank = /(grand\s*professeur|grand\s*prof|directeur\s*adjoint|directeur|co-directeur|co\s*directeur)/i.test(combined);
+    const matchesWriter = /(redacteur|rédacteur)/i.test(combined);
+    const matchesProfessor = /(professeur|\.prof|prof)/i.test(combined);
+    const matchesStaff = /(staff|\.staff)/i.test(combined);
 
     if (action === 'manage_roles') {
-      return isHighRank;
+      return matchesHighRank;
     }
-    
+
     if (action === 'create_content') {
-      return isHighRank || isWriter || isProfessor || isStaff;
+      return matchesHighRank || matchesWriter || matchesProfessor || matchesStaff;
     }
 
     if (action === 'club_access') {
-      const isClubRole = ['club', 'prof', 'staff'].some(key => role.toLowerCase().includes(key) || rank.toLowerCase().includes(key));
-      const isProfessor = rank.toLowerCase().includes('professeur');
-      return isClubRole || isProfessor || isHighRank;
+      return /(club|prof|staff)/i.test(combined) || matchesHighRank;
     }
 
     if (action === 'manage_club_roles') {
-      const isClubManager = role.toLowerCase().includes('gérant de club') || rank.toLowerCase().includes('gérant de club') || role.toLowerCase().includes('gérant club') || rank.toLowerCase().includes('gérant club');
-      return isClubManager || isHighRank;
+      return /(gerant\s*de\s*club|gérant\s*de\s*club|gerant\s*club|gérant\s*club)/i.test(combined) || matchesHighRank;
     }
 
     if (action === 'staff_access') {
-      return isStaff || isHighRank;
+      return matchesStaff || matchesHighRank;
     }
 
     return false;
