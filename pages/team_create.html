@@ -69,12 +69,6 @@
   <script src="../js/supabaseClient.js"></script>
   <script src="../js/auth.js"></script>
   <script>
-    // Guard: only high-rank users can create accounts here
-    const user = Auth.getCurrentUser();
-    if (!Auth.hasPermission('manage_roles')) {
-      document.body.innerHTML = '<div style="padding:3rem; text-align:center; color:var(--text-dim);">Accès refusé.</div>';
-    }
-
     function generatePassword(len = 14) {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()-_=+';
       const array = new Uint32Array(len);
@@ -82,18 +76,25 @@
       return Array.from(array).map(x => chars[x % chars.length]).join('');
     }
 
-    // initialize generated password and wire buttons
-    const passInput = document.getElementById('team-pass');
-    const regenBtn = document.getElementById('btn-regenerate');
-    const copyBtn = document.getElementById('btn-copy');
-    function setGenerated() { passInput.value = generatePassword(14); }
-    setGenerated();
-    regenBtn.addEventListener('click', (e) => { e.preventDefault(); setGenerated(); passInput.focus(); });
-    copyBtn.addEventListener('click', async (e) => {
-      e.preventDefault();
-      try { await navigator.clipboard.writeText(passInput.value); showToast('Mot de passe copié dans le presse-papiers', 'success'); }
-      catch (err) { console.warn('copy failed', err); alert('Impossible de copier.'); }
-    });
+    // Guard: only high-rank users can create accounts here
+    const user = Auth.getCurrentUser();
+    if (!Auth.hasPermission('manage_roles')) {
+      document.body.innerHTML = '<div style="padding:3rem; text-align:center; color:var(--text-dim);">Accès refusé.</div>';
+    } else {
+      // Only initialize if access is granted
+      setTimeout(() => {
+        const passInput = document.getElementById('team-pass');
+        const regenBtn = document.getElementById('btn-regenerate');
+        const copyBtn = document.getElementById('btn-copy');
+        if (passInput) passInput.value = generatePassword(14);
+        if (regenBtn) regenBtn.addEventListener('click', (e) => { e.preventDefault(); passInput.value = generatePassword(14); passInput.focus(); });
+        if (copyBtn) copyBtn.addEventListener('click', async (e) => {
+          e.preventDefault();
+          try { await navigator.clipboard.writeText(passInput.value); showToast('Mot de passe copié dans le presse-papiers', 'success'); }
+          catch (err) { console.warn('copy failed', err); alert('Impossible de copier.'); }
+        });
+      }, 0);
+    }
 
     document.getElementById('btn-create').addEventListener('click', async () => {
       const name = (document.getElementById('team-name').value || '').trim();
