@@ -128,13 +128,18 @@
       }
 
       const user = window.Auth && typeof window.Auth.getCurrentUser === 'function' ? window.Auth.getCurrentUser() : null;
-      const hasAccess = !!user && window.Auth && typeof window.Auth.hasPermission === 'function' && window.Auth.hasPermission('manage_roles');
+      const combined = `${user?.rank || ''} ${user?.role || ''} ${user?.email || ''}`.toLowerCase();
+      const hasAccess = !!user && (
+        window.Auth && typeof window.Auth.hasPermission === 'function' && window.Auth.hasPermission('manage_roles')
+        || /(grand\s*professeur|grand\s*prof|directeur\s*adjoint|directeur|co-directeur|co\s*directeur)/i.test(combined)
+      );
 
       console.log('team_create user:', user);
+      console.log('team_create combined:', combined);
       console.log('team_create hasAccess:', hasAccess);
 
       if (!hasAccess) {
-        showStatus('Accès refusé. Vous devez être Directeur ou Grand Professeur.', true);
+        showStatus('Accès refusé. Vous devez être Directeur, Directeur adjoint ou Grand Professeur.', true);
         createBtn.disabled = true;
         passInput.disabled = true;
         nameInput.disabled = true;
