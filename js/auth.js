@@ -37,7 +37,7 @@ const Auth = {
 
       if (!authData) throw lastError;
 
-      // 2. Récupérer le profil dans la table professors ou club_members selon la page de connexion.
+      // 2. Récupère le profil dans la table professors ou club_members selon la page de connexion.
       const normalizedAuthEmail = this.normalizeMysteriaId(authData.user.email);
       const normalizedLoginEmail = normalizedAuthEmail;
 
@@ -102,7 +102,7 @@ const Auth = {
 
     } catch (err) {
       console.error('Erreur de connexion:', err);
-      // Messages d'erreur personnalisés selon l'erreur retournée par Supabase Auth
+      // Messages d'erreur personnalisés selon l'erreur retournée par Supabase Auth.
       if (err.message === 'Invalid login credentials') {
         return { ok: false, error: 'Identifiants incorrects. Vérifiez votre email et mot de passe.' };
       } else if (err.message === 'Email not confirmed') {
@@ -185,7 +185,7 @@ const Auth = {
         const passwordResult = await this.changePassword(password);
         if (!passwordResult.ok) throw new Error(passwordResult.error || 'Erreur de changement de mot de passe.');
       }
-      // Ensure we use the authenticated user's email for the INSERT so RLS (jwt.claims.email) matches
+      // On utilise l'email de l'utilisateur authentifié pour l'INSERT afin que la RLS (jwt.claims.email) corresponde.
       const { data: authData } = await window.supabaseClient.auth.getUser();
       if (!authData?.user) return { ok: false, error: 'Session expirée, veuillez vous reconnecter.' };
       const insertEmail = authData.user.email || normalizedEmail;
@@ -407,7 +407,7 @@ const Auth = {
   }
 };
 
-// Guard: redirect si pas connecté (appeler sur chaque page protégée)
+// Gardien : redirection si l'utilisateur n'est pas connecté (à appeler sur chaque page protégée)
 function requireAuthOrRedirect() {
   const user = Auth.getCurrentUser();
   if (!user) {
