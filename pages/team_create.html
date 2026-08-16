@@ -69,20 +69,36 @@
   <script src="../js/supabaseClient.js"></script>
   <script src="../js/auth.js"></script>
   <script>
-    // Fetch password from API
+    // Generate password locally (more reliable than API on GitHub Pages)
     async function generatePassword(len = 14) {
       try {
-        const response = await fetch(`https://www.motdepasse.xyz/api/?action=password&format=json&length=${len}`);
+        // Try API first (with timeout)
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), 3000);
+        
+        const response = await fetch(`https://www.motdepasse.xyz/api/?action=password&format=json&length=${len}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeout);
+        
         const data = await response.json();
-        return data.password || 'Erreur génération';
+        console.log('API password:', data.password);
+        return data.password || generateLocalPassword(len);
       } catch (err) {
-        console.warn('API call failed, using fallback', err);
-        // Fallback if API fails
-        const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()-_=+';
-        const array = new Uint32Array(len);
-        window.crypto.getRandomValues(array);
-        return Array.from(array).map(x => chars[x % chars.length]).join('');
+        console.warn('API failed, using local generation:', err.message);
+        return generateLocalPassword(len);
       }
+    }
+
+    function generateLocalPassword(len = 14) {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()-_=+';
+      let password = '';
+      const array = new Uint32Array(len);
+      window.crypto.getRandomValues(array);
+      for (let i = 0; i < len; i++) {
+        password += chars[array[i] % chars.length];
+      }
+      return password;
     }
 
     // Declare variables in outer scope
@@ -90,21 +106,50 @@
 
     // Guard: only high-rank users can create accounts here
     const user = Auth.getCurrentUser();
-    if (!Auth.hasPermission('manage_roles')) {
-      document.body.innerHTML = '<div style="padding:3rem; text-align:center; color:var(--text-dim);">Accès refusé.</div>';
+    const hasAccess = Auth.hasPermission('manage_roles');
+    
+    console.log('User:', user);
+    console.log('Has permission manage_roles:', hasAccess);
+    
+    if (!hasAccess) {
+      console.warn('Access denied - user does not have manage_roles permission');
+      document.body.innerHTML = '<div style="padding:3rem; text-align:center; color:var(--text-dim);"><h2>Accès refusé</h2><p>Vous devez être Directeur ou Grand Professeur.</p><p>User:', + JSON.stringify(user) + '</p></div>';
     } else {
+      console.log('Access granted - initializing page');
       // Only initialize if access is granted
       setTimeout(async () => {
         passInput = document.getElementById('team-pass');
         regenBtn = document.getElementById('btn-regenerate');
         copyBtn = document.getElementById('btn-copy');
-        if (passInput) passInput.value = await generatePassword(14);
-        if (regenBtn) regenBtn.addEventListener('click', async (e) => { e.preventDefault(); passInput.value = await generatePassword(14); passInput.focus(); });
-        if (copyBtn) copyBtn.addEventListener('click', async (e) => {
-          e.preventDefault();
-          try { await navigator.clipboard.writeText(passInput.value); showToast('Mot de passe copié dans le presse-papiers', 'success'); }
-          catch (err) { console.warn('copy failed', err); alert('Impossible de copier.'); }
-        });
+        
+        if (passInput) {
+          passInput.value = '⏳ Génération...';
+          passInput.value = await generatePassword(14);
+          console.log('Password generated:', passInput.value);
+        }
+        
+        if (regenBtn) {
+          regenBtn.addEventListener('click', async (e) => { 
+            e.preventDefault(); 
+            passInput.value = '⏳ Génération...';
+            passInput.value = await generatePassword(14); 
+            passInput.focus(); 
+          });
+        }
+        
+        if (copyBtn) {
+          copyBtn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            try { 
+              await navigator.clipboard.writeText(passInput.value); 
+              showToast('Mot de passe copié dans le presse-papiers', 'success'); 
+            }
+            catch (err) { 
+              console.warn('copy failed', err); 
+              alert('Impossible de copier.'); 
+            }
+          });
+        }
       }, 0);
     }
 
