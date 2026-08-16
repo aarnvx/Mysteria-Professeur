@@ -360,11 +360,24 @@
     const user = requireAuthOrRedirect();
 
     const HOUSES = [
-      { key: 'gryffondor', name: 'Gryffondor',  img: '../img/gryffindor.png', fillClass: 'fill-gryf' },
-      { key: 'serpentard',  name: 'Serpentard',  img: '../img/slytherin.png',  fillClass: 'fill-sly'  },
-      { key: 'serdaigle',  name: 'Serdaigle',   img: '../img/ravenclaw.png',  fillClass: 'fill-rav'  },
-      { key: 'poufsouffle', name: 'Poufsouffle', img: '../img/hufflepuff.png', fillClass: 'fill-huff' },
+      { key: 'gryffondor', name: 'Gryffondor', emoji: '🦁', img: '../img/gryffindor.png', fillClass: 'fill-gryf' },
+      { key: 'serpentard', name: 'Serpentard', emoji: '🐍', img: '../img/slytherin.png', fillClass: 'fill-sly' },
+      { key: 'serdaigle', name: 'Serdaigle', emoji: '🦅', img: '../img/ravenclaw.png', fillClass: 'fill-rav' },
+      { key: 'poufsouffle', name: 'Poufsouffle', emoji: '🦡', img: '../img/hufflepuff.png', fillClass: 'fill-huff' },
     ];
+
+    function normalizeHouseKey(value) {
+      if (!value || typeof value !== 'string') return '';
+      const key = value.trim().toLowerCase();
+      if (key === 'slytherin') return 'serpentard';
+      return key;
+    }
+
+    function getHouseDisplayName(value) {
+      const normalized = normalizeHouseKey(value);
+      const match = HOUSES.find(h => h.key === normalized);
+      return match ? match.name : (value || 'Maison');
+    }
 
     let pendingAction = null; // { house, type: 'add'|'remove' }
     let pointsRealtimeChannels = [];
@@ -383,7 +396,7 @@
           <div class="house-name">${h.name}</div>
           <div class="house-pts" id="pts-${h.key}">${data.points}</div>
           <div class="house-pts-label">Points</div>
-          <div class="house-blames">⚠ ${data.blames} retarit${data.blames > 1 ? 's' : ''}</div>
+          <div class="house-blames">⚠ ${data.blames} retrait${data.blames > 1 ? 's' : ''}</div>
           <div class="house-card-actions">
             <button class="house-btn house-btn-add" onclick="openModal('${h.key}','${h.name}','add')">＋ Ajouter</button>
             <button class="house-btn house-btn-remove" onclick="openModal('${h.key}','${h.name}','remove')">－ Retirer</button>
@@ -412,7 +425,7 @@
         bar.className = 'leader-bar';
         bar.innerHTML = `
           <div class="leader-bar-header">
-            <span class="leader-bar-name">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '4️⃣'} ${h.emoji} ${h.name}</span>
+            <span class="leader-bar-name">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '4️⃣'} ${h.emoji || '🏠'} ${h.name}</span>
             <span class="leader-bar-pts">${h.pts} pts</span>
           </div>
           <div class="leader-bar-track">
@@ -450,16 +463,20 @@
       };
 
       const houseNames = {
-        gryffindor: 'Gryffondor',
+        gryffondor: 'Gryffondor',
+        serpentard: 'Serpentard',
         slytherin: 'Serpentard',
+        serdaigle: 'Serdaigle',
         ravenclaw: 'Serdaigle',
+        poufsouffle: 'Poufsouffle',
         hufflepuff: 'Poufsouffle',
       };
 
       log.slice(0, 30).forEach(entry => {
         const isAdd = entry.amount > 0;
-        const color = houseColors[entry.house] || '#c9a84c';
-        const name = houseNames[entry.house] || entry.house;
+        const normalizedHouse = normalizeHouseKey(entry.house);
+        const color = houseColors[normalizedHouse] || '#c9a84c';
+        const name = getHouseDisplayName(entry.house);
         const date = new Date(entry.ts).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
 
         const item = document.createElement('div');
