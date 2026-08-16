@@ -69,139 +69,171 @@
   <script src="../js/supabaseClient.js"></script>
   <script src="../js/auth.js"></script>
   <script>
-    // Generate password locally (more reliable than API on GitHub Pages)
-    async function generatePassword(len = 14) {
-      try {
-        // Try API first (with timeout)
-        const controller = new AbortController();
-        const timeout = setTimeout(() => controller.abort(), 3000);
-        
-        const response = await fetch(`https://www.motdepasse.xyz/api/?action=password&format=json&length=${len}`, {
-          signal: controller.signal
-        });
-        clearTimeout(timeout);
-        
-        const data = await response.json();
-        console.log('API password:', data.password);
-        return data.password || generateLocalPassword(len);
-      } catch (err) {
-        console.warn('API failed, using local generation:', err.message);
-        return generateLocalPassword(len);
-      }
-    }
-
     function generateLocalPassword(len = 14) {
       const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%^&*()-_=+';
-      let password = '';
       const array = new Uint32Array(len);
       window.crypto.getRandomValues(array);
+      let password = '';
       for (let i = 0; i < len; i++) {
         password += chars[array[i] % chars.length];
       }
       return password;
     }
 
-    // Declare variables in outer scope
-    let passInput, regenBtn, copyBtn;
-
-    // Guard: only high-rank users can create accounts here
-    const user = Auth.getCurrentUser();
-    const hasAccess = Auth.hasPermission('manage_roles');
-    
-    console.log('User:', user);
-    console.log('Has permission manage_roles:', hasAccess);
-    
-    if (!hasAccess) {
-      console.warn('Access denied - user does not have manage_roles permission');
-      document.body.innerHTML = '<div style="padding:3rem; text-align:center; color:var(--text-dim);"><h2>Accès refusé</h2><p>Vous devez être Directeur ou Grand Professeur.</p><p>User:', + JSON.stringify(user) + '</p></div>';
-    } else {
-      console.log('Access granted - initializing page');
-      // Only initialize if access is granted
-      setTimeout(async () => {
-        passInput = document.getElementById('team-pass');
-        regenBtn = document.getElementById('btn-regenerate');
-        copyBtn = document.getElementById('btn-copy');
-        
-        if (passInput) {
-          passInput.value = '⏳ Génération...';
-          passInput.value = await generatePassword(14);
-          console.log('Password generated:', passInput.value);
-        }
-        
-        if (regenBtn) {
-          regenBtn.addEventListener('click', async (e) => { 
-            e.preventDefault(); 
-            passInput.value = '⏳ Génération...';
-            passInput.value = await generatePassword(14); 
-            passInput.focus(); 
-          });
-        }
-        
-        if (copyBtn) {
-          copyBtn.addEventListener('click', async (e) => {
-            e.preventDefault();
-            try { 
-              await navigator.clipboard.writeText(passInput.value); 
-              showToast('Mot de passe copié dans le presse-papiers', 'success'); 
-            }
-            catch (err) { 
-              console.warn('copy failed', err); 
-              alert('Impossible de copier.'); 
-            }
-          });
-        }
-      }, 0);
+    function generatePassword(len = 14) {
+      return generateLocalPassword(len);
     }
 
-    document.getElementById('btn-create').addEventListener('click', async () => {
-      const name = (document.getElementById('team-name').value || '').trim();
-      const pass = (passInput && passInput.value || '').trim();
-      const status = document.getElementById('create-status');
-      status.textContent = '';
-      if (!name || !pass) { status.textContent = 'Nom et mot de passe requis.'; return; }
-      // simple sanitization for local part
-      const local = name.toLowerCase().replace(/[^a-z0-9._-]/g, '');
-      // Supabase requires a valid email address; we append an internal test domain
-      const email = `${local}@mysteria.prof`;
+    async function copyTextSafe(text) {
+      if (!text) return false;
       try {
-        status.textContent = 'Création en cours...';
-        const { data, error } = await window.supabaseClient.auth.signUp({ email, password: pass });
-        if (error) {
-          status.textContent = 'Erreur: ' + (error.message || error);
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+          return true;
+        }
+
+        const textArea = document.createElement('textarea');
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        document.execCommand('copy');
+        textArea.remove();
+        return true;
+      } catch (err) {
+        console.error('Copy failed:', err);
+        return false;
+      }
+    }
+
+    function showStatus(message, isError = false) {
+      const status = document.getElementById('create-status');
+      if (!status) return;
+      status.textContent = message;
+      status.style.color = isError ? '#ff9a9a' : 'var(--text-dim)';
+    }
+
+    function initializeTeamCreatePage() {
+      const passInput = document.getElementById('team-pass');
+      const regenBtn = document.getElementById('btn-regenerate');
+      const copyBtn = document.getElementById('btn-copy');
+      const createBtn = document.getElementById('btn-create');
+      const nameInput = document.getElementById('team-name');
+
+      if (!passInput || !createBtn || !nameInput) {
+        console.error('Données du formulaire introuvables dans team_create.html');
+        return;
+      }
+
+      const user = window.Auth && typeof window.Auth.getCurrentUser === 'function' ? window.Auth.getCurrentUser() : null;
+      const hasAccess = !!user && window.Auth && typeof window.Auth.hasPermission === 'function' && window.Auth.hasPermission('manage_roles');
+
+      console.log('team_create user:', user);
+      console.log('team_create hasAccess:', hasAccess);
+
+      if (!hasAccess) {
+        showStatus('Accès refusé. Vous devez être Directeur ou Grand Professeur.', true);
+        createBtn.disabled = true;
+        passInput.disabled = true;
+        nameInput.disabled = true;
+        return;
+      }
+
+      const fillPassword = () => {
+        passInput.value = generatePassword(14);
+        console.log('Password generated:', passInput.value);
+      };
+
+      fillPassword();
+
+      if (regenBtn) {
+        regenBtn.addEventListener('click', function (event) {
+          event.preventDefault();
+          fillPassword();
+          passInput.focus();
+        });
+      }
+
+      if (copyBtn) {
+        copyBtn.addEventListener('click', async function (event) {
+          event.preventDefault();
+          const ok = await copyTextSafe(passInput.value);
+          if (ok) {
+            if (window.showToast) {
+              window.showToast('Mot de passe copié', 'success');
+            } else {
+              showStatus('Mot de passe copié.');
+            }
+          } else {
+            showStatus('Impossible de copier le mot de passe.', true);
+          }
+        });
+      }
+
+      createBtn.addEventListener('click', async function () {
+        const name = (nameInput.value || '').trim();
+        const pass = (passInput.value || '').trim();
+        showStatus('');
+
+        if (!name || !pass) {
+          showStatus('Nom et mot de passe requis.', true);
           return;
         }
-        status.textContent = 'Compte créé.';
-        console.log('Created team account', data);
-        // Show credentials modal with a Discord-ready message
-        (function showCredentials(emailAddr, pwd) {
+
+        const local = name.toLowerCase().replace(/[^a-z0-9._-]/g, '');
+        const email = `${local}@mysteria.prof`;
+
+        try {
+          showStatus('Création en cours...');
+          const { data, error } = await window.supabaseClient.auth.signUp({ email, password: pass });
+          if (error) {
+            showStatus('Erreur: ' + (error.message || 'inconnue'), true);
+            return;
+          }
+
+          showStatus('Compte créé.');
+          console.log('Created team account', data);
+
           const modal = document.getElementById('creds-modal');
           const textarea = document.getElementById('creds-message');
-          const copyBtn = document.getElementById('creds-copy');
-          const copyCredsBtn = document.getElementById('creds-copy-creds');
+          const copyBtnModal = document.getElementById('creds-copy');
           const closeBtn = document.getElementById('creds-close');
           const backdrop = document.getElementById('creds-backdrop');
-          const site = window.location.origin + (window.location.pathname.endsWith('/') ? '' : '/');
-          const discordMsg = `Bonjour,\nVoici vos identifiants pour le Portail Académique, Mysteria Professeur :\n\n\`\`\`\nEmail: ${emailAddr}\nMot de passe: ${pwd}\n\`\`\`\n\nConnexion : https://aarnvx.github.io/Mysteria-Professeur/index.html
+
+          if (!modal || !textarea || !copyBtnModal || !closeBtn || !backdrop) {
+            console.warn('Modal de credentials absent');
+            return;
+          }
+
+          const discordMsg = `Bonjour,\nVoici vos identifiants pour le Portail Académique, Mysteria Professeur :\n\n\`\`\`\nEmail: ${email}\nMot de passe: ${pass}\n\`\`\`\n\nConnexion : https://aarnvx.github.io/Mysteria-Professeur/index.html`;
           textarea.value = discordMsg;
           modal.style.display = 'flex';
 
-          function close() { modal.style.display = 'none'; }
+          const close = () => {
+            modal.style.display = 'none';
+          };
+
           closeBtn.onclick = close;
           backdrop.onclick = close;
-          copyBtn.onclick = async () => {
-            try { await navigator.clipboard.writeText(textarea.value); status.textContent = 'Message copié.'; }
-            catch (e) { alert('Impossible de copier.'); }
+
+          copyBtnModal.onclick = async () => {
+            const ok = await copyTextSafe(textarea.value);
+            if (ok) {
+              showStatus('Message copié.');
+            } else {
+              alert('Impossible de copier le message.');
+            }
           };
-          copyCredsBtn.onclick = async () => {
-            try { await navigator.clipboard.writeText(`Email: ${emailAddr}\nMot de passe: ${pwd}`); status.textContent = 'Identifiants copiés.'; }
-            catch (e) { alert('Impossible de copier.'); }
-          };
-        })(email, pass);
-      } catch (err) {
-        status.textContent = 'Erreur lors de la création.';
-        console.error(err);
-      }
-    });
+        } catch (err) {
+          console.error(err);
+          showStatus('Erreur lors de la création.', true);
+        }
+      });
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeTeamCreatePage);
   </script>
 </body>
 </html>
