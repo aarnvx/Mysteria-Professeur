@@ -313,12 +313,12 @@
 
     function addMissiveToList(missive) {
       if (!missive || !document.getElementById('missive-list')) return;
-      // Ensure the missive has a stable id for caching and DOM ids
+      // Assure que la missive a un identifiant stable pour le cache et les identifiants DOM.
       const listEl = document.getElementById('missive-list');
       const mid = missive.id || ('mk_' + Math.random().toString(36).slice(2, 9));
       if (missiveCache.has(mid)) return;
       if (!isMissiveRelevant(missive)) return;
-      // assign id back to the object to keep consistency
+      // Réaffecte l'id à l'objet pour garder une cohérence globale.
       if (!missive.id) missive.id = mid;
       missiveCache.set(mid, missive);
       const list = document.getElementById('missive-list');
@@ -327,8 +327,8 @@
         list.innerHTML = '';
       }
       list.insertAdjacentHTML('afterbegin', renderMissiveCard(missive));
-      console.log('Added missive to list', missive.id || mid);
-      // Attach handlers to the newly inserted card buttons to ensure clicks work
+      console.log('Missive ajoutée à la liste', missive.id || mid);
+      // Attache les gestionnaires aux boutons de la carte ajoutée pour garantir le bon fonctionnement des clics.
       const cardId = missive.id || mid;
       const cardEl = document.getElementById('missive-card-' + cardId);
       if (cardEl) {
@@ -361,12 +361,12 @@
       }
     }
 
-    // Bind UI handlers in a resilient way (call once)
+    // Lie les gestionnaires UI de manière robuste (appel unique)
     function bindUIHandlers() {
       if (window.__hibouxHandlersBound) return;
       window.__hibouxHandlersBound = true;
 
-      // Delegate click on missive cards to open modal and handle delete
+      // Délègue les clics sur les cartes de missive pour ouvrir la modale et gérer la suppression.
       const missiveListEl = document.getElementById('missive-list');
       if (missiveListEl) {
         missiveListEl.addEventListener('click', async event => {
@@ -406,7 +406,7 @@
         });
       }
 
-      // Modal buttons
+      // Boutons de la modale
       const closeBtn = document.getElementById('modal-close');
       if (closeBtn) closeBtn.addEventListener('click', closeMissiveModal);
 
@@ -415,7 +415,7 @@
         const id = document.getElementById('missive-modal-backdrop').dataset.missiveId;
         const m = missiveCache.get(id);
         if (!m) return;
-        // Pre-fill composer to reply and focus
+        // Pré-remplit le formulaire de réponse et place le focus.
         if (document.getElementById('missive-recipient')) document.getElementById('missive-recipient').value = m.author || '';
         if (document.getElementById('missive-title')) document.getElementById('missive-title').value = m.title ? ('Re: ' + m.title) : 'Re:';
         if (document.getElementById('missive-message')) document.getElementById('missive-message').value = `@${m.author || ''}\n\n`;
@@ -443,7 +443,7 @@
         }
       });
 
-      // Image upload preview handler
+      // Gestionnaire d'aperçu pour l'upload d'image.
       const imgInput = document.getElementById('missive-image');
       if (imgInput) imgInput.addEventListener('change', (ev) => {
         const f = ev.target.files && ev.target.files[0];
@@ -515,7 +515,7 @@
       const button = document.getElementById('missive-submit');
       if (button) button.disabled = true;
       try {
-        // handle optional image upload
+        // Gère le téléversement d'image optionnel.
         const imageInput = document.getElementById('missive-image');
         if (imageInput && imageInput.files && imageInput.files[0]) {
           const file = imageInput.files[0];
@@ -529,7 +529,7 @@
           }
         }
 
-        // optional signature
+        // Signature optionnelle.
         const sigCheckbox = document.getElementById('missive-signature');
         if (sigCheckbox && sigCheckbox.checked && user && user.name) {
           const parts = String(user.name).split(' ');
@@ -587,14 +587,14 @@
       backdrop.classList.add('open');
       backdrop.dataset.missiveId = id;
       document.body.style.overflow = 'hidden';
-      // close on backdrop click
+      // Ferme la modale quand on clique sur le fond.
       const onBackdropClick = function(e) { if (e.target === backdrop) closeMissiveModal(); };
       const onKey = function(e) { if (e.key === 'Escape') closeMissiveModal(); };
       backdrop._onBackdropClick = onBackdropClick;
       backdrop._onKey = onKey;
       backdrop.addEventListener('click', onBackdropClick);
       document.addEventListener('keyup', onKey);
-      // show/hide delete depending on author
+      // Affiche ou masque la suppression selon l'auteur.
       const userId = String(user?.email || user?.name || '').toLowerCase();
       const canDelete = [String(missive.author || ''), String(missive.recipient || '')].map(s => s.toLowerCase()).includes(userId);
       document.getElementById('modal-delete').style.display = canDelete ? 'inline-block' : 'none';
@@ -606,7 +606,7 @@
       backdrop.classList.remove('open');
       delete backdrop.dataset.missiveId;
       document.body.style.overflow = '';
-      // cleanup handlers if set
+      // Nettoie les gestionnaires si présents.
       if (backdrop._onKey) {
         document.removeEventListener('keyup', backdrop._onKey);
         delete backdrop._onKey;
