@@ -535,13 +535,13 @@
       const directionMembers = roles.filter(r => {
         const rank = (r.rank || '').toString();
         const role = (r.role || '').toString();
-        return rank.includes('Directeur') || rank.includes('Grand Professeur') || role.includes('Directeur') || role.includes('Grand Professeur');
+        return rank.includes('Directeur') || rank.includes('Co-Directeur') || rank.includes('Grand Professeur') || rank.includes('Admin') || rank.includes('Fonda') || role.includes('Directeur') || role.includes('Co-Directeur') || role.includes('Grand Professeur') || role.includes('Admin') || role.includes('Fonda');
       }).sort((a, b) => {
-        const order = { 'Directeur': 0, 'Directeur Adjoint': 1, 'Grand Professeur': 2 };
+        const order = { 'Directeur': 0, 'Co-Directeur': 1, 'Directeur Adjoint': 2, 'Grand Professeur': 3, 'Admin': 4, 'Fonda': 5 };
         const aRank = (a.rank || '').toString();
         const bRank = (b.rank || '').toString();
-        const aOrder = order[aRank] ?? 99;
-        const bOrder = order[bRank] ?? 99;
+        const aOrder = order[aRank] ?? (aRank.includes('Co-Directeur') ? 1 : (aRank.includes('Directeur') ? 0 : 99));
+        const bOrder = order[bRank] ?? (bRank.includes('Co-Directeur') ? 1 : (bRank.includes('Directeur') ? 0 : 99));
         return aOrder - bOrder;
       });
       const director = directionMembers.find(r => !r.house) || directionMembers[0] || null;
@@ -712,6 +712,9 @@
             <option value="Grand Professeur" ${m.rank === 'Grand Professeur' ? 'selected' : ''}>Grand Professeur</option>
             <option value="Directeur Adjoint" ${m.rank === 'Directeur Adjoint' ? 'selected' : ''}>Directeur Adjoint</option>
             <option value="Directeur" ${m.rank === 'Directeur' ? 'selected' : ''}>Directeur</option>
+            <option value="Co-Directeur" ${m.rank === 'Co-Directeur' ? 'selected' : ''}>Co-Directeur</option>
+            <option value="Directeur [Maison]" ${m.rank === 'Directeur [Maison]' ? 'selected' : ''}>Directeur [Maison]</option>
+            <option value="Co-Directeur [Maison]" ${m.rank === 'Co-Directeur [Maison]' ? 'selected' : ''}>Co-Directeur [Maison]</option>
           </select>
           <input type="text" class="form-input" id="role-${m.id}" value="${m.role || 'Aucune'}" style="padding:0.4rem; font-size:0.75rem;" placeholder="Fonction (ex: Rédacteur, Gérant...)">
           <button class="btn btn-sm btn-primary" onclick="saveRole(${m.id})">💾</button>
