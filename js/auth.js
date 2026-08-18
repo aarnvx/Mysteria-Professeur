@@ -298,6 +298,10 @@ const Auth = {
       return matchesHighRank || matchesWriter || matchesProfessor || matchesStaff;
     }
 
+    if (action === 'edit_content') {
+      return matchesHighRank || matchesWriter;
+    }
+
     if (action === 'club_access') {
       return /(club|prof|staff)/i.test(combined) || matchesHighRank;
     }
