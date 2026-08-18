@@ -4,6 +4,8 @@
 
 const AUTH_KEY = 'Mysteria_auth';
 const SESSION_KEY = 'Mysteria_session';
+const IDLE_ACTIVITY_KEY = 'Mysteria_last_activity';
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
 
 const Auth = {
   normalizeMysteriaId(rawValue) {
@@ -426,6 +428,63 @@ function requireAuthOrRedirect() {
   }
   return user;
 }
+
+// Déconnecte automatiquement les sessions protégées après cinq minutes sans activité.
+(function initializeIdleLogout() {
+  const path = window.location.pathname.toLowerCase();
+  const isLoginPage = path.endsWith('/index.html') || path.endsWith('/') || path.endsWith('/club.html');
+  if (isLoginPage || !localStorage.getItem(AUTH_KEY)) return;
+
+  let lastActivity = Number(localStorage.getItem(IDLE_ACTIVITY_KEY)) || Date.now();
+  let lastSavedActivity = lastActivity;
+  let logoutInProgress = false;
+
+  const redirectToLogin = () => {
+    const target = path.includes('/pages/') ? '../index.html' : 'index.html';
+    window.location.href = target;
+  };
+
+  const logoutForInactivity = async () => {
+    if (logoutInProgress) return;
+    logoutInProgress = true;
+    try {
+      await window.supabaseClient?.auth.signOut();
+    } catch (error) {
+      console.warn('Déconnexion automatique Supabase impossible :', error);
+    }
+    localStorage.removeItem(AUTH_KEY);
+    localStorage.removeItem(SESSION_KEY);
+    localStorage.removeItem(IDLE_ACTIVITY_KEY);
+    redirectToLogin();
+  };
+
+  const recordActivity = () => {
+    lastActivity = Date.now();
+    if (lastActivity - lastSavedActivity >= 30000) {
+      lastSavedActivity = lastActivity;
+      localStorage.setItem(IDLE_ACTIVITY_KEY, String(lastActivity));
+    }
+  };
+
+  const checkIdleTimeout = () => {
+    const storedActivity = Number(localStorage.getItem(IDLE_ACTIVITY_KEY));
+    if (storedActivity > lastActivity) lastActivity = storedActivity;
+    if (Date.now() - lastActivity >= IDLE_TIMEOUT_MS) logoutForInactivity();
+  };
+
+  if (!localStorage.getItem(IDLE_ACTIVITY_KEY)) {
+    localStorage.setItem(IDLE_ACTIVITY_KEY, String(lastActivity));
+  }
+
+  ['click', 'keydown', 'pointerdown', 'touchstart', 'mousemove', 'scroll'].forEach(eventName => {
+    document.addEventListener(eventName, recordActivity, { passive: true });
+  });
+  window.addEventListener('storage', event => {
+    if (event.key === IDLE_ACTIVITY_KEY && event.newValue) lastActivity = Number(event.newValue);
+  });
+  window.setInterval(checkIdleTimeout, 10000);
+  checkIdleTimeout();
+})();
 
 // Toast utilitaire
 function showToast(message, type = 'info') {
