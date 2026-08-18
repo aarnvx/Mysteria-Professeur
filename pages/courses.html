@@ -74,6 +74,7 @@
     .course-card-meta {
       flex: 1;
       min-width: 0;
+      padding-right: 3.5rem;
     }
 
     .course-card-title {
@@ -138,7 +139,7 @@
       width: 100%;
       box-shadow: var(--glow-strong), 0 40px 100px rgba(0,0,0,0.8);
       overflow: hidden;
-      margin: auto;
+      margin: 0 auto;
     }
 
     .viewer-header {
@@ -196,22 +197,10 @@
     .viewer-body {
       padding: 2rem;
       position: relative;
-    }
-
-    /* Watermark */
-    .viewer-body::after {
-      content: 'Mysteria RP · USAGE INTERNE · NE PAS DIFFUSER';
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%) rotate(-30deg);
-      font-family: 'Cinzel', serif;
-      font-size: 1rem;
-      letter-spacing: 0.3em;
-      color: rgba(201,168,76,0.06);
-      pointer-events: none;
-      white-space: nowrap;
-      font-weight: 700;
+      max-height: calc(100vh - 9rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+      -webkit-overflow-scrolling: touch;
     }
 
     /* Markdown-style rendering */
@@ -251,6 +240,31 @@
     .course-content strong {
       color: var(--gold-light);
       font-weight: 600;
+    }
+
+    .course-content u {
+      text-decoration: underline;
+      text-decoration-thickness: 1px;
+      text-underline-offset: 3px;
+    }
+
+    .course-content del {
+      color: var(--text-dim);
+      text-decoration-thickness: 2px;
+    }
+
+    .course-content .spoiler {
+      color: transparent;
+      background: var(--text-dim);
+      border-radius: 3px;
+      padding: 0 0.2em;
+      cursor: pointer;
+    }
+
+    .course-content .spoiler:hover,
+    .course-content .spoiler:focus {
+      color: var(--cream);
+      background: rgba(201, 168, 76, 0.18);
     }
 
     .course-content blockquote {
@@ -299,24 +313,39 @@
       margin-bottom: 1.5rem;
     }
 
+    .year-row {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+
     .pill, .status-pill {
       font-family: 'Cinzel', serif;
       font-size: 0.72rem;
       letter-spacing: 0.1em;
       padding: 0.35rem 0.9rem;
       border-radius: 100px;
-      border: 1px solid var(--border);
-      background: transparent;
-      color: var(--text-dim);
+      border: 1px solid rgba(232, 201, 109, 0.55);
+      background: rgba(6, 6, 15, 0.82);
+      color: var(--cream);
+      text-shadow: 0 1px 2px rgba(0, 0, 0, 0.9);
       cursor: pointer;
       transition: all 0.2s;
     }
 
     .pill:hover, .pill.active,
     .status-pill:hover, .status-pill.active {
-      border-color: var(--border-bright);
-      color: var(--gold);
-      background: rgba(201,168,76,0.08);
+      border-color: var(--gold-light);
+      color: #17130a;
+      background: var(--gold-light);
+      text-shadow: none;
+      box-shadow: 0 0 12px rgba(232, 201, 109, 0.3);
+    }
+
+    .pill:focus-visible, .status-pill:focus-visible {
+      outline: 2px solid var(--gold-light);
+      outline-offset: 3px;
     }
 
     .status-badge {
@@ -342,6 +371,30 @@
       border-color: rgba(215, 185, 118, 0.35);
       background: rgba(215, 185, 118, 0.08);
     }
+
+    .year-badge {
+      position: absolute;
+      top: 1.3rem;
+      right: 1.3rem;
+      display: inline-block;
+      padding: 0.35rem 0.75rem;
+      border-radius: 999px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      border: 1px solid currentColor;
+      background: rgba(6, 6, 15, 0.72);
+    }
+
+    .year-badge.year-1 { color: #8dd7ff; }
+    .year-badge.year-2 { color: #91e6b3; }
+    .year-badge.year-3 { color: #f3d477; }
+    .year-badge.year-4 { color: #ffb36b; }
+    .year-badge.year-5 { color: #ff8f8f; }
+    .year-badge.year-6 { color: #d4a5ff; }
+    .year-badge.year-7 { color: #ff9bd1; }
+    .year-badge.year-all { color: #e8c96d; }
   </style>
 </head>
 <body>
@@ -360,7 +413,7 @@
       <li><a href="dashboard.html">🏠 Accueil</a></li>
       <li><a href="courses.html" class="active">📚 Cours</a></li>
       <li><a href="points.html">⚡ Points</a></li>
-      <li><a href="blames.html">📜 Carnet</a></li>
+      <li><a href="blames.html">📜 Blâme</a></li>
       <li><a href="roles.html">🎓 Équipe</a></li>
       <li><a href="hiboux.html">🦉 Hiboux</a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
@@ -397,6 +450,18 @@
       <button class="status-pill" data-status="passif">Passif</button>
     </div>
 
+    <!-- Filtres par année -->
+    <div class="year-row" id="year-row">
+      <button class="status-pill active" data-year="all">Toutes années</button>
+      <button class="status-pill" data-year="1">1A</button>
+      <button class="status-pill" data-year="2">2A</button>
+      <button class="status-pill" data-year="3">3A</button>
+      <button class="status-pill" data-year="4">4A</button>
+      <button class="status-pill" data-year="5">5A</button>
+      <button class="status-pill" data-year="6">6A</button>
+      <button class="status-pill" data-year="7">7A</button>
+    </div>
+
     <!-- Filters -->
     <div class="filter-pills" id="filter-pills">
       <button class="pill active" data-tag="all">Tous</button>
@@ -429,7 +494,10 @@
       <div class="viewer-body">
         <div class="course-content protected-content" id="viewer-content"></div>
         <div class="viewer-actions" style="margin-top:2rem; border-top:1px solid var(--border); padding-top:1rem; display:flex; justify-content:flex-end;">
-          <button id="btn-delete-course" class="btn btn-secondary btn-sm" style="color:var(--danger); border-color:var(--danger); display:none;">🗑️ Supprimer le cours</button>
+          <div style="display:flex; gap:0.75rem;">
+            <button id="btn-edit-course" class="btn btn-secondary btn-sm" style="display:none;">✏️ Modifier le cours</button>
+            <button id="btn-delete-course" class="btn btn-secondary btn-sm" style="color:var(--danger); border-color:var(--danger); display:none;">🗑️ Supprimer le cours</button>
+          </div>
         </div>
       </div>
     </div>
@@ -439,7 +507,7 @@
   <div class="modal-overlay" id="add-course-modal">
     <div class="modal" style="max-width:640px;">
       <button class="modal-close" onclick="closeAddCourse()">✕</button>
-      <h3>📚 Ajouter un Cours</h3>
+      <h3 id="course-modal-title">📚 Ajouter un Cours</h3>
       <p style="margin-bottom:1.25rem;">Remplissez les informations pour créer un nouveau cours dans la bibliothèque.</p>
 
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem;">
@@ -453,24 +521,35 @@
         </div>
         <div class="form-group">
           <label class="form-label" for="new-level">Niveau</label>
-          <input class="form-input" type="text" id="new-level" placeholder="ex: 3ème année" />
+          <select class="form-input" id="new-level">
+            <option value="1A">1A</option>
+            <option value="2A">2A</option>
+            <option value="3A">3A</option>
+            <option value="4A">4A</option>
+            <option value="5A">5A</option>
+            <option value="6A">6A</option>
+            <option value="7A">7A</option>
+            <option value="Toute année">Toute année</option>
+          </select>
         </div>
         <div class="form-group">
           <label class="form-label" for="new-tag">Catégorie</label>
           <select class="form-input" id="new-tag">
             <option value="Sortilèges">Sortilèges</option>
-            <option value="Potions">Potions</option>
-            <option value="Métamorphose">Métamorphose</option>
             <option value="DCFM">Défense Contre les Forces du Mal (DCFM)</option>
-            <option value="Histoire de la Magie">Histoire de la Magie</option>
             <option value="Astronomie">Astronomie</option>
+            <option value="Métamorphose">Métamorphose</option>
+            <option value="Soins aux créatures">Soins aux créatures magiques</option>
+            <option value="Histoire de la Magie">Histoire de la Magie</option>
+            <option value="Potions">Potions</option>
             <option value="Botanique">Botanique</option>
             <option value="Divination">Divination</option>
             <option value="Vol sur balai">Vol sur balai</option>
-            <option value="Soins aux créatures">Soins aux créatures magiques</option>
+            <option value="Alchimie">Alchimie</option>
             <option value="Étude des Moldus">Étude des Moldus</option>
             <option value="Arithmancie">Arithmancie</option>
             <option value="Étude des Runes">Étude des Runes</option>
+            <option value="Médicomagie">Médicomagie</option>
             <option value="Autre">Autre</option>
           </select>
         </div>
@@ -490,7 +569,7 @@
       <div class="form-group">
         <label class="form-label" for="new-content">Contenu du cours</label>
         <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:0.5rem; font-family:'Cinzel',serif;">
-          Supporte le Markdown : **gras**, *italique*, # Titre, ## Sous-titre, - liste, > citation
+          Formats : **gras**, *italique*, __souligné__, --barré-- ou ~~barré~~, ||spoiler||, `code`, # titre, - liste, > citation
         </div>
         <textarea class="form-input" id="new-content" rows="10"
           style="resize:vertical; font-family: monospace; font-size:0.85rem;"
@@ -500,7 +579,7 @@
       <div class="form-error" id="add-course-error" style="display:none; margin-bottom:0.75rem;"></div>
 
       <div style="display:flex; gap:0.75rem;">
-        <button class="btn btn-primary" onclick="submitAddCourse()">✨ Publier le cours</button>
+        <button id="course-modal-submit" class="btn btn-primary" onclick="submitAddCourse()">✨ Publier le cours</button>
         <button class="btn btn-sm" onclick="closeAddCourse()" style="flex:0.4;">Annuler</button>
       </div>
     </div>
@@ -523,12 +602,46 @@
     let courses = [];
     let currentFilter = 'all';
     let currentStatusFilter = 'all';
+    let currentYearFilter = 'all';
     let currentSearch = '';
     let courseRealtimeChannel = null;
+    let editingCourseId = null;
 
     function normalizeCourseStatus(course) {
       const raw = String(course?.status || 'actif').trim().toLowerCase();
       return raw === 'passif' ? 'passif' : 'actif';
+    }
+
+    function getCourseYear(level) {
+      const normalized = String(level || '').trim().toLowerCase();
+      if (/toute\s*annee|toute\s*année|tous niveaux/.test(normalized)) return null;
+      const match = normalized.match(/([1-7])\s*a(?:nnée)?/i);
+      return match ? Number(match[1]) : null;
+    }
+
+    function getMaximumCourseYear() {
+      const user = Auth.getCurrentUser();
+      if (!user) return 0;
+
+      const combined = `${user.rank || ''} ${user.role || ''} ${user.email || ''}`.toLowerCase();
+      if (/(rédacteur|redacteur|grand\s*professeur|grand\s*prof|directeur|co[- ]directeur|admin|fonda|fondateur)/i.test(combined)) {
+        return Infinity;
+      }
+      if (/professeur\s*expérimenté|professeur\s*experimente/i.test(combined)) return 7;
+      if (/professeur\s*confirmé|professeur\s*confirme/i.test(combined)) return 6;
+      if (/professeur\s*apprenti|apprenti/i.test(combined)) return 2;
+      if (/professeur|\.prof|\bprof\b/i.test(combined)) return 5;
+      return 0;
+    }
+
+    function canAccessCourse(course) {
+      const courseYear = getCourseYear(course.level);
+      return courseYear === null || courseYear <= getMaximumCourseYear();
+    }
+
+    function getYearBadgeClass(level) {
+      const year = getCourseYear(level);
+      return year === null ? 'year-all' : `year-${year}`;
     }
 
     async function initData() {
@@ -579,7 +692,14 @@
 
     function setStatusFilter(status, btn) {
       currentStatusFilter = status;
-      document.querySelectorAll('.status-pill').forEach(p => p.classList.remove('active'));
+      document.querySelectorAll('#status-row .status-pill').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active');
+      renderCourses();
+    }
+
+    function setYearFilter(year, btn) {
+      currentYearFilter = year;
+      document.querySelectorAll('#year-row .status-pill').forEach(p => p.classList.remove('active'));
       btn.classList.add('active');
       renderCourses();
     }
@@ -588,22 +708,30 @@
       setFilter('all', this);
     });
 
-    document.querySelectorAll('.status-pill').forEach(btn => {
+    document.querySelectorAll('#status-row .status-pill').forEach(btn => {
       btn.addEventListener('click', () => setStatusFilter(btn.dataset.status, btn));
+    });
+
+    document.querySelectorAll('#year-row .status-pill').forEach(btn => {
+      btn.addEventListener('click', () => setYearFilter(btn.dataset.year, btn));
     });
 
     function renderCourses() {
       const query = currentSearch.toLowerCase();
       const filtered = courses.filter(c => {
+        if (!canAccessCourse(c)) return false;
         const courseStatus = normalizeCourseStatus(c);
+        const courseYear = getCourseYear(c.level);
         const matchTag = currentFilter === 'all' || c.tag === currentFilter;
         const matchStatus = currentStatusFilter === 'all' || courseStatus === currentStatusFilter;
+        const matchYear = currentYearFilter === 'all' ||
+          courseYear === Number(currentYearFilter);
         const matchSearch = !query ||
           (c.subject || '').toLowerCase().includes(query) ||
           (c.teacher || '').toLowerCase().includes(query) ||
           (c.tag || '').toLowerCase().includes(query) ||
           (c.level || '').toLowerCase().includes(query);
-        return matchTag && matchStatus && matchSearch;
+        return matchTag && matchStatus && matchYear && matchSearch;
       });
 
       document.getElementById('course-count').textContent = filtered.length + ' cours';
@@ -630,6 +758,7 @@
 
         card.innerHTML = `
           <div class="status-badge ${courseStatus}">${courseStatus === 'passif' ? 'Passif' : 'Actif'}</div>
+          <div class="year-badge ${getYearBadgeClass(c.level)}">${c.level || 'Toute année'}</div>
           <div class="course-card-header">
             <div class="course-icon">${iconHtml}</div>
             <div class="course-card-meta">
@@ -638,7 +767,6 @@
             </div>
           </div>
           <span class="course-tag">${c.tag}</span>
-          <div class="course-level">${c.level}</div>
         `;
         card.addEventListener('click', () => openViewer(c));
         grid.appendChild(card);
@@ -652,6 +780,10 @@
         .replace(/^# (.+)$/gm, '<h1>$1</h1>')
         .replace(/^## (.+)$/gm, '<h2>$1</h2>')
         .replace(/^### (.+)$/gm, '<h3>$1</h3>')
+        .replace(/\|\|(.+?)\|\|/g, '<span class="spoiler" tabindex="0">$1</span>')
+        .replace(/~~(.+?)~~/g, '<del>$1</del>')
+        .replace(/--(.+?)--/g, '<del>$1</del>')
+        .replace(/__(.+?)__/g, '<u>$1</u>')
         .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
         .replace(/\*(.+?)\*/g, '<em>$1</em>')
         .replace(/`(.+?)`/g, '<code>$1</code>')
@@ -674,8 +806,17 @@
       document.getElementById('viewer-content').innerHTML = parseMarkdown(course.content);
       
       const deleteBtn = document.getElementById('btn-delete-course');
+      const editBtn = document.getElementById('btn-edit-course');
       const isAuthor = currentUser && currentUser.name === course.teacher;
       const isDirector = Auth.hasPermission('manage_roles');
+      const canEdit = Auth.hasPermission('edit_content');
+
+      if (canEdit) {
+        editBtn.style.display = 'inline-block';
+        editBtn.onclick = () => openEditCourse(course);
+      } else {
+        editBtn.style.display = 'none';
+      }
       
       if (isAuthor || isDirector) {
         deleteBtn.style.display = 'inline-block';
@@ -686,6 +827,15 @@
 
       document.getElementById('viewer-overlay').classList.add('open');
       document.body.style.overflow = 'hidden';
+
+      const viewerOverlay = document.getElementById('viewer-overlay');
+      const viewerPanel = viewerOverlay.querySelector('.viewer-panel');
+      viewerOverlay.scrollTop = 0;
+      viewerPanel.scrollIntoView({ block: 'start', inline: 'nearest' });
+      requestAnimationFrame(() => {
+        viewerOverlay.scrollTop = 0;
+        viewerPanel.scrollIntoView({ block: 'start', inline: 'nearest' });
+      });
     }
 
     async function confirmDeleteCourse(id, subject) {
@@ -723,6 +873,32 @@
  
     // Modale ajout cours
     function openAddCourse() {
+      editingCourseId = null;
+      document.getElementById('course-modal-title').textContent = '📚 Ajouter un Cours';
+      document.getElementById('course-modal-submit').textContent = '✨ Publier le cours';
+      document.getElementById('new-subject').value = '';
+      document.getElementById('new-teacher').value = '';
+      document.getElementById('new-level').value = '';
+      document.getElementById('new-tag').value = 'Sortilèges';
+      document.getElementById('new-status').value = 'actif';
+      document.getElementById('new-icon').value = '';
+      document.getElementById('new-content').value = '';
+      document.getElementById('add-course-modal').classList.add('active');
+    }
+
+    function openEditCourse(course) {
+      editingCourseId = course.id;
+      document.getElementById('course-modal-title').textContent = '✏️ Modifier le Cours';
+      document.getElementById('course-modal-submit').textContent = '💾 Enregistrer les modifications';
+      document.getElementById('new-subject').value = course.subject || '';
+      document.getElementById('new-teacher').value = course.teacher || '';
+      document.getElementById('new-level').value = course.level || '';
+      document.getElementById('new-tag').value = course.tag || 'Autre';
+      document.getElementById('new-status').value = normalizeCourseStatus(course);
+      document.getElementById('new-icon').value = course.icon || '';
+      document.getElementById('new-content').value = course.content || '';
+      closeViewer();
+      document.getElementById('add-course-error').style.display = 'none';
       document.getElementById('add-course-modal').classList.add('active');
     }
     function closeAddCourse() {
@@ -745,10 +921,14 @@
         return;
       }
 
-      const result = await DataStore.addCourse({ subject, teacher, level, tag, status, icon, content });
+      const courseData = { subject, teacher, level, tag, status, icon, content };
+      const result = editingCourseId
+        ? await DataStore.updateCourse(editingCourseId, courseData)
+        : await DataStore.addCourse(courseData);
       if (result.ok) {
         closeAddCourse();
-        showToast('Cours publié avec succès !', 'success');
+        showToast(editingCourseId ? 'Cours modifié avec succès !' : 'Cours publié avec succès !', 'success');
+        editingCourseId = null;
         await initData();
       } else {
         errEl.textContent = result.error || 'Erreur lors de la publication. Vérifiez vos permissions Supabase.';
