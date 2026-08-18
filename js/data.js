@@ -134,9 +134,48 @@ const DataStore = {
   },
 
   async addCourse(course) {
-    const { error } = await window.supabaseClient.from('courses').insert([course]);
-    if (error) { console.error('Error adding course:', error); return false; }
-    return true;
+    const payload = {
+      subject: course.subject,
+      teacher: course.teacher,
+      level: course.level || '',
+      tag: course.tag || 'Autre',
+      icon: course.icon || '📚',
+      content: course.content || ''
+    };
+
+    if (course.status) payload.status = course.status;
+
+    const { data, error } = await window.supabaseClient.from('courses').insert([payload]).select().single();
+    if (error) {
+      console.error('Error adding course:', error);
+      return { ok: false, error: error.message || String(error) };
+    }
+    return { ok: true, course: data };
+  },
+
+  async updateCourse(id, course) {
+    const payload = {
+      subject: course.subject,
+      teacher: course.teacher,
+      level: course.level || '',
+      tag: course.tag || 'Autre',
+      icon: course.icon || '📚',
+      content: course.content || ''
+    };
+
+    if (course.status) payload.status = course.status;
+
+    const { data, error } = await window.supabaseClient
+      .from('courses')
+      .update(payload)
+      .eq('id', id)
+      .select()
+      .single();
+    if (error) {
+      console.error('Error updating course:', error);
+      return { ok: false, error: error.message || String(error) };
+    }
+    return { ok: true, course: data };
   },
 
   async deleteCourse(id) {
