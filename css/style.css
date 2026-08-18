@@ -516,28 +516,6 @@ a:hover { color: var(--gold-light); }
   opacity: 0.6;
 }
 
-/* ── Anti-copy overlay ── */
-.protected-content {
-  user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  position: relative;
-}
-
-.protected-content::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: repeating-linear-gradient(
-    45deg,
-    transparent,
-    transparent 40px,
-    rgba(201, 168, 76, 0.015) 40px,
-    rgba(201, 168, 76, 0.015) 80px
-  );
-}
-
 /* ── Search bar ── */
 .search-wrapper {
   position: relative;
