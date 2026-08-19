@@ -554,39 +554,46 @@
       window.location.href = 'club_dashboard.html';
     }
 
-    // Tout le rendu dépendant de l'utilisateur passe par cette fonction :
-    // si un des appels échoue, on le voit dans la console au lieu que la page
-    // reste bloquée en silence sur "Chargement…" / valeurs par défaut.
+    function renderCurrentUser(currentUser) {
+      const avatarEl = document.getElementById('user-avatar');
+      const nameEl = document.getElementById('user-name');
+      const roleEl = document.getElementById('user-role');
+
+      if (avatarEl) avatarEl.textContent = currentUser.avatar || '🎓';
+      if (nameEl) nameEl.textContent = currentUser.name || currentUser.email || 'Professeur';
+
+      const roleText = [
+        currentUser.rank,
+        currentUser.role && currentUser.role !== 'Aucune' ? currentUser.role : null,
+        currentUser.house ? currentUser.house : null
+      ].filter(Boolean).join(' - ');
+      if (roleEl) roleEl.textContent = roleText || 'Professeur';
+
+      const createCard = document.getElementById('card-create-session');
+      if (createCard) createCard.style.display = Auth.hasPermission('create_content') ? 'block' : 'none';
+    }
+
+    // Tout le rendu dépendant de l'utilisateur est aussi actualisé par Realtime.
     (async () => {
       try {
         if (!user) return;
 
         console.log('Dashboard utilisateur chargé :', user);
-
-        const avatarEl = document.getElementById('user-avatar');
-        const nameEl = document.getElementById('user-name');
-        const roleEl = document.getElementById('user-role');
-
-        if (avatarEl) avatarEl.textContent = user.avatar || '🎓';
-        if (nameEl) nameEl.textContent = user.name || user.email || 'Professeur';
-
-        // Afficher le grade ET la fonction
-        const roleText = [
-          user.rank,
-          user.role && user.role !== 'Aucune' ? user.role : null,
-          user.house ? user.house : null
-        ].filter(Boolean).join(' - ');
-        if (roleEl) roleEl.textContent = roleText || 'Professeur';
-
-        // Afficher carte "Créer une session" selon les droits
-        if (Auth.hasPermission('create_content')) {
-          const card = document.getElementById('card-create-session');
-          if (card) card.style.display = 'block';
-        }
+        renderCurrentUser(user);
       } catch (err) {
         console.error('Erreur lors de l\'affichage des infos utilisateur :', err);
       }
     })();
+
+    window.addEventListener('auth:user-updated', event => {
+      const updatedUser = event.detail;
+      if (!updatedUser) return;
+      if (Auth.isClubContextUser(updatedUser) && !Auth.isProfessorContextUser(updatedUser)) {
+        window.location.href = 'club_dashboard.html';
+        return;
+      }
+      renderCurrentUser(updatedUser);
+    });
 
     // House points mini display
     async function loadMiniPoints() {
