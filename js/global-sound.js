@@ -3,8 +3,24 @@
   window.__MysteriaGlobalSoundInitialized = true;
 
   const videoId = 'rPt79QYxXEc';
+  const positionKey = 'Mysteria-global-youtube-position';
   let player = null;
   let attemptedAutoStart = false;
+
+  function getStoredPosition() {
+    const position = Number(sessionStorage.getItem(positionKey));
+    return Number.isFinite(position) && position > 0 ? position : 0;
+  }
+
+  function savePosition() {
+    if (!player || typeof player.getCurrentTime !== 'function') return;
+    try {
+      const position = player.getCurrentTime();
+      if (Number.isFinite(position)) sessionStorage.setItem(positionKey, String(position));
+    } catch (error) {
+      // Ignore errors while navigating away from the page.
+    }
+  }
 
   function loadYouTubeApi() {
     if (window.YT?.Player) {
@@ -48,7 +64,11 @@
         rel: 0
       },
       events: {
-        onReady: () => beginPlayback(),
+        onReady: () => {
+          const position = getStoredPosition();
+          if (position > 0) player.seekTo(position, true);
+          beginPlayback();
+        },
         onStateChange: event => {
           if (event.data === window.YT.PlayerState.ENDED) player.playVideo();
         }
@@ -57,9 +77,9 @@
   }
 
   function beginPlayback() {
+    if (!player) return;
     if (attemptedAutoStart) return;
     attemptedAutoStart = true;
-    if (!player) return;
     player.playVideo();
     try {
       localStorage.setItem('Mysteria-global-sound-started', '1');
@@ -82,6 +102,7 @@
   });
   window.addEventListener('focus', beginPlayback);
   window.addEventListener('pageshow', beginPlayback);
+  window.addEventListener('beforeunload', savePosition);
   window.addEventListener('load', loadYouTubeApi);
 
   function attachSlideLinks() {
