@@ -2,166 +2,87 @@
   if (window.__MysteriaGlobalSoundInitialized) return;
   window.__MysteriaGlobalSoundInitialized = true;
 
-  const startedKey = 'Mysteria-global-sound-started';
-  const positionKey = 'Mysteria-global-sound-position';
-  let audioEl = null;
-  let started = false;
+  const videoId = 'rPt79QYxXEc';
+  let player = null;
   let attemptedAutoStart = false;
-  const bucketName = 'videos';
-  const filename = 'Harry Potter Ambient Music  Hogwarts  Relaxing, Studying, Sleeping.mp4';
-  const pathParts = location.pathname.split('/');
 
-  async function resolveStorageAudioUrl() {
-    try {
-      const storage = window.supabaseClient?.storage;
-      if (!storage) return null;
-
-      const { data: publicData, error: publicError } = storage.from(bucketName).getPublicUrl(filename);
-      if (!publicError && publicData?.publicUrl) {
-        return publicData.publicUrl;
-      }
-
-      const { data: signedData, error: signedError } = await storage.from(bucketName).createSignedUrl(filename, 60 * 60);
-      if (!signedError && signedData?.signedUrl) {
-        return signedData.signedUrl;
-      }
-    } catch (err) {
-      console.warn('Impossible de récupérer l\'URL audio depuis Supabase storage :', err);
+  function loadYouTubeApi() {
+    if (window.YT?.Player) {
+      createPlayer();
+      return;
     }
-    return null;
-  }
 
-  let audioSrc = (pathParts.includes('pages') ? '../' + filename : filename);
+    const previousReady = window.onYouTubeIframeAPIReady;
+    window.onYouTubeIframeAPIReady = () => {
+      if (typeof previousReady === 'function') previousReady();
+      createPlayer();
+    };
 
-  async function initAudioSource() {
-    const storageUrl = await resolveStorageAudioUrl();
-    if (storageUrl) {
-      audioSrc = storageUrl;
-      audioEl && (audioEl.src = storageUrl);
+    if (!document.querySelector('script[src="https://www.youtube.com/iframe_api"]')) {
+      const script = document.createElement('script');
+      script.src = 'https://www.youtube.com/iframe_api';
+      document.head.appendChild(script);
     }
   }
 
-  function getStoredPosition() {
-    const stored = sessionStorage.getItem(positionKey);
-    if (!stored) return 0;
-    const value = parseFloat(stored);
-    return Number.isFinite(value) && value > 0 ? value : 0;
-  }
+  function createPlayer() {
+    if (player || !window.YT?.Player) return;
 
-  function savePosition() {
-    if (!audioEl || isNaN(audioEl.currentTime)) return;
-    try {
-      sessionStorage.setItem(positionKey, audioEl.currentTime.toString());
-    } catch (error) {
-      // ignore storage errors
-    }
-  }
+    const container = document.createElement('div');
+    container.id = 'mysteria-youtube-player';
+    container.style.cssText = 'position:fixed;width:1px;height:1px;left:-10px;bottom:-10px;opacity:0;pointer-events:none;';
+    document.body.appendChild(container);
 
-  function createAudioElement() {
-    if (audioEl) return audioEl;
-    audioEl = document.createElement('audio');
-    audioEl.src = audioSrc;
-    audioEl.loop = true;
-    audioEl.preload = 'auto';
-    audioEl.autoplay = true;
-    audioEl.volume = 0.35;
-    audioEl.setAttribute('playsinline', '');
-    audioEl.style.display = 'none';
-
-    const position = getStoredPosition();
-    if (position > 0) {
-      audioEl.currentTime = position;
-    }
-
-    audioEl.addEventListener('canplaythrough', () => {
-      if (!started) {
-        tryStartPlayback();
+    player = new window.YT.Player(container, {
+      width: '1',
+      height: '1',
+      videoId,
+      playerVars: {
+        autoplay: 1,
+        controls: 0,
+        disablekb: 1,
+        loop: 1,
+        modestbranding: 1,
+        playsinline: 1,
+        playlist: videoId,
+        rel: 0
+      },
+      events: {
+        onReady: () => beginPlayback(),
+        onStateChange: event => {
+          if (event.data === window.YT.PlayerState.ENDED) player.playVideo();
+        }
       }
     });
-
-    audioEl.addEventListener('timeupdate', savePosition);
-    window.addEventListener('beforeunload', savePosition);
-
-    document.body.appendChild(audioEl);
-    return audioEl;
-  }
-
-  function tryStoreStarted() {
-    try {
-      localStorage.setItem(startedKey, '1');
-    } catch (error) {
-      console.warn('Impossible d’écrire dans localStorage pour le son global.', error);
-    }
-  }
-
-  function tryStartPlayback() {
-    if (started) return;
-    const audio = createAudioElement();
-    const playPromise = audio.play();
-
-    if (playPromise && typeof playPromise.then === 'function') {
-      playPromise
-        .then(() => {
-          started = true;
-          tryStoreStarted();
-        })
-        .catch(() => {
-          if (!started) {
-            audio.muted = false;
-          }
-        });
-    } else {
-      started = true;
-      tryStoreStarted();
-    }
   }
 
   function beginPlayback() {
     if (attemptedAutoStart) return;
     attemptedAutoStart = true;
-    tryStartPlayback();
+    if (!player) return;
+    player.playVideo();
+    try {
+      localStorage.setItem('Mysteria-global-sound-started', '1');
+    } catch (error) {
+      // Ignore storage errors.
+    }
   }
 
   window.MysteriaGlobalSound = {
     pauseForTransition() {
-      if (audioEl && !audioEl.paused) {
-        audioEl.pause();
-      }
+      player?.pauseVideo();
     },
     resumeAfterTransition() {
-      if (audioEl && audioEl.paused) {
-        const playPromise = audioEl.play();
-        if (playPromise && typeof playPromise.then === 'function') {
-          playPromise.catch(() => {
-            // Ignore failure, user can resume later.
-          });
-        }
-      }
+      player?.playVideo();
     }
   };
 
-  ['click', 'touchstart', 'keydown', 'pointerdown'].forEach((eventName) => {
+  ['click', 'touchstart', 'keydown', 'pointerdown'].forEach(eventName => {
     document.addEventListener(eventName, beginPlayback, { once: true, capture: true });
   });
-
   window.addEventListener('focus', beginPlayback);
   window.addEventListener('pageshow', beginPlayback);
-  document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible' && !started) {
-      beginPlayback();
-    }
-  });
-
-  window.addEventListener('load', async () => {
-    await initAudioSource();
-    createAudioElement();
-    document.documentElement.classList.add('page-transition-active');
-    if (localStorage.getItem(startedKey) === '1') {
-      window.setTimeout(beginPlayback, 150);
-    } else {
-      window.setTimeout(beginPlayback, 250);
-    }
-  });
+  window.addEventListener('load', loadYouTubeApi);
 
   function attachSlideLinks() {
     const links = Array.from(document.querySelectorAll('a[href]')).filter(link => {
