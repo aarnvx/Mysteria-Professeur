@@ -380,6 +380,50 @@ const Auth = {
     }
   },
 
+  initializeProfileRealtime() {
+    if (!window.supabaseClient || typeof window.supabaseClient.channel !== 'function') return;
+    if (this._profileRealtimeChannel) return;
+
+    const currentUser = this.getCurrentUser();
+    if (!currentUser?.email) return;
+
+    const normalizedEmail = this.normalizeMysteriaId(currentUser.email);
+    const channelName = `auth-profile-${Math.random().toString(36).slice(2, 9)}`;
+    const channel = window.supabaseClient.channel(channelName);
+    const profileTables = ['professors', 'club_members'];
+
+    profileTables.forEach(table => {
+      channel.on('postgres_changes', {
+        schema: 'public',
+        table,
+        event: '*'
+      }, payload => {
+        const profile = payload.new || payload.old;
+        if (!profile?.email || this.normalizeMysteriaId(profile.email) !== normalizedEmail) return;
+
+        const user = this.getCurrentUser();
+        if (!user) return;
+
+        const profileFields = ['name', 'rank', 'role', 'house', 'avatar'];
+        const updatedUser = { ...user };
+        profileFields.forEach(field => {
+          if (Object.prototype.hasOwnProperty.call(payload.new || {}, field)) {
+            updatedUser[field] = payload.new[field];
+          }
+        });
+        localStorage.setItem(AUTH_KEY, JSON.stringify(updatedUser));
+        window.dispatchEvent(new CustomEvent('auth:user-updated', { detail: updatedUser }));
+      });
+    });
+
+    channel.subscribe(status => {
+      if (status === 'SUBSCRIBED') {
+        console.info('Realtime du profil utilisateur activé.');
+      }
+    });
+    this._profileRealtimeChannel = channel;
+  },
+
   isLoggedIn() {
     return !!this.getCurrentUser();
   },
@@ -415,6 +459,8 @@ const Auth = {
     }
   }
 };
+
+Auth.initializeProfileRealtime();
 
 // Gardien : redirection si l'utilisateur n'est pas connecté (à appeler sur chaque page protégée)
 function requireAuthOrRedirect() {
