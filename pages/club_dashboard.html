@@ -338,7 +338,7 @@
     (async () => {
       try {
         // Get current user
-        const currentUser = await Auth.getCurrentUser();
+        let currentUser = await Auth.getCurrentUser();
         if (!currentUser) {
           window.location.href = 'login.html';
           return;
@@ -366,24 +366,27 @@
           return [user?.rank, user?.role].filter(Boolean).join(' - ') || 'Membre';
         }
 
-        // Update header
-        document.getElementById('club-avatar').textContent = currentUser.avatar || '🎭';
-        document.getElementById('club-name').textContent = currentUser.name || 'Membre de Club';
-        document.getElementById('club-role').textContent = formatClubRole(currentUser);
+        function renderClubUser(user) {
+          document.getElementById('club-avatar').textContent = user.avatar || '🎭';
+          document.getElementById('club-name').textContent = user.name || 'Membre de Club';
+          document.getElementById('club-role').textContent = formatClubRole(user);
 
-        function isClubManagerUser(user) {
-          return Auth.isClubManagerUser(user);
+          const canConfigure = Auth.canAccessClubConfiguration(user);
+          const configNavLink = document.getElementById('club-config-nav-link');
+          const manageButton = document.getElementById('club-manage-btn');
+          if (configNavLink) configNavLink.style.display = canConfigure ? 'list-item' : 'none';
+          if (manageButton) manageButton.style.display = canConfigure ? 'inline-flex' : 'none';
         }
 
-        const configNavLink = document.getElementById('club-config-nav-link');
-        if (configNavLink && currentUser && Auth.canAccessClubConfiguration(currentUser)) {
-          configNavLink.style.display = 'list-item';
-        }
-
-        // Show manage button if permission
-        if (Auth.canAccessClubConfiguration(currentUser)) {
-          document.getElementById('club-manage-btn').style.display = 'inline-flex';
-        }
+        renderClubUser(currentUser);
+        window.addEventListener('auth:user-updated', event => {
+          currentUser = event.detail;
+          if (!Auth.isClubContextUser(currentUser) && !Auth.isProfessorContextUser(currentUser)) {
+            window.location.href = 'dashboard.html';
+            return;
+          }
+          renderClubUser(currentUser);
+        });
 
         // Initialize dashboard
         await initDashboard();
