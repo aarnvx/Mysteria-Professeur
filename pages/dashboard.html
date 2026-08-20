@@ -499,6 +499,19 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="discord-connect-modal">
+    <div class="modal" style="max-width:520px;">
+      <button class="modal-close" id="discord-connect-close" type="button">✕</button>
+      <h3>🔗 Connecter Discord</h3>
+      <p>Reliez votre compte Discord pour recevoir les notifications de hiboux en message privé.</p>
+      <div id="discord-connect-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+      <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+        <button class="btn btn-primary" id="discord-connect-button" type="button">Connecter mon Discord</button>
+        <button class="btn" id="discord-connect-later" type="button">Plus tard</button>
+      </div>
+    </div>
+  </div>
+
   <div class="container" style="padding-bottom:4rem; position:relative; z-index:1;">
 
     <!-- Navigation cards -->
@@ -570,6 +583,8 @@
   <script src="../js/global-sound.js"></script>
   <script>
     const user = requireAuthOrRedirect();
+    const DISCORD_CLIENT_ID = '1540008220758904913';
+    const DISCORD_REDIRECT_URI = `${window.location.origin}${window.location.pathname}`;
     if (user && Auth.isClubContextUser(user) && !Auth.isProfessorContextUser(user)) {
       window.location.href = 'club_dashboard.html';
     }
@@ -593,6 +608,52 @@
       if (createCard) createCard.style.display = Auth.hasPermission('create_content') ? 'block' : 'none';
     }
 
+    function showDiscordConnectPrompt() {
+      const modal = document.getElementById('discord-connect-modal');
+      if (modal) modal.classList.add('active');
+    }
+
+    function closeDiscordConnectPrompt() {
+      const modal = document.getElementById('discord-connect-modal');
+      if (modal) modal.classList.remove('active');
+    }
+
+    async function completeDiscordConnection() {
+      const params = new URLSearchParams(window.location.search);
+      const code = params.get('code');
+      if (!code) return false;
+      const result = await DataStore.connectDiscord(code, DISCORD_REDIRECT_URI);
+      window.history.replaceState({}, document.title, window.location.pathname);
+      if (result.ok) {
+        const updatedUser = { ...Auth.getCurrentUser(), discord_id: result.discord_id };
+        localStorage.setItem('Mysteria_auth', JSON.stringify(updatedUser));
+        renderCurrentUser(updatedUser);
+        showToast('Compte Discord connecté.', 'success');
+        return true;
+      }
+      const errorEl = document.getElementById('discord-connect-error');
+      if (errorEl) {
+        errorEl.textContent = result.error || 'Connexion Discord impossible.';
+        errorEl.style.display = 'block';
+      }
+      showDiscordConnectPrompt();
+      return false;
+    }
+
+    function setupDiscordConnection() {
+      document.getElementById('discord-connect-close')?.addEventListener('click', closeDiscordConnectPrompt);
+      document.getElementById('discord-connect-later')?.addEventListener('click', closeDiscordConnectPrompt);
+      document.getElementById('discord-connect-button')?.addEventListener('click', () => {
+        const params = new URLSearchParams({
+          client_id: DISCORD_CLIENT_ID,
+          response_type: 'code',
+          redirect_uri: DISCORD_REDIRECT_URI,
+          scope: 'identify'
+        });
+        window.location.href = `https://discord.com/oauth2/authorize?${params}`;
+      });
+    }
+
     // Tout le rendu dépendant de l'utilisateur est aussi actualisé par Realtime.
     (async () => {
       try {
@@ -600,6 +661,9 @@
 
         console.log('Dashboard utilisateur chargé :', user);
         renderCurrentUser(user);
+        setupDiscordConnection();
+        const connected = await completeDiscordConnection();
+        if (!connected && !user.discord_id) showDiscordConnectPrompt();
       } catch (err) {
         console.error('Erreur lors de l\'affichage des infos utilisateur :', err);
       }
