@@ -139,6 +139,14 @@
       background: rgba(201,168,76,0.14);
       color: var(--gold);
     }
+    .portal-footer {
+      padding: 2rem 0 1rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+    }
     @media (max-width: 960px) {
       .hiboux-grid {
         grid-template-columns: 1fr;
@@ -208,6 +216,7 @@
         </div>
       </section>
     </div>
+    <footer class="portal-footer">Portail Académique Mysteria</footer>
   </div>
 
   <!-- Modal to view and reply to a missive -->
@@ -550,6 +559,12 @@
             window.location.href = '../index.html';
           }
           return;
+        }
+        if (result.missive) {
+          const notification = await DataStore.notifyMissiveOnDiscord(result.missive);
+          if (!notification.ok) {
+            console.warn('Notification Discord non envoyée :', notification.error);
+          }
         }
         if (result.missive) {
           addMissiveToList(result.missive);
