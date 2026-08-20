@@ -564,6 +564,7 @@
           const notification = await DataStore.notifyMissiveOnDiscord(result.missive);
           if (!notification.ok) {
             console.warn('Notification Discord non envoyée :', notification.error);
+            showToast('Hibou enregistré, mais notification Discord indisponible.', 'error');
           }
         }
         if (result.missive) {
