@@ -349,13 +349,35 @@ const DataStore = {
         body: { missive }
       });
       if (error) {
-        console.error('[Hiboux] Erreur Edge Function Discord', error);
-        return { ok: false, error: error.message || String(error) };
+        let details = '';
+        try {
+          if (error.context instanceof Response) {
+            const responseBody = await error.context.clone().json();
+            details = responseBody?.error || responseBody?.message || '';
+          }
+        } catch (bodyError) {
+          console.warn('[Hiboux] Réponse d’erreur Discord illisible', bodyError);
+        }
+        console.error('[Hiboux] Erreur Edge Function Discord', { error, details });
+        return { ok: false, error: details || error.message || String(error) };
       }
       console.info('[Hiboux] Réponse Edge Function Discord', data);
       return data || { ok: true };
     } catch (err) {
       console.error('Error notifying Discord:', err);
+      return { ok: false, error: String(err) };
+    }
+  },
+
+  async connectDiscord(code, redirectUri) {
+    try {
+      const { data, error } = await window.supabaseClient.functions.invoke('discord-connect', {
+        body: { code, redirect_uri: redirectUri }
+      });
+      if (error) return { ok: false, error: error.message || String(error) };
+      return data || { ok: false, error: 'Réponse Discord vide.' };
+    } catch (err) {
+      console.error('Error connecting Discord:', err);
       return { ok: false, error: String(err) };
     }
   },
