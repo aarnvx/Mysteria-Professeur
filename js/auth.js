@@ -124,8 +124,8 @@ const Auth = {
         finalName = 'Professeur ' + finalName;
       }
 
-      const finalRank = rank || emailRole?.rank || 'Professeur';
-      const finalRole = role || emailRole?.role || 'Aucune';
+      const finalRank = rank || emailRole?.rank || 'Professeur Apprenti';
+      const finalRole = role === 'prof' ? 'Professeur' : (role || emailRole?.role || 'Professeur');
       const finalAvatar = emailRole?.avatar || '🎓';
 
       if (password) {
@@ -226,7 +226,7 @@ const Auth = {
       return { role: 'staff', rank: 'Staff', defaultName: 'Membre Staff', avatar: '🛡️' };
     }
     if (normalized.endsWith('.prof') || normalized.includes('mysteria.prof')) {
-      return { role: 'prof', rank: 'Professeur', defaultName: 'Professeur', avatar: '🎓' };
+      return { role: 'prof', rank: 'Professeur Apprenti', defaultName: 'Professeur', avatar: '🎓' };
     }
     if (normalized.endsWith('.club') || normalized.includes('mysteria.club')) {
       return { role: 'club', rank: 'Membre de club', defaultName: 'Membre de club', avatar: '🎭' };
