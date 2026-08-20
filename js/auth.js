@@ -96,6 +96,7 @@ const Auth = {
         role: profile.role || emailRole?.role || 'Aucune',
         house: profile.house || null,
         avatar: profile.avatar || emailRole?.avatar || '🎓',
+        discord_id: profile.discord_id || null,
         loggedAt: new Date().toISOString()
       };
 
@@ -404,7 +405,7 @@ const Auth = {
         const user = this.getCurrentUser();
         if (!user) return;
 
-        const profileFields = ['name', 'rank', 'role', 'house', 'avatar'];
+        const profileFields = ['name', 'rank', 'role', 'house', 'avatar', 'discord_id'];
         const updatedUser = { ...user };
         profileFields.forEach(field => {
           if (Object.prototype.hasOwnProperty.call(payload.new || {}, field)) {
