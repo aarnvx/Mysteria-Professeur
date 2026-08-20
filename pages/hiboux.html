@@ -167,6 +167,7 @@
     <ul class="navbar-nav">
       <li><a href="dashboard.html">🏠 Accueil</a></li>
       <li><a href="courses.html">📚 Cours</a></li>
+      <li><a href="planning.html">🗓️ Planning</a></li>
       <li><a href="points.html">⚡ Points</a></li>
       <li><a href="blames.html">📜 Blâme</a></li>
       <li><a href="roles.html">🎓 Équipe</a></li>
@@ -208,11 +209,18 @@
         <div class="section-title-row">
           <div>
             <span class="page-title-small">Réception</span>
-            <h2>Vos missives</h2>
+            <h2>Courrier</h2>
           </div>
         </div>
-        <div class="missive-list" id="missive-list">
-          <div class="missive-empty">Chargement des missives…</div>
+        <div id="missive-list">
+          <h3>Vos missives</h3>
+          <div class="missive-list" id="missive-sent-list">
+            <div class="missive-empty">Chargement des missives…</div>
+          </div>
+          <h3 style="margin-top:2rem;">Missives reçues</h3>
+          <div class="missive-list" id="missive-received-list">
+            <div class="missive-empty">Chargement des missives…</div>
+          </div>
         </div>
       </section>
     </div>
@@ -243,7 +251,7 @@
   <script>
     const user = requireAuthOrRedirect();
     if (user && Auth.isClubContextUser(user) && !Auth.isProfessorContextUser(user)) {
-      window.location.href = 'club_dashboard.html';
+      window.location.href = 'club_hiboux.html';
     }
 
     const missiveCache = new Map();
@@ -313,24 +321,24 @@
       `;
     }
 
-    function setMissiveListEmpty(message) {
-      const list = document.getElementById('missive-list');
+    function setMissiveListEmpty(message, listId = 'missive-list') {
+      const list = document.getElementById(listId);
       if (list) {
         list.innerHTML = `<div class="missive-empty">${message}</div>`;
       }
     }
 
-    function addMissiveToList(missive) {
-      if (!missive || !document.getElementById('missive-list')) return;
+    function addMissiveToList(missive, listId = 'missive-list') {
+      if (!missive || !document.getElementById(listId)) return;
       // Assure que la missive a un identifiant stable pour le cache et les identifiants DOM.
-      const listEl = document.getElementById('missive-list');
+      const listEl = document.getElementById(listId);
       const mid = missive.id || ('mk_' + Math.random().toString(36).slice(2, 9));
       if (missiveCache.has(mid)) return;
       if (!isMissiveRelevant(missive)) return;
       // Réaffecte l'id à l'objet pour garder une cohérence globale.
       if (!missive.id) missive.id = mid;
       missiveCache.set(mid, missive);
-      const list = document.getElementById('missive-list');
+      const list = document.getElementById(listId);
       if (!list) return;
       if (list.firstChild && list.firstChild.classList && list.firstChild.classList.contains('missive-empty')) {
         list.innerHTML = '';
@@ -467,7 +475,7 @@
 
     async function loadMissiveRecipients() {
       try {
-        const professors = await DataStore.getAllProfessors();
+        const recipients = await DataStore.getAllProfessors();
         const select = document.getElementById('missive-recipient');
         if (!select) return;
         select.innerHTML = '';
@@ -476,11 +484,11 @@
         allOption.value = '';
         allOption.textContent = 'Tous les professeurs';
         select.appendChild(allOption);
-        professors.forEach(prof => {
-          const value = prof.email || prof.id;
-          const label = prof.name || prof.email || prof.id;
-          if (value && prof.name) {
-            recipientNameByEmail.set(value.toLowerCase(), prof.name);
+        recipients.forEach(recipient => {
+          const value = recipient.email || recipient.id;
+          const label = recipient.name || recipient.email || recipient.id;
+          if (value && recipient.name) {
+            recipientNameByEmail.set(value.toLowerCase(), recipient.name);
           }
           const option = document.createElement('option');
           option.value = value;
@@ -499,14 +507,18 @@
         if (!list) return;
         missiveCache.clear();
         if (!Array.isArray(missives) || missives.length === 0) {
-          setMissiveListEmpty('Aucune missive pour le moment.');
+          setMissiveListEmpty('Aucune missive envoyée.', 'missive-sent-list');
+          setMissiveListEmpty('Aucune missive reçue.', 'missive-received-list');
           return;
         }
-        list.innerHTML = '';
-        missives.forEach(missive => addMissiveToList(missive));
-        if (!list.firstChild) {
-          setMissiveListEmpty('Aucune missive pour le moment.');
-        }
+        const sent = missives.filter(missive => normalizeString(missive.author) === normalizeString(user.email));
+        const received = missives.filter(missive => !sent.includes(missive));
+        document.getElementById('missive-sent-list').innerHTML = '';
+        document.getElementById('missive-received-list').innerHTML = '';
+        sent.forEach(missive => addMissiveToList(missive, 'missive-sent-list'));
+        received.forEach(missive => addMissiveToList(missive, 'missive-received-list'));
+        if (!sent.length) setMissiveListEmpty('Aucune missive envoyée.', 'missive-sent-list');
+        if (!received.length) setMissiveListEmpty('Aucune missive reçue.', 'missive-received-list');
       } catch (err) {
         console.error('Erreur lors du chargement des missives :', err);
         setMissiveListEmpty('Impossible de charger les missives.');
@@ -564,7 +576,7 @@
           const notification = await DataStore.notifyMissiveOnDiscord(result.missive);
           if (!notification.ok) {
             console.warn('Notification Discord non envoyée :', notification.error);
-            showToast('Hibou enregistré, mais notification Discord indisponible.', 'error');
+            showToast(`Hibou enregistré. Discord : ${notification.error || 'erreur inconnue'}`, 'error');
           }
         }
         if (result.missive) {
