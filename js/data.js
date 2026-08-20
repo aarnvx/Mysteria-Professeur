@@ -338,6 +338,20 @@ const DataStore = {
     }
   },
 
+  async notifyMissiveOnDiscord(missive) {
+    if (!missive) return { ok: true, skipped: true };
+    try {
+      const { data, error } = await window.supabaseClient.functions.invoke('notify-missive', {
+        body: { missive }
+      });
+      if (error) return { ok: false, error: error.message || String(error) };
+      return data || { ok: true };
+    } catch (err) {
+      console.error('Error notifying Discord:', err);
+      return { ok: false, error: String(err) };
+    }
+  },
+
   // Delete a missive by id. RLS will enforce author-only deletion if configured.
   async deleteMissive(id) {
     if (!id) return { ok: false, error: 'Missing id' };
