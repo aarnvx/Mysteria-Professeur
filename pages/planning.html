@@ -15,14 +15,18 @@
     .schedule-panel, .booking-panel { background:rgba(9,9,24,.9); border:1px solid var(--border); border-radius:10px; padding:1rem; }
     .schedule-header { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:.75rem; }
     .schedule-date { color:var(--gold); font-family:'Cinzel',serif; }
-    .schedule { display:grid; grid-template-columns:76px minmax(0,1fr); border-top:1px solid var(--border); }
-    .time-label { min-height:58px; padding:.65rem .5rem 0 0; color:var(--text-dim); font-size:.75rem; text-align:right; border-bottom:1px solid rgba(255,255,255,.07); }
-    .time-cell { min-height:58px; padding:.35rem; border-left:1px solid var(--border); border-bottom:1px solid rgba(255,255,255,.07); cursor:pointer; transition:background .2s; }
+    .schedule { display:flex; gap:.5rem; overflow-x:auto; overflow-y:hidden; padding:.25rem .25rem .85rem; border-top:1px solid var(--border); scrollbar-width:thin; scrollbar-color:var(--gold-dim) rgba(255,255,255,.08); }
+    .schedule::-webkit-scrollbar { height:10px; }
+    .schedule::-webkit-scrollbar-track { background:rgba(255,255,255,.08); border-radius:5px; }
+    .schedule::-webkit-scrollbar-thumb { background:var(--gold-dim); border-radius:5px; }
+    .schedule-slot { flex:0 0 138px; }
+    .time-label { min-height:auto; padding:.45rem .25rem; color:var(--text-dim); font-size:.75rem; text-align:center; border-bottom:1px solid rgba(255,255,255,.07); }
+    .time-cell { min-height:110px; padding:.35rem; border:1px solid var(--border); border-radius:6px; cursor:pointer; transition:background .2s; }
     .time-cell:hover { background:rgba(201,168,76,.08); }
     .time-cell.is-booked { cursor:default; }
     .booking-chip { height:100%; min-height:42px; padding:.45rem .6rem; border-left:3px solid var(--gold); border-radius:4px; background:rgba(201,168,76,.15); color:var(--text); font-size:.78rem; }
     .booking-chip strong { display:block; color:var(--gold); margin-bottom:.15rem; }
-    .empty-schedule { grid-column:1 / -1; padding:2rem; color:var(--text-dim); text-align:center; }
+    .empty-schedule { min-width:100%; padding:2rem; color:var(--text-dim); text-align:center; }
     .booking-panel h2 { margin-top:0; color:var(--gold); font-family:'Cinzel',serif; font-size:1.05rem; }
     .booking-panel .form-group { margin-bottom:1rem; }
     .booking-panel small { color:var(--text-dim); }
@@ -144,6 +148,7 @@
       const formatTime = total => `${String(Math.floor((total % 1440) / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
       for (let slot = startMinutes; slot < endMinutes; slot += 30) {
         const time = formatTime(slot);
+        const slotColumn = document.createElement('div'); slotColumn.className = 'schedule-slot';
         const label = document.createElement('div'); label.className = 'time-label'; label.textContent = time;
         const cell = document.createElement('div'); cell.className = 'time-cell';
         const reservation = filtered.find(item => isOverlapping(item, time));
@@ -154,7 +159,8 @@
           cell.title = `Réserver ${time}`;
           cell.addEventListener('click', () => { document.getElementById('booking-time').value = time; document.getElementById('booking-subject').focus(); });
         }
-        schedule.append(label, cell);
+        slotColumn.append(label, cell);
+        schedule.append(slotColumn);
       }
       document.getElementById('schedule-date').textContent = formatDate(selectedDate);
       document.getElementById('reservation-count').textContent = `${filtered.length} réservation${filtered.length > 1 ? 's' : ''}`;
