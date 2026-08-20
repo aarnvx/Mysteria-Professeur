@@ -14,6 +14,29 @@
       margin-top: 1.5rem;
     }
 
+    .member-category {
+      grid-column: 1 / -1;
+      margin-top: 1.5rem;
+    }
+
+    .member-category:first-child { margin-top: 0; }
+
+    .member-category-title {
+      margin: 0 0 0.75rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 1px solid rgba(201,168,76,0.28);
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .member-category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
     .member-card {
       background: var(--bg-card);
       border: 1px solid var(--border);
@@ -79,6 +102,28 @@
       background: rgba(201,168,76,0.08);
       border: 1px solid rgba(201,168,76,0.3);
       color: var(--gold-dim);
+    }
+
+    .member-house img {
+      width: 18px;
+      height: 18px;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 0 5px rgba(201,168,76,0.45));
+    }
+
+    .member-emblem {
+      display: block;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .member-emblem img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 5px rgba(201,168,76,0.45));
     }
 
     /* ── Filter/Search ── */
@@ -222,8 +267,11 @@
     </div>
     <ul class="navbar-nav">
       <li><a href="club_dashboard.html">🏠 Accueil</a></li>
-      <li><a href="club_members.html" class="active">👥 Membres</a></li>
+      <li><a href="club_members.html">👥 Membres</a></li>
       <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
   </nav>
@@ -267,6 +315,9 @@
       <select id="role-filter" class="filter-select">
         <option value="">📋 Tous les rôles</option>
       </select>
+      <select id="club-filter" class="filter-select">
+        <option value="">🎭 Tous les clubs</option>
+      </select>
     </div>
 
     <!-- Members Grid -->
@@ -285,7 +336,9 @@
   <script src="../js/global-sound.js"></script>
   <script>
     const currentUser = requireAuthOrRedirect();
-    if (!currentUser) return;
+    if (!currentUser) {
+      window.location.href = 'club.html';
+    } else {
 
     function isClubManagerUser(user) {
       return Auth.isClubManagerUser(user);
@@ -299,16 +352,56 @@
     // Verify user has access to club section
     if (!Auth.isClubContextUser(currentUser) && !Auth.isProfessorContextUser(currentUser)) {
       window.location.href = 'club_dashboard.html';
-      return;
     }
 
     let allMembers = [];
     let clubMembersRealtimeChannel = null;
+
+    const houseImages = {
+      gryffondor: '../img/gryffindor.png',
+      serpentard: '../img/slytherin.png',
+      serdaigle: '../img/ravenclaw.png',
+      poufsouffle: '../img/hufflepuff.png'
+    };
+
+    function normalizeEmail(value) {
+      return String(value || '').trim().replace(/^[@^]/, '').toLowerCase();
+    }
+
+    function getHouseImage(house) {
+      const key = normalizeEmail(house).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return houseImages[key] || null;
+    }
  
     async function loadMembers() {
       try {
         const members = await DataStore.getClubMembers();
-        allMembers = members || [];
+        let clubs = [];
+        try {
+          clubs = await DataStore.getClubs();
+        } catch (clubsError) {
+          console.warn('Impossible de charger les clubs pour enrichir l’annuaire:', clubsError);
+        }
+        const clubsById = new Map((clubs || []).map(club => [club.club_id, club]));
+        allMembers = (members || []).map(member => ({
+          ...member,
+          club: clubsById.get(member.club_id) || (clubs || []).find(club =>
+            normalizeEmail(club.manager_email) === normalizeEmail(member.email)
+          ) || null
+        }));
+        allMembers = allMembers.map(member => ({
+          ...member,
+          club_id: member.club_id || member.club?.club_id || null
+        }));
+
+        const clubFilter = document.getElementById('club-filter');
+        clubFilter.innerHTML = '<option value="">🎭 Tous les clubs</option>';
+        (clubs || []).forEach(club => {
+          const option = document.createElement('option');
+          option.value = club.club_id;
+          option.textContent = club.name;
+          clubFilter.appendChild(option);
+        });
 
         if (!allMembers || allMembers.length === 0) {
           renderEmptyState();
@@ -337,7 +430,7 @@
 
       } catch (err) {
         console.error('Erreur chargement membres:', err);
-        renderEmptyState('Impossible de charger les membres.');
+        renderEmptyState(`Impossible de charger les membres : ${err.message || 'vérifiez les permissions Supabase.'}`);
       }
     }
 
@@ -360,16 +453,51 @@
       }
 
       container.innerHTML = '';
-      members.forEach(member => {
+      const isManager = member => {
+        const signals = `${member.role || ''} ${member.rank || ''}`.toLowerCase();
+        return Boolean(member.club?.manager_email && normalizeEmail(member.email) === normalizeEmail(member.club.manager_email)) || /gérant|gerant|manager/.test(signals);
+      };
+
+      const renderMemberCard = member => {
         const card = document.createElement('div');
         card.className = 'member-card';
+        const isClubManager = isManager(member);
+        const houseImage = getHouseImage(member.house);
         card.innerHTML = `
           <div class="member-avatar">${member.avatar || '🎭'}</div>
           <div class="member-name">${member.name || member.email}</div>
-          <div class="member-role">${member.role || 'Membre'}</div>
-          ${member.house ? `<div class="member-house">🏰 ${member.house}</div>` : ''}
+          <div class="member-role">${member.role || member.rank || 'Membre'}</div>
+          ${member.club ? `<div class="member-house">${isClubManager ? `Gérant du ${member.club.name}` : `Membre du ${member.club.name}`}</div>` : ''}
+          ${houseImage ? `<div class="member-emblem"><img src="${houseImage}" alt="${member.house}" title="${member.house}"></div>` : ''}
         `;
-        container.appendChild(card);
+        return card;
+      };
+
+      const renderCategory = (title, categoryMembers) => {
+        if (!categoryMembers.length) return;
+        const section = document.createElement('section');
+        section.className = 'member-category';
+        section.innerHTML = `<h2 class="member-category-title">${title}</h2>`;
+        const grid = document.createElement('div');
+        grid.className = 'member-category-grid';
+        categoryMembers.forEach(member => grid.appendChild(renderMemberCard(member)));
+        section.appendChild(grid);
+        container.appendChild(section);
+      };
+
+      renderCategory('👑 Gérants de club', members.filter(isManager));
+
+      const regularMembers = members.filter(member => !isManager(member));
+      const groupedClubs = new Map();
+      regularMembers.forEach(member => {
+        const key = member.club?.club_id || '__unassigned__';
+        if (!groupedClubs.has(key)) groupedClubs.set(key, []);
+        groupedClubs.get(key).push(member);
+      });
+
+      groupedClubs.forEach((categoryMembers, clubId) => {
+        const club = categoryMembers[0].club;
+        renderCategory(club ? `🎭 Club de ${club.name}` : '📭 Sans club', categoryMembers);
       });
     }
 
@@ -386,6 +514,7 @@
     function filterMembers() {
       const searchTerm = document.getElementById('search-input').value.toLowerCase();
       const roleFilter = document.getElementById('role-filter').value;
+      const clubFilter = document.getElementById('club-filter').value;
 
       let filtered = allMembers;
 
@@ -394,12 +523,18 @@
         filtered = filtered.filter(m => m.role === roleFilter);
       }
 
+      if (clubFilter) {
+        filtered = filtered.filter(m => m.club_id === clubFilter);
+      }
+
       // Filter by search
       if (searchTerm) {
         filtered = filtered.filter(m => 
           (m.name || '').toLowerCase().includes(searchTerm) ||
           (m.email || '').toLowerCase().includes(searchTerm) ||
-          (m.role || '').toLowerCase().includes(searchTerm)
+          (m.role || '').toLowerCase().includes(searchTerm) ||
+          (m.rank || '').toLowerCase().includes(searchTerm) ||
+          (m.club?.name || '').toLowerCase().includes(searchTerm)
         );
       }
 
@@ -410,6 +545,7 @@
     // Event listeners
     document.getElementById('search-input').addEventListener('input', filterMembers);
     document.getElementById('role-filter').addEventListener('change', filterMembers);
+    document.getElementById('club-filter').addEventListener('change', filterMembers);
  
     // Load on page init
     loadMembers();
@@ -471,6 +607,13 @@
       init();
       animate();
     })();
+    }
+  </script>
+  <script>
+    const currentPage = window.location.pathname.split('/').pop() || 'club_members.html';
+    document.querySelectorAll('.navbar a[href]').forEach(link => {
+      if (link.getAttribute('href') === currentPage) link.classList.add('active');
+    });
   </script>
 </body>
 </html>
