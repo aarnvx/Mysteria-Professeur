@@ -341,10 +341,18 @@ const DataStore = {
   async notifyMissiveOnDiscord(missive) {
     if (!missive) return { ok: true, skipped: true };
     try {
+      console.info('[Hiboux] Appel de la fonction Discord', {
+        recipient: missive.recipient || 'tous les professeurs',
+        missiveId: missive.id
+      });
       const { data, error } = await window.supabaseClient.functions.invoke('notify-missive', {
         body: { missive }
       });
-      if (error) return { ok: false, error: error.message || String(error) };
+      if (error) {
+        console.error('[Hiboux] Erreur Edge Function Discord', error);
+        return { ok: false, error: error.message || String(error) };
+      }
+      console.info('[Hiboux] Réponse Edge Function Discord', data);
       return data || { ok: true };
     } catch (err) {
       console.error('Error notifying Discord:', err);
