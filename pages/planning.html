@@ -95,8 +95,9 @@
     let reservations = [];
     let courses = [];
     let planningRealtimeChannel = null;
-    const startHour = 8;
-    const endHour = 20;
+    const defaultSubjects = ['Sortilèges', 'DCFM', 'Astronomie', 'Métamorphose', 'Soins aux créatures', 'Histoire de la Magie', 'Potions', 'Botanique', 'Divination', 'Vol sur balai', 'Alchimie', 'Étude des Moldus', 'Arithmancie'];
+    const startMinutes = 18 * 60;
+    const endMinutes = 27 * 60;
 
     const dateKey = date => date.toISOString().slice(0, 10);
     const formatDate = date => date.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
@@ -110,18 +111,16 @@
 
     function populateTimeOptions() {
       const select = document.getElementById('booking-time');
-      for (let hour = startHour; hour < endHour; hour += 0.5) {
-        const startMinutes = Math.round(hour * 60);
-        const endMinutes = startMinutes + 30;
-        const formatTime = totalMinutes => `${String(Math.floor(totalMinutes / 60)).padStart(2, '0')}:${String(totalMinutes % 60).padStart(2, '0')}`;
-        const start = formatTime(startMinutes);
-        const end = formatTime(endMinutes);
+      const formatTime = total => `${String(Math.floor((total % 1440) / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+      for (let slot = startMinutes; slot < endMinutes; slot += 30) {
+        const start = formatTime(slot);
+        const end = formatTime(slot + 30);
         select.insertAdjacentHTML('beforeend', `<option value="${start}">${start} - ${end}</option>`);
       }
     }
 
     function populateSubjectOptions() {
-      const names = [...new Set(courses.map(course => course.subject || course.title || course.name).filter(Boolean))].sort();
+      const names = [...new Set([...defaultSubjects, ...courses.map(course => course.tag).filter(Boolean)])].sort();
       const selects = [document.getElementById('booking-subject'), document.getElementById('planning-subject-filter')];
       selects.forEach((select, index) => {
         select.innerHTML = index ? '<option value="all">Toutes les matières</option>' : '<option value="">Choisir une matière</option>';
@@ -130,9 +129,9 @@
     }
 
     function isOverlapping(reservation, time) {
-      const start = Number(time.slice(0, 2)) * 60 + Number(time.slice(3));
-      const reservationStart = Number(reservation.start_time.slice(0, 2)) * 60 + Number(reservation.start_time.slice(3, 5));
-      const reservationEnd = Number(reservation.end_time.slice(0, 2)) * 60 + Number(reservation.end_time.slice(3, 5));
+      const start = Number(time.slice(0, 2)) * 60 + Number(time.slice(3)) + (Number(time.slice(0, 2)) < 18 ? 1440 : 0);
+      const reservationStart = Number(reservation.start_time.slice(0, 2)) * 60 + Number(reservation.start_time.slice(3, 5)) + (Number(reservation.start_time.slice(0, 2)) < 18 ? 1440 : 0);
+      const reservationEnd = Number(reservation.end_time.slice(0, 2)) * 60 + Number(reservation.end_time.slice(3, 5)) + (Number(reservation.end_time.slice(0, 2)) < 18 ? 1440 : 0);
       return start >= reservationStart && start < reservationEnd;
     }
 
@@ -142,8 +141,9 @@
       const subjectFilter = document.getElementById('planning-subject-filter').value;
       const filtered = reservations.filter(item => (!yearFilter || yearFilter === 'all' || item.school_year === yearFilter) && (!subjectFilter || subjectFilter === 'all' || item.subject === subjectFilter));
       schedule.innerHTML = '';
-      for (let hour = startHour; hour < endHour; hour += .5) {
-        const time = `${String(Math.floor(hour)).padStart(2, '0')}:${hour % 1 ? '30' : '00'}`;
+      const formatTime = total => `${String(Math.floor((total % 1440) / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+      for (let slot = startMinutes; slot < endMinutes; slot += 30) {
+        const time = formatTime(slot);
         const label = document.createElement('div'); label.className = 'time-label'; label.textContent = time;
         const cell = document.createElement('div'); cell.className = 'time-cell';
         const reservation = filtered.find(item => isOverlapping(item, time));
@@ -189,8 +189,9 @@
       const startTime = document.getElementById('booking-time').value;
       if (!subject || !schoolYear || !startTime) return setMessage('Choisis une matière, une année et une heure.', true);
       if (reservations.some(item => isOverlapping(item, startTime))) return setMessage('Ce créneau est déjà réservé.', true);
-      const endMinutes = Number(startTime.slice(0, 2)) * 60 + Number(startTime.slice(3)) + 30;
-      const endTime = `${String(Math.floor(endMinutes / 60)).padStart(2, '0')}:${String(endMinutes % 60).padStart(2, '0')}`;
+      const startSlotMinutes = Number(startTime.slice(0, 2)) * 60 + Number(startTime.slice(3)) + (Number(startTime.slice(0, 2)) < 18 ? 1440 : 0);
+      const endSlotMinutes = startSlotMinutes + 30;
+      const endTime = `${String(Math.floor((endSlotMinutes % 1440) / 60)).padStart(2, '0')}:${String(endSlotMinutes % 60).padStart(2, '0')}`;
       const payload = { date: dateKey(selectedDate), start_time: startTime, end_time: endTime, subject, school_year: schoolYear, teacher_email: currentUser.email, teacher_name: currentUser.name || currentUser.email, note: document.getElementById('booking-note').value.trim() || null };
       const { error } = await database.from('lesson_slots').insert(payload);
       if (error) return setMessage(error.message, true);
