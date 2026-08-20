@@ -828,7 +828,7 @@
         const password = document.getElementById('setup-password').value;
         const emailRole = window.tempEmailRole || null;
         const finalRank = emailRole?.rank || 'Professeur Apprenti';
-        const finalRole = emailRole?.role || 'Aucune';
+        const finalRole = emailRole?.role === 'prof' ? 'Professeur' : (emailRole?.role || 'Professeur');
         const result = await Auth.setupProfile(window.tempSetupEmail, name, finalRank, finalRole, house, password);
         if (result.ok) {
           btn.textContent = '✨ Bienvenue à Mysteria !';
