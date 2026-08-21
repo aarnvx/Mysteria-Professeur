@@ -70,14 +70,14 @@
           beginPlayback();
         },
         onStateChange: event => {
-          if (event.data === window.YT.PlayerState.ENDED) player.playVideo();
+          if (event.data === window.YT.PlayerState.ENDED && typeof player?.playVideo === 'function') player.playVideo();
         }
       }
     });
   }
 
   function beginPlayback() {
-    if (!player) return;
+    if (!player || typeof player.playVideo !== 'function') return;
     if (attemptedAutoStart) return;
     attemptedAutoStart = true;
     player.playVideo();
@@ -93,7 +93,7 @@
       player?.pauseVideo();
     },
     resumeAfterTransition() {
-      player?.playVideo();
+      if (typeof player?.playVideo === 'function') player.playVideo();
     }
   };
 
