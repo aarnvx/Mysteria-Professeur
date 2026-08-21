@@ -195,7 +195,7 @@
     }
 
     .viewer-body {
-      padding: 2rem;
+      padding: 1rem 1.25rem;
       position: relative;
       max-height: calc(100vh - 9rem);
       overflow-y: auto;
@@ -282,6 +282,97 @@
       padding: 0.1em 0.4em;
       font-size: 0.9em;
       color: var(--gold-light);
+    }
+
+    .course-pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    #viewer-content {
+      min-height: 220px;
+      max-height: calc(100vh - 245px);
+      overflow: auto;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0;
+      perspective: 1200px;
+    }
+    #viewer-content img {
+      display: block;
+      width: auto !important;
+      max-width: calc(100% - 0.5rem);
+      max-height: calc(100vh - 225px);
+      object-fit: contain;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+    #viewer-content.page-turn {
+      animation: pageTurn 0.48s ease both;
+    }
+    #viewer-content.page-turn-previous { animation-name: pageTurnPrevious; }
+    @keyframes pageTurn {
+      0% { opacity: 0; transform: rotateY(-72deg) translateX(24px); transform-origin: left center; }
+      100% { opacity: 1; transform: rotateY(0) translateX(0); transform-origin: left center; }
+    }
+    @keyframes pageTurnPrevious {
+      0% { opacity: 0; transform: rotateY(72deg) translateX(-24px); transform-origin: right center; }
+      100% { opacity: 1; transform: rotateY(0) translateX(0); transform-origin: right center; }
+    }
+    .pdf-page-selection {
+      display: none;
+      margin: 0.75rem 0;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      background: rgba(0, 0, 0, 0.12);
+    }
+    .pdf-page-selection.visible { display: block; }
+    .pdf-page-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+      gap: 0.65rem;
+      max-height: 230px;
+      overflow: auto;
+      margin-top: 0.75rem;
+    }
+    .pdf-page-option {
+      position: relative;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      padding: 0.3rem;
+      background: rgba(255, 255, 255, 0.04);
+    }
+    .pdf-page-option:has(input:checked) {
+      border-color: var(--gold-light);
+      box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.2);
+    }
+    .pdf-page-option img { display: block; width: 100%; height: 118px; object-fit: contain; background: #111; }
+    .pdf-page-option span { display: block; text-align: center; font-size: 0.72rem; margin-top: 0.25rem; color: var(--text-dim); }
+    .pdf-page-option input { position: absolute; top: 0.45rem; left: 0.45rem; z-index: 1; accent-color: var(--gold-light); }
+    .course-preview {
+      display: none;
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.14);
+    }
+    .course-preview.visible { display: block; }
+    .course-preview img { display: block; max-width: 100%; max-height: 260px; margin: 0 auto; object-fit: contain; }
+    .course-create-modal {
+      max-height: calc(100vh - 2rem);
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+    .course-page-indicator {
+      min-width: 5rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
     }
 
     /* No results */
@@ -494,6 +585,11 @@
       </div>
       <div class="viewer-body">
         <div class="course-content protected-content" id="viewer-content"></div>
+        <div class="course-pagination" id="course-pagination" style="display:none;">
+          <button class="btn btn-secondary btn-sm" id="course-previous-page" type="button" aria-label="Page précédente">←</button>
+          <span class="course-page-indicator" id="course-page-indicator">Page 1 / 1</span>
+          <button class="btn btn-secondary btn-sm" id="course-next-page" type="button" aria-label="Page suivante">→</button>
+        </div>
         <div class="viewer-actions" style="margin-top:2rem; border-top:1px solid var(--border); padding-top:1rem; display:flex; justify-content:flex-end;">
           <div style="display:flex; gap:0.75rem;">
             <button id="btn-edit-course" class="btn btn-secondary btn-sm" style="display:none;">✏️ Modifier le cours</button>
@@ -506,7 +602,7 @@
 
   <!-- Modale ajout cours -->
   <div class="modal-overlay" id="add-course-modal">
-    <div class="modal" style="max-width:640px;">
+    <div class="modal course-create-modal" style="max-width:640px;">
       <button class="modal-close" onclick="closeAddCourse()">✕</button>
       <h3 id="course-modal-title">📚 Ajouter un Cours</h3>
       <p style="margin-bottom:1.25rem;">Remplissez les informations pour créer un nouveau cours dans la bibliothèque.</p>
@@ -570,11 +666,23 @@
       <div class="form-group">
         <label class="form-label" for="new-content">Contenu du cours</label>
         <div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:0.5rem; font-family:'Cinzel',serif;">
-          Formats : **gras**, *italique*, __souligné__, --barré-- ou ~~barré~~, ||spoiler||, `code`, # titre, - liste, > citation
+          Importez un PDF pour créer automatiquement une page par page, ou saisissez le contenu manuellement.
+        </div>
+        <input class="form-input" type="file" id="new-content-pdf" accept="application/pdf,.pdf" style="margin-bottom:0.75rem;" />
+        <div id="pdf-import-status" style="display:none; color:var(--gold-dim); font-size:0.8rem; margin-bottom:0.75rem;"></div>
+        <div class="pdf-page-selection" id="pdf-page-selection">
+          <div style="display:flex; justify-content:space-between; align-items:center; gap:0.75rem; flex-wrap:wrap;">
+            <strong>Choisissez les pages à importer</strong>
+            <button class="btn btn-secondary btn-sm" id="select-all-pdf-pages" type="button">Tout sélectionner</button>
+          </div>
+          <div class="pdf-page-grid" id="pdf-page-grid"></div>
+          <button class="btn btn-secondary btn-sm" id="import-selected-pdf-pages" type="button" style="margin-top:0.75rem;">Importer les pages sélectionnées</button>
         </div>
         <textarea class="form-input" id="new-content" rows="10"
           style="resize:vertical; font-family: monospace; font-size:0.85rem;"
           placeholder="# Titre du cours&#10;&#10;## Introduction&#10;&#10;Contenu du cours ici..."></textarea>
+        <button class="btn btn-secondary btn-sm" id="preview-course-button" type="button" style="margin-top:0.75rem;">👁️ Prévisualiser le cours</button>
+        <div class="course-preview" id="course-preview"></div>
       </div>
 
       <div class="form-error" id="add-course-error" style="display:none; margin-bottom:0.75rem;"></div>
@@ -591,7 +699,9 @@
   <script src="../js/auth.js"></script>
   <script src="../js/data.js"></script>
   <script src="../js/global-sound.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script>
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
     requireAuthOrRedirect();
     const currentUser = Auth.getCurrentUser();
 
@@ -607,6 +717,178 @@
     let currentSearch = '';
     let courseRealtimeChannel = null;
     let editingCourseId = null;
+    let viewerPages = [];
+    const coursePageSeparator = '\n\n--- MYSTERIA COURSE PAGE ---\n\n';
+    const courseImageMarker = 'MYSTERIA_COURSE_IMAGES_V1:';
+    let pendingCourseImages = null;
+    let pendingPdfPages = [];
+    let pdfSelectionDirection = 'next';
+
+    function splitCoursePages(content) {
+      const pages = String(content || '').split(coursePageSeparator);
+      return pages.length ? pages : [''];
+    }
+
+    function getCourseImages(content) {
+      if (!String(content || '').startsWith(courseImageMarker)) return null;
+      try {
+        const images = JSON.parse(String(content).slice(courseImageMarker.length));
+        return Array.isArray(images) && images.length ? images : null;
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function renderViewerPage() {
+      const content = document.getElementById('viewer-content');
+      const pagination = document.getElementById('course-pagination');
+      const indicator = document.getElementById('course-page-indicator');
+      const previous = document.getElementById('course-previous-page');
+      const next = document.getElementById('course-next-page');
+      const pageCount = viewerPages.length || 1;
+      const pageIndex = Math.max(0, Math.min(window.currentViewerPage || 0, pageCount - 1));
+      window.currentViewerPage = pageIndex;
+      const page = viewerPages[pageIndex];
+      content.innerHTML = page && page.image
+        ? `<img src="${page.image}" alt="Page ${pageIndex + 1}" style="display:block;width:100%;height:auto;object-fit:contain;">`
+        : parseMarkdown(page || '');
+      content.classList.remove('page-turn', 'page-turn-next', 'page-turn-previous');
+      void content.offsetWidth;
+      content.classList.add('page-turn', `page-turn-${pdfSelectionDirection}`);
+      pagination.style.display = pageCount > 1 ? 'flex' : 'none';
+      indicator.textContent = `Page ${pageIndex + 1} / ${pageCount}`;
+      previous.disabled = pageIndex === 0;
+      next.disabled = pageIndex === pageCount - 1;
+    }
+
+    async function importPdfPages(file) {
+      if (!file) return '';
+      if (!window.pdfjsLib) {
+        throw new Error('Le lecteur PDF est encore en chargement. Réessayez dans quelques secondes.');
+      }
+      const status = document.getElementById('pdf-import-status');
+      status.textContent = 'Import du PDF en cours...';
+      status.style.display = 'block';
+      const pdf = await window.pdfjsLib.getDocument({ data: await file.arrayBuffer() }).promise;
+      const pages = [];
+      for (let pageNumber = 1; pageNumber <= pdf.numPages; pageNumber += 1) {
+        const page = await pdf.getPage(pageNumber);
+        const viewport = page.getViewport({ scale: 1.5 });
+        const canvas = document.createElement('canvas');
+        canvas.width = viewport.width;
+        canvas.height = viewport.height;
+        await page.render({ canvasContext: canvas.getContext('2d'), viewport }).promise;
+        const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', 0.88));
+        if (!blob) throw new Error(`Impossible de convertir la page ${pageNumber} en image.`);
+        const base64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject(new Error('Impossible de lire la page convertie.'));
+          reader.readAsDataURL(blob);
+        });
+        pages.push({
+          pageNumber,
+          base64,
+          fileName: `${file.name.replace(/[^a-zA-Z0-9_.-]/g, '_')}-page-${pageNumber}.jpg`
+        });
+        status.textContent = `Préparation du PDF : page ${pageNumber} / ${pdf.numPages}`;
+      }
+      pendingPdfPages = pages;
+      renderPdfPageSelection();
+      status.textContent = `${pdf.numPages} page${pdf.numPages > 1 ? 's' : ''} prête${pdf.numPages > 1 ? 's' : ''} à sélectionner.`;
+    }
+
+    function renderPdfPageSelection() {
+      const selection = document.getElementById('pdf-page-selection');
+      const grid = document.getElementById('pdf-page-grid');
+      grid.innerHTML = pendingPdfPages.map(page => `
+        <label class="pdf-page-option">
+          <input type="checkbox" data-pdf-page="${page.pageNumber}" checked>
+          <img src="${page.base64}" alt="Page ${page.pageNumber}">
+          <span>Page ${page.pageNumber}</span>
+        </label>
+      `).join('');
+      selection.classList.toggle('visible', pendingPdfPages.length > 0);
+      document.getElementById('import-selected-pdf-pages').disabled = pendingPdfPages.length === 0;
+    }
+
+    async function uploadSelectedPdfPages() {
+      const selected = Array.from(document.querySelectorAll('#pdf-page-grid input:checked'))
+        .map(input => Number(input.dataset.pdfPage));
+      if (!selected.length) throw new Error('Sélectionnez au moins une page à importer.');
+      const status = document.getElementById('pdf-import-status');
+      const pages = [];
+      for (let index = 0; index < selected.length; index += 1) {
+        const page = pendingPdfPages.find(item => item.pageNumber === selected[index]);
+        const { data, error } = await window.supabaseClient.functions.invoke('upload-course-page', {
+          body: { base64: page.base64, fileName: page.fileName }
+        });
+        if (error || !data?.publicUrl) throw new Error(error?.message || data?.error || 'Échec de l’envoi de la page.');
+        pages.push({ image: data.publicUrl });
+        status.textContent = `Import des pages : ${index + 1} / ${selected.length}`;
+      }
+      pendingCourseImages = pages;
+      document.getElementById('new-content').value = courseImageMarker + JSON.stringify(pages);
+      status.textContent = `${selected.length} page${selected.length > 1 ? 's' : ''} importée${selected.length > 1 ? 's' : ''}.`;
+      document.getElementById('pdf-page-selection').classList.remove('visible');
+      previewCourseDraft();
+    }
+
+    document.getElementById('course-previous-page').addEventListener('click', () => {
+      pdfSelectionDirection = 'previous';
+      window.currentViewerPage = Math.max(0, (window.currentViewerPage || 0) - 1);
+      renderViewerPage();
+    });
+    document.getElementById('course-next-page').addEventListener('click', () => {
+      pdfSelectionDirection = 'next';
+      window.currentViewerPage = Math.min(viewerPages.length - 1, (window.currentViewerPage || 0) + 1);
+      renderViewerPage();
+    });
+
+    document.getElementById('new-content-pdf').addEventListener('change', async event => {
+      const file = event.target.files[0];
+      if (!file) return;
+      try {
+        await importPdfPages(file);
+      } catch (error) {
+        const status = document.getElementById('pdf-import-status');
+        let details = error.message || 'Impossible d’importer ce PDF.';
+        try {
+          if (error.context instanceof Response) {
+            const responseBody = await error.context.clone().json();
+            details = responseBody?.error || responseBody?.message || details;
+          }
+        } catch (contextError) {
+          console.warn('Détail de l’erreur Edge indisponible :', contextError);
+        }
+        status.textContent = details;
+        status.style.color = 'var(--danger)';
+      }
+    });
+
+    document.getElementById('select-all-pdf-pages').addEventListener('click', () => {
+      document.querySelectorAll('#pdf-page-grid input').forEach(input => { input.checked = true; });
+    });
+    document.getElementById('import-selected-pdf-pages').addEventListener('click', async () => {
+      try {
+        await uploadSelectedPdfPages();
+      } catch (error) {
+        const status = document.getElementById('pdf-import-status');
+        status.textContent = error.message || 'Impossible d’importer les pages sélectionnées.';
+        status.style.color = 'var(--danger)';
+      }
+    });
+
+    function previewCourseDraft() {
+      const preview = document.getElementById('course-preview');
+      const content = document.getElementById('new-content').value.trim();
+      const images = getCourseImages(content) || pendingCourseImages;
+      preview.innerHTML = images?.length
+        ? `<div style="font-size:0.75rem; color:var(--text-dim); margin-bottom:0.5rem;">Aperçu de la première page (${images.length} page${images.length > 1 ? 's' : ''})</div><img src="${images[0].image}" alt="Aperçu du cours">`
+        : parseMarkdown(content || 'Aucun contenu à prévisualiser.');
+      preview.classList.add('visible');
+    }
+    document.getElementById('preview-course-button').addEventListener('click', previewCourseDraft);
 
     function normalizeCourseStatus(course) {
       const raw = String(course?.status || 'actif').trim().toLowerCase();
@@ -804,12 +1086,13 @@
       
       document.getElementById('viewer-title').textContent = course.subject;
       document.getElementById('viewer-teacher').textContent = 'Prof. ' + course.teacher + ' · ' + course.level + ' · ' + (courseStatus === 'passif' ? 'Passif' : 'Actif');
-      document.getElementById('viewer-content').innerHTML = parseMarkdown(course.content);
+      const courseImages = getCourseImages(course.content);
+      viewerPages = courseImages || splitCoursePages(course.content);
+      window.currentViewerPage = 0;
+      renderViewerPage();
       
       const deleteBtn = document.getElementById('btn-delete-course');
       const editBtn = document.getElementById('btn-edit-course');
-      const isAuthor = currentUser && currentUser.name === course.teacher;
-      const isDirector = Auth.hasPermission('manage_roles');
       const canEdit = Auth.hasPermission('edit_content');
 
       if (canEdit) {
@@ -819,7 +1102,7 @@
         editBtn.style.display = 'none';
       }
       
-      if (isAuthor || isDirector) {
+      if (canEdit) {
         deleteBtn.style.display = 'inline-block';
         deleteBtn.onclick = () => confirmDeleteCourse(course.id, course.subject);
       } else {
@@ -844,7 +1127,8 @@
         const ok = await DataStore.deleteCourse(id);
         if (ok) {
           closeViewer();
-          loadCourses(); // Reloads list
+          await initData();
+          showToast('Cours supprimé avec succès.', 'success');
         } else {
           alert('Erreur lors de la suppression du cours.');
         }
@@ -884,6 +1168,12 @@
       document.getElementById('new-status').value = 'actif';
       document.getElementById('new-icon').value = '';
       document.getElementById('new-content').value = '';
+      document.getElementById('new-content-pdf').value = '';
+      document.getElementById('pdf-import-status').style.display = 'none';
+      pendingCourseImages = null;
+      pendingPdfPages = [];
+      document.getElementById('pdf-page-selection').classList.remove('visible');
+      document.getElementById('course-preview').classList.remove('visible');
       document.getElementById('add-course-modal').classList.add('active');
     }
 
@@ -898,6 +1188,12 @@
       document.getElementById('new-status').value = normalizeCourseStatus(course);
       document.getElementById('new-icon').value = course.icon || '';
       document.getElementById('new-content').value = course.content || '';
+      document.getElementById('new-content-pdf').value = '';
+      document.getElementById('pdf-import-status').style.display = 'none';
+      pendingCourseImages = null;
+      pendingPdfPages = [];
+      document.getElementById('pdf-page-selection').classList.remove('visible');
+      document.getElementById('course-preview').classList.remove('visible');
       closeViewer();
       document.getElementById('add-course-error').style.display = 'none';
       document.getElementById('add-course-modal').classList.add('active');
