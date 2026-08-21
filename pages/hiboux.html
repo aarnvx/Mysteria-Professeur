@@ -99,15 +99,18 @@
 
     /* Modal for viewing missive */
     .missive-modal-backdrop {
-      position: fixed; inset: 0; background: rgba(2,6,23,0.6); display: flex; align-items: center; justify-content: center; z-index: 9999;
-      opacity: 0; pointer-events: none; transition: opacity 180ms ease;
+      position: fixed; inset: 0; background: rgba(2,6,23,0.78); display: flex; align-items: center; justify-content: center;
+      z-index: 2147483000; isolation: isolate; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 180ms ease, visibility 180ms ease;
     }
-    .missive-modal-backdrop.open { opacity: 1; pointer-events: auto; }
+    .missive-modal-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; }
     .missive-modal {
-      background: rgba(8,10,25,0.96); border-radius: 14px; padding: 1.4rem; width: min(980px, 96%); max-height: 90vh; overflow: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.6);
+      position: relative; z-index: 1; background: rgba(8,10,25,0.99); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 1.4rem; width: min(980px, 96%); max-height: 90vh; overflow: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.8);
     }
     .missive-modal h3 { margin-top: 0; font-size: 1.25rem; }
     .missive-modal .actions { display:flex; gap:0.5rem; justify-content:flex-end; margin-top:0.75rem; }
+    .missive-reply-form { display:none; margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.08); }
+    .missive-reply-form.open { display:grid; gap:.75rem; }
+    .missive-reply-form textarea { min-height:120px; resize:vertical; }
     .missive-card-meta {
       color: var(--text-dim);
       font-size: 0.82rem;
@@ -235,8 +238,18 @@
         <div id="modal-meta" style="color:var(--text-dim);font-size:0.9rem;margin-bottom:0.75rem;"></div>
         <div id="modal-message" style="white-space:pre-wrap;color:var(--cream);"></div>
         <div id="modal-image-container" style="margin-top:0.75rem;"></div>
+        <form id="missive-reply-form" class="missive-reply-form">
+          <label class="missive-form-label" for="missive-reply-title">Titre de la réponse</label>
+          <input id="missive-reply-title" class="missive-input" type="text" />
+          <label class="missive-form-label" for="missive-reply-message">Réponse</label>
+          <textarea id="missive-reply-message" class="missive-textarea" placeholder="Écrivez votre réponse..."></textarea>
+          <div class="actions">
+            <button id="missive-reply-cancel" class="btn" type="button">Annuler</button>
+            <button id="missive-reply-submit" class="btn btn-primary" type="submit">Envoyer la réponse</button>
+          </div>
+        </form>
         <div class="actions">
-          <button id="modal-reply" class="btn">Répondre</button>
+          <button id="modal-reply" class="btn" type="button" onclick="return window.openMissiveReplyForm(event)">Répondre</button>
           <button id="modal-delete" class="btn btn-danger">Supprimer</button>
           <button id="modal-close" class="btn">Fermer</button>
         </div>
@@ -288,7 +301,7 @@
       return recipient === email || recipient === name || author === email || author === name;
     }
 
-    function renderMissiveCard(missive) {
+    function renderMissiveCard(missive, isReceived = false) {
       const rawRecipient = missive?.recipient || '';
       const recipientLabel = rawRecipient
         ? recipientNameByEmail.get(rawRecipient.toLowerCase()) || rawRecipient
@@ -296,13 +309,14 @@
       const authorLabel = missive?.author
         ? recipientNameByEmail.get(missive.author.toLowerCase()) || missive.author
         : 'Anonyme';
-      const title = missive?.title ? `<div class="missive-card-title">${escapeHtml(missive.title)}</div>` : '';
+      const title = `<div class="missive-card-title">${escapeHtml(missive?.title || 'Sans sujet')}</div>`;
       const label = !rawRecipient
         ? 'Envoi global'
         : rawRecipient === user.email || rawRecipient === user.name
           ? 'Reçu'
           : 'Envoyé';
       const meta = [`Auteur: ${escapeHtml(authorLabel)}`, `Destinataire: ${escapeHtml(recipientLabel)}`, `${label}`, escapeHtml(formatActivityDate(missive.created_at || missive.updated_at || new Date().toISOString()))].join(' · ');
+      const messagePreview = '';
 
       const canDeleteCard = [String(missive.author || ''), String(missive.recipient || '')].map(s => s.toLowerCase()).includes(String(user?.email || user?.name || '').toLowerCase());
       const safeId = escapeHtml(missive.id || '');
@@ -312,7 +326,7 @@
       return `
         <div class="missive-card" id="missive-card-${escapeHtml(missive.id || Math.random().toString(36).slice(2))}">
           ${title}
-          <div class="missive-card-message">${escapeHtml(missive.message)}</div>
+          ${messagePreview}
           <div class="missive-card-meta">${meta}</div>
           <div style="margin-top:0.75rem;display:flex;gap:0.5rem;justify-content:flex-end;">
             ${openBtn}${deleteBtn}
@@ -343,7 +357,7 @@
       if (list.firstChild && list.firstChild.classList && list.firstChild.classList.contains('missive-empty')) {
         list.innerHTML = '';
       }
-      list.insertAdjacentHTML('afterbegin', renderMissiveCard(missive));
+      list.insertAdjacentHTML('afterbegin', renderMissiveCard(missive, listId === 'missive-received-list'));
       console.log('Missive ajoutée à la liste', missive.id || mid);
       // Attache les gestionnaires aux boutons de la carte ajoutée pour garantir le bon fonctionnement des clics.
       const cardId = missive.id || mid;
@@ -427,18 +441,38 @@
       const closeBtn = document.getElementById('modal-close');
       if (closeBtn) closeBtn.addEventListener('click', closeMissiveModal);
 
-      const replyBtn = document.getElementById('modal-reply');
-      if (replyBtn) replyBtn.addEventListener('click', () => {
-        const id = document.getElementById('missive-modal-backdrop').dataset.missiveId;
-        const m = missiveCache.get(id);
-        if (!m) return;
-        // Pré-remplit le formulaire de réponse et place le focus.
-        if (document.getElementById('missive-recipient')) document.getElementById('missive-recipient').value = m.author || '';
-        if (document.getElementById('missive-title')) document.getElementById('missive-title').value = m.title ? ('Re: ' + m.title) : 'Re:';
-        if (document.getElementById('missive-message')) document.getElementById('missive-message').value = `@${m.author || ''}\n\n`;
-        closeMissiveModal();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        const msg = document.getElementById('missive-message'); if (msg) msg.focus();
+      const replyCancelBtn = document.getElementById('missive-reply-cancel');
+      if (replyCancelBtn) replyCancelBtn.addEventListener('click', () => {
+        document.getElementById('missive-reply-form').classList.remove('open');
+      });
+
+      const replyForm = document.getElementById('missive-reply-form');
+      if (replyForm) replyForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        const backdrop = document.getElementById('missive-modal-backdrop');
+        const original = backdrop.__missive || missiveCache.get(backdrop.dataset.missiveId);
+        const message = document.getElementById('missive-reply-message').value.trim();
+        const submitButton = document.getElementById('missive-reply-submit');
+        if (!original || !message) return alert('Veuillez saisir une réponse.');
+        submitButton.disabled = true;
+        try {
+          const result = await DataStore.addMissive({
+            title: document.getElementById('missive-reply-title').value.trim(),
+            message,
+            author: user?.email || user?.name || 'Anonyme',
+            recipient: original.author || ''
+          });
+          if (!result.ok) return alert('Erreur : ' + result.error);
+          if (result.missive) await DataStore.notifyMissiveOnDiscord(result.missive);
+          closeMissiveModal();
+          await loadMissives();
+          showToast('Réponse envoyée.', 'success');
+        } catch (error) {
+          console.error('Erreur lors de la réponse à la missive :', error);
+          alert('Erreur lors de l\'envoi de la réponse : ' + (error.message || error));
+        } finally {
+          submitButton.disabled = false;
+        }
       });
 
       const modalDeleteBtn = document.getElementById('modal-delete');
@@ -597,6 +631,19 @@
       }
     }
 
+    window.openMissiveReplyForm = function openMissiveReplyForm(event) {
+      if (event) event.preventDefault();
+      const backdrop = document.getElementById('missive-modal-backdrop');
+      const missive = backdrop?.__missive || missiveCache.get(backdrop?.dataset.missiveId);
+      const replyForm = document.getElementById('missive-reply-form');
+      if (!backdrop || !missive || !replyForm) return false;
+      document.getElementById('missive-reply-title').value = missive.title ? `Re: ${missive.title}` : 'Re:';
+      document.getElementById('missive-reply-message').value = `@${missive.author || ''}\n\n`;
+      replyForm.classList.add('open');
+      document.getElementById('missive-reply-message').focus();
+      return false;
+    };
+
     function openMissiveModal(id) {
       const missive = missiveCache.get(id);
       if (!missive) return;
@@ -604,6 +651,7 @@
       document.getElementById('modal-title').textContent = missive.title || 'Missive';
       document.getElementById('modal-meta').textContent = `Auteur: ${missive.author || 'Anonyme'} · Destinataire: ${missive.recipient || 'Tous' } · ${formatActivityDate(missive.created_at || missive.updated_at)}`;
       document.getElementById('modal-message').textContent = missive.message || '';
+      document.getElementById('missive-reply-form').classList.remove('open');
       const imgContainer = document.getElementById('modal-image-container');
       imgContainer.innerHTML = '';
       const urlMatch = (missive.message || '').match(/https?:\/\/[^\s]+/);
@@ -614,6 +662,7 @@
       }
       backdrop.classList.add('open');
       backdrop.dataset.missiveId = id;
+      backdrop.__missive = missive;
       document.body.style.overflow = 'hidden';
       // Ferme la modale quand on clique sur le fond.
       const onBackdropClick = function(e) { if (e.target === backdrop) closeMissiveModal(); };
@@ -633,6 +682,7 @@
       if (!backdrop) return;
       backdrop.classList.remove('open');
       delete backdrop.dataset.missiveId;
+      delete backdrop.__missive;
       document.body.style.overflow = '';
       // Nettoie les gestionnaires si présents.
       if (backdrop._onKey) {
