@@ -460,7 +460,8 @@
             title: document.getElementById('missive-reply-title').value.trim(),
             message,
             author: user?.email || user?.name || 'Anonyme',
-            recipient: original.author || ''
+            recipient: original.author || '',
+            audience: 'prof'
           });
           if (!result.ok) return alert('Erreur : ' + result.error);
           if (result.missive) await DataStore.notifyMissiveOnDiscord(result.missive);
@@ -536,7 +537,7 @@
 
     async function loadMissives() {
       try {
-        const missives = await DataStore.getMissives(80);
+        const missives = await DataStore.getMissives(80, 'prof');
         const list = document.getElementById('missive-list');
         if (!list) return;
         missiveCache.clear();
@@ -596,7 +597,8 @@
           title,
           message,
           author: user?.email || user?.name || 'Anonyme',
-          recipient: recipient || ''
+          recipient: recipient || '',
+          audience: 'prof'
         });
         if (!result.ok) {
           alert('Erreur : ' + result.error);

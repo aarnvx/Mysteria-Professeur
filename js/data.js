@@ -325,10 +325,12 @@ const DataStore = {
 
   // ── Missives (Hiboux) ───────────────────────────────────────────
 
-  async getMissives(limit = 100) {
-    const { data, error } = await window.supabaseClient
+  async getMissives(limit = 100, audience = null) {
+    let query = window.supabaseClient
       .from('missives')
-      .select('*')
+      .select('*');
+    if (audience) query = query.eq('audience', audience);
+    const { data, error } = await query
       .order('created_at', { ascending: false })
       .limit(limit || 100);
     if (error) { console.error('Error fetching missives:', error); return []; }
@@ -343,6 +345,7 @@ const DataStore = {
         message: missive.message,
         author: (missive.author || null),
         recipient: (missive.recipient || ''),
+        audience: missive.audience || 'prof',
       };
       const { data, error } = await window.supabaseClient.from('missives').insert([payload]).select().single();
       if (error) return { ok: false, error: error.message || error };
