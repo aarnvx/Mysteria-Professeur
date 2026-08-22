@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Points des Clubs - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body.club-page { background: #02030a url('../img/fond3.jpg') center center / cover no-repeat fixed; }
+    .points-layout { display: grid; grid-template-columns: 1.2fr 0.8fr; gap: 2rem; }
+    .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; }
+    .panel h2 { color: var(--gold); margin: 0 0 0.5rem; }
+    .panel-subtitle { color: var(--text-dim); margin-bottom: 1.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; color: var(--gold-dim); font-size: 0.8rem; margin-bottom: 0.4rem; text-transform: uppercase; }
+    .form-input, .form-select { width: 100%; padding: 0.8rem 1rem; background: rgba(10,10,18,0.85); color: var(--gold); border: 1px solid var(--border); border-radius: 8px; }
+    .points-table { width: 100%; border-collapse: collapse; }
+    .points-table th, .points-table td { padding: 0.85rem 0.6rem; border-bottom: 1px solid var(--border); text-align: left; }
+    .points-table th { color: var(--gold-dim); font-size: 0.75rem; text-transform: uppercase; }
+    .points-value { color: var(--gold); font-weight: 700; }
+    .history-item { padding: 0.8rem 0; border-bottom: 1px solid var(--border); }
+    .history-title { color: var(--text); }
+    .history-meta { color: var(--text-dim); font-size: 0.8rem; margin-top: 0.25rem; }
+    .notice { display: none; padding: 0.8rem 1rem; margin-bottom: 1rem; border-radius: 8px; color: var(--text); background: rgba(76,175,80,0.15); border: 1px solid #4caf50; }
+    @media (max-width: 850px) { .points-layout { grid-template-columns: 1fr; } .points-table { font-size: 0.85rem; } }
+  </style>
+</head>
+<body class="club-page">
+  <nav class="navbar">
+    <div class="navbar-brand"><img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;"><div><div class="navbar-title">GESTION CLUBS</div><div class="navbar-subtitle">Points et classements</div></div></div>
+    <ul class="navbar-nav">
+      <li><a href="club_dashboard.html">🏠 Accueil</a></li>
+      <li><a href="club_members.html">👥 Membres</a></li>
+      <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+  <main class="container" style="padding-top:3.5rem;padding-bottom:4rem;">
+    <div class="page-header"><div class="page-header-inner"><div><div class="page-title-small">⭐ Gestion</div><h1>Points des Clubs</h1></div></div></div>
+    <div class="points-layout">
+      <section class="panel"><h2>Classement</h2><div class="panel-subtitle">Total des points par club</div><table class="points-table"><thead><tr><th>Rang</th><th>Club</th><th>Points</th></tr></thead><tbody id="ranking"><tr><td colspan="3">Chargement...</td></tr></tbody></table></section>
+      <section class="panel" id="points-form-panel"><h2>Attribuer des points</h2><div class="panel-subtitle">Récompenser une activité de club</div><div id="notice" class="notice"></div><form id="points-form"><div class="form-group"><label class="form-label" for="club">Club</label><select id="club" class="form-select" required></select></div><div class="form-group"><label class="form-label" for="reason">Raison</label><select id="reason" class="form-select" required><option value="participation">Participation</option><option value="victoire">Victoire</option><option value="challenge">Défi spécial</option><option value="event">Événement</option><option value="autre">Autre</option></select></div><div class="form-group"><label class="form-label" for="amount">Points</label><input id="amount" class="form-input" type="number" min="1" max="100" required></div><div class="form-group"><label class="form-label" for="description">Description</label><input id="description" class="form-input" type="text"></div><button class="btn btn-primary" type="submit">⭐ Ajouter les points</button></form></section>
+    </div>
+    <section class="panel" style="margin-top:2rem;"><h2>Historique récent</h2><div class="panel-subtitle">Dernières attributions</div><div id="history">Chargement...</div></section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script><script src="../js/auth.js"></script>
+  <script>
+    const supabase = window.supabaseClient;
+    const user = Auth.getCurrentUser();
+    if (!user) window.location.href = 'club.html';
+    let clubs = [];
+    let points = [];
+    const canManage = user && Auth.canAccessClubConfiguration(user);
+    if (!canManage) document.getElementById('points-form-panel').style.display = 'none';
+    function notify(message) { const notice = document.getElementById('notice'); notice.textContent = message; notice.style.display = 'block'; setTimeout(() => notice.style.display = 'none', 3000); }
+    async function load() {
+      const clubsResult = await supabase.from('clubs').select('club_id,name').eq('status','active').order('name');
+      const pointsResult = await supabase.from('club_points').select('*').order('awarded_at', { ascending: false });
+      if (clubsResult.error) throw clubsResult.error;
+      if (pointsResult.error) throw pointsResult.error;
+      clubs = clubsResult.data || []; points = pointsResult.data || [];
+      const select = document.getElementById('club');
+      select.innerHTML = clubs.map(club => `<option value="${club.club_id}">${club.name}</option>`).join('');
+      const totals = clubs.map(club => ({ ...club, total: points.filter(item => item.club_id === club.club_id).reduce((sum, item) => sum + Number(item.points || 0), 0) })).sort((a,b) => b.total - a.total);
+      document.getElementById('ranking').innerHTML = totals.length ? totals.map((club, index) => `<tr><td>#${index + 1}</td><td>${club.name}</td><td class="points-value">${club.total}</td></tr>`).join('') : '<tr><td colspan="3">Aucun club</td></tr>';
+      document.getElementById('history').innerHTML = points.length ? points.slice(0, 15).map(item => { const club = clubs.find(entry => entry.club_id === item.club_id); return `<div class="history-item"><div class="history-title">${club?.name || item.club_id} <span class="points-value">+${item.points} pts</span></div><div class="history-meta">${item.reason}${item.description ? ` · ${item.description}` : ''} · ${new Date(item.awarded_at).toLocaleDateString('fr-FR')}</div></div>`; }).join('') : '<p>Aucune attribution.</p>';
+    }
+    document.getElementById('points-form').addEventListener('submit', async event => { event.preventDefault(); try { const { error } = await supabase.from('club_points').insert({ club_id: document.getElementById('club').value, reason: document.getElementById('reason').value, points: Number(document.getElementById('amount').value), description: document.getElementById('description').value.trim() || null }); if (error) throw error; event.target.reset(); notify('Points ajoutés.'); await load(); } catch (error) { notify(error.message || 'Erreur lors de l’ajout.'); } });
+    load().catch(error => { document.getElementById('ranking').innerHTML = `<tr><td colspan="3">${error.message || 'Impossible de charger les points.'}</td></tr>`; });
+  </script>
+  <script>
+    const currentPage = window.location.pathname.split('/').pop() || 'club_points.html';
+    document.querySelectorAll('.navbar a[href]').forEach(link => {
+      if (link.getAttribute('href') === currentPage) link.classList.add('active');
+    });
+  </script>
+</body>
+</html>
