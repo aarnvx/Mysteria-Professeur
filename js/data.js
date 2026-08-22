@@ -514,9 +514,11 @@ const DataStore = {
 
   // ── Sessions ─────────────────────────────────────────────────────
 
-  async createSession(code, label, type, teacher) {
+  async createSession(code, label, type, teacher, clubId = null) {
+    const payload = { code, label, type, teacher, active: false };
+    if (clubId) payload.club_id = clubId;
     const { data, error } = await window.supabaseClient
-      .from('session_codes').insert([{ code, label, type, teacher, active: false }]).select().single();
+      .from('session_codes').insert([payload]).select().single();
     if (error) return { ok: false, error: error.message };
     return { ok: true, session: data };
   },
@@ -538,9 +540,10 @@ const DataStore = {
     return data;
   },
 
-  async getSessions(teacher) {
+  async getSessions(teacher, clubId = null) {
     let q = window.supabaseClient.from('session_codes').select('*').order('created_at', { ascending: false });
     if (teacher) q = q.eq('teacher', teacher);
+    if (clubId) q = q.eq('club_id', clubId);
     const { data, error } = await q;
     if (error) return [];
     return data;

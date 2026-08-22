@@ -195,11 +195,36 @@
             Informations de Base
           </label>
 
-          <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Nom RP</label>
-          <input type="text" id="setup-name" class="form-input" placeholder="ex: Severus Rogue" required>
+          <div id="professor-fields">
+            <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Nom RP</label>
+            <input type="text" id="setup-name" class="form-input" placeholder="ex: Severus Rogue" required>
+          </div>
+
+          <div id="student-fields" style="display:none;">
+            <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Prénom RP</label>
+            <input type="text" id="setup-first-name" class="form-input" placeholder="ex: Harry">
+            <div class="form-error" id="error-first-name"></div>
+
+            <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Nom RP</label>
+            <input type="text" id="setup-last-name" class="form-input" placeholder="ex: Potter">
+            <div class="form-error" id="error-last-name"></div>
+
+            <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Année scolaire</label>
+            <select id="setup-year" class="form-select">
+              <option value="">-- Choisir une année --</option>
+              <option value="1ère année">1ère année</option>
+              <option value="2ème année">2ème année</option>
+              <option value="3ème année">3ème année</option>
+              <option value="4ème année">4ème année</option>
+              <option value="5ème année">5ème année</option>
+              <option value="6ème année">6ème année</option>
+              <option value="7ème année">7ème année</option>
+            </select>
+            <div class="form-error" id="error-year"></div>
+          </div>
           <div class="form-error" id="error-name"></div>
 
-          <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Maison <span class="mandatory-badge">Optionnel</span></label>
+          <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Maison <span id="house-optional" class="mandatory-badge">Optionnel</span></label>
           <select id="setup-house" class="form-select">
             <option value="">Aucune</option>
             <option value="Gryffondor">🦁 Gryffondor</option>
@@ -223,6 +248,16 @@
   <script src="js/auth.js"></script>
   <script src="js/global-sound.js"></script>
   <script>
+    const setupUser = Auth.getCurrentUser();
+    const isStudentSetup = setupUser && ((setupUser.role || '').toLowerCase().includes('club') || (setupUser.email || '').toLowerCase().endsWith('@mysteria.club'));
+    if (isStudentSetup) {
+      document.getElementById('professor-fields').style.display = 'none';
+      document.getElementById('student-fields').style.display = 'block';
+      document.querySelector('.setup-title').textContent = 'Configuration du profil élève';
+      document.querySelector('.setup-desc').textContent = 'Renseignez vos informations RP pour accéder à Mysteria RP';
+      document.getElementById('house-optional').textContent = 'Obligatoire';
+    }
+
     function showError(fieldId, message) {
       const errorEl = document.getElementById(`error-${fieldId}`);
       if (errorEl) {
@@ -245,33 +280,38 @@
     document.getElementById('setup-form').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const name = document.getElementById('setup-name').value.trim();
+      const currentUser = Auth.getCurrentUser();
+      const isStudent = currentUser && ((currentUser.role || '').toLowerCase().includes('club') || (currentUser.email || '').toLowerCase().endsWith('@mysteria.club'));
+      const firstName = document.getElementById('setup-first-name').value.trim();
+      const lastName = document.getElementById('setup-last-name').value.trim();
+      const name = isStudent ? `${firstName} ${lastName}`.trim() : document.getElementById('setup-name').value.trim();
       const house = document.getElementById('setup-house').value;
+      const year = document.getElementById('setup-year').value;
 
       // Validation
-      if (!name) {
+      if (isStudent && !firstName) showError('first-name', 'Veuillez entrer votre prénom RP');
+      if (isStudent && !lastName) showError('last-name', 'Veuillez entrer votre nom RP');
+      if (isStudent && !year) showError('year', 'Veuillez choisir votre année scolaire');
+      if (isStudent && !house) showError('name', 'Veuillez choisir votre maison');
+      if (!isStudent && !name) {
         showError('name', 'Veuillez entrer votre nom RP');
         return;
       }
+      if (isStudent && (!firstName || !lastName || !year || !house)) return;
 
       const btn = document.getElementById('setup-submit-btn');
       btn.disabled = true;
       btn.textContent = '⏳ Configuration...';
 
       try {
-        const currentUser = Auth.getCurrentUser();
         if (!currentUser) {
           throw new Error('Session expirée');
         }
 
         // Mettre à jour le profil
-        const updateResult = await Auth.setupProfile(
-          currentUser.email,
-          name,
-          null,
-          null,
-          house
-        );
+        const updateResult = isStudent
+          ? await Auth.setupClubProfile(currentUser.email, name, year, currentUser.role || 'Membre de club', house)
+          : await Auth.setupProfile(currentUser.email, name, null, null, house);
 
         if (!updateResult.ok) {
           throw new Error(updateResult.error);

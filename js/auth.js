@@ -193,9 +193,18 @@ const Auth = {
       if (!authData?.user) return { ok: false, error: 'Session expirée, veuillez vous reconnecter.' };
       const insertEmail = authData.user.email || normalizedEmail;
 
-      const { data, error } = await window.supabaseClient.from('club_members').insert([
-        { email: insertEmail, name: finalName, rank: finalRank, role: finalRole, house, avatar: finalAvatar }
-      ]).select().single();
+      const profilePayload = { name: finalName, rank: finalRank, role: finalRole, house, avatar: finalAvatar };
+      const { data: existingProfile, error: existingError } = await window.supabaseClient
+        .from('club_members')
+        .select('id')
+        .ilike('email', insertEmail)
+        .maybeSingle();
+      if (existingError) throw existingError;
+
+      const profileQuery = existingProfile
+        ? window.supabaseClient.from('club_members').update(profilePayload).eq('id', existingProfile.id)
+        : window.supabaseClient.from('club_members').insert([{ email: insertEmail, ...profilePayload }]);
+      const { data, error } = await profileQuery.select().single();
       if (error) throw error;
 
       const userSession = {
