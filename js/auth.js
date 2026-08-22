@@ -59,9 +59,9 @@ const Auth = {
 
       let profile = null;
       if (preferredArea === 'prof') {
-        profile = profProfile || clubProfile;
+        profile = profProfile;
       } else if (preferredArea === 'club') {
-        profile = clubProfile || profProfile;
+        profile = clubProfile;
       } else {
         profile = clubProfile || profProfile;
       }
@@ -559,4 +559,3 @@ document.addEventListener('keydown', function(e) {
     window.close();
   }
 });
-
