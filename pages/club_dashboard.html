@@ -215,6 +215,88 @@
       margin-top: 3rem;
     }
 
+    .activity-list {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .activity-item {
+      display: grid;
+      grid-template-columns: 44px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      padding: 1rem 1.1rem;
+      background: rgba(8,11,28,0.58);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 10px;
+    }
+
+    .activity-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      display: grid;
+      place-items: center;
+      font-size: 1.25rem;
+    }
+
+    .activity-text {
+      min-width: 0;
+    }
+
+    .activity-main {
+      color: var(--text);
+      line-height: 1.35;
+      overflow-wrap: anywhere;
+    }
+
+    .activity-meta {
+      margin-top: 0.25rem;
+      color: var(--text-dim);
+      font-size: 0.78rem;
+    }
+
+    .club-announcements {
+      margin-top: 2rem;
+      padding: 1.5rem 2rem;
+      border: 1px solid rgba(201,168,76,0.32);
+      border-radius: 12px;
+      background: linear-gradient(135deg, rgba(48,38,18,0.58), rgba(15,15,37,0.82));
+    }
+
+    .announcement-list {
+      display: grid;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    .announcement-item {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 0.85rem;
+      padding: 0.9rem 1rem;
+      background: rgba(8,11,28,0.56);
+      border-left: 3px solid var(--gold);
+      border-radius: 8px;
+    }
+
+    .announcement-item strong,
+    .announcement-item span {
+      overflow-wrap: anywhere;
+    }
+
+    .announcement-empty {
+      padding: 1rem;
+      color: var(--text-dim);
+      text-align: center;
+    }
+
+    .category-card {
+      text-decoration: none;
+      color: inherit;
+    }
+
     @media (max-width: 768px) {
       .club-header {
         flex-direction: column;
@@ -225,6 +307,14 @@
       }
       .quick-actions {
         grid-template-columns: 1fr;
+      }
+      .activity-item,
+      .announcement-item {
+        grid-template-columns: 36px minmax(0, 1fr);
+      }
+      .activity-item .badge,
+      .announcement-item time {
+        grid-column: 2;
       }
     }
   </style>
@@ -310,6 +400,19 @@
           <div class="action-title">Calendrier</div>
           <div class="action-desc">Événements à venir</div>
         </a>
+      </div>
+    </section>
+
+    <section class="club-announcements" aria-labelledby="announcements-title">
+      <div class="section-title-row" style="margin-bottom:0;">
+        <div>
+          <div class="page-title-small">Vie du club</div>
+          <h2 id="announcements-title">📢 Annonces de mon club</h2>
+        </div>
+        <a href="club_community.html" class="btn btn-secondary btn-sm">Voir la communauté</a>
+      </div>
+      <div id="club-announcements-list" class="announcement-list">
+        <div class="announcement-empty">Chargement des annonces…</div>
       </div>
     </section>
 
@@ -487,34 +590,43 @@
         document.getElementById('stat-sessions').textContent = sessionCount || '0';
         document.getElementById('stat-events').textContent = eventCount || '0';
 
-        // Categories
-        const CLUB_CATEGORIES = [
-          { label: 'Club de la Gazette', key: 'gazette', icon: '📰' },
-          { label: 'Club de Duel', key: 'duel', icon: '⚔️' },
-          { label: 'Club de Théâtre', key: 'théâtre', icon: '🎭' },
-          { label: 'Club de Musique', key: 'musique', icon: '🎵' },
-          { label: 'Club de Divination', key: 'divination', icon: '🔮' },
-          { label: 'Club de Potions', key: 'potions', icon: '🧪' },
-          { label: 'Club de Botanique', key: 'botanique', icon: '🌿' }
-        ];
+        const clubs = await DataStore.getClubs();
+        const normalizedEmail = (currentUser.email || '').trim().toLowerCase();
+        const clubMember = await DataStore.getClubMemberByEmail(currentUser.email);
+        const currentClub = clubs.find(club =>
+          (club.manager_email || '').trim().toLowerCase() === normalizedEmail
+        ) || clubs.find(club => club.club_id === clubMember?.club_id);
 
         const categoriesContainer = document.getElementById('categories-container');
         categoriesContainer.innerHTML = '';
 
-        CLUB_CATEGORIES.forEach(cat => {
-          const memberCount = members.filter(member => {
-            const memberRole = (member.role || '').toLowerCase();
-            return memberRole.includes(cat.key.toLowerCase());
-          }).length;
-          const card = document.createElement('div');
+        clubs.forEach(club => {
+          const memberCount = members.filter(member => member.club_id === club.club_id).length;
+          const card = document.createElement('a');
           card.className = 'category-card';
+          card.href = club.club_id === currentClub?.club_id ? 'club_community.html' : '#';
           card.innerHTML = `
-            <div class="category-icon">${cat.icon}</div>
-            <div class="category-name">${cat.label}</div>
+            <div class="category-icon">🛡️</div>
+            <div class="category-name">${club.name || 'Club sans nom'}</div>
             <div class="category-count">${memberCount} membre${memberCount === 1 ? '' : 's'}</div>
           `;
           categoriesContainer.appendChild(card);
         });
+
+        const announcementContainer = document.getElementById('club-announcements-list');
+        if (currentClub) {
+          const posts = await DataStore.getClubPosts(currentClub.club_id, 5);
+          const announcements = posts.filter(post => post.is_announcement);
+          announcementContainer.innerHTML = announcements.length ? announcements.map(post => `
+            <a class="announcement-item" href="club_community.html">
+              <span aria-hidden="true">📌</span>
+              <strong>${post.title}</strong>
+              <time datetime="${post.created_at}">${new Date(post.created_at).toLocaleDateString('fr-FR')}</time>
+            </a>
+          `).join('') : '<div class="announcement-empty">Aucune annonce publiée pour le moment.</div>';
+        } else {
+          announcementContainer.innerHTML = '<div class="announcement-empty">Aucun club associé à ce compte.</div>';
+        }
 
         // Activity
         const activity = [
@@ -522,6 +634,10 @@
           { icon: '📝', badge: 'Sessions', title: `${sessionCount || 0} session${sessionCount === 1 ? '' : 's'} planifiée${sessionCount === 1 ? '' : 's'}`, time: 'Maintenant' },
           { icon: '🎉', badge: 'Événements', title: `${eventCount || 0} événement${eventCount === 1 ? '' : 's'} au calendrier`, time: 'Maintenant' }
         ];
+
+        if (currentClub) {
+          activity.unshift({ icon: '🛡️', badge: 'Mon club', title: currentClub.name || 'Club', time: 'Club actif' });
+        }
 
         const activityContainer = document.getElementById('activity-container');
         activityContainer.innerHTML = activity.map(item => `
