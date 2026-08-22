@@ -271,6 +271,12 @@
 </head>
 <body>
 
+<script>
+  if (new URLSearchParams(window.location.search).get('area') === 'club') {
+    document.body.classList.add('club-page');
+  }
+</script>
+
 <canvas id="bg"></canvas>
 
 <div class="page-wrap">
