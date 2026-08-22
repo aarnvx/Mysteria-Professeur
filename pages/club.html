@@ -370,13 +370,13 @@
 
             <div class="form-group">
               <label class="form-label" for="club-setup-house" style="font-size:0.75rem;">Maison</label>
-              <select class="form-input" id="club-setup-house" name="club-setup-house">
-                <option value="">-- Choisir une maison --</option>
-                <option value="Gryffondor">🦁 Gryffondor</option>
-                <option value="Serpentard">🐍 Serpentard</option>
-                <option value="Serdaigle">🦅 Serdaigle</option>
-                <option value="Poufsouffle">🦡 Poufsouffle</option>
-              </select>
+              <div style="display:flex; gap:1rem; align-items:center; justify-content:center; padding:.5rem 0;">
+                <img src="../img/gryffindor.png" alt="Gryffondor" class="house-choice" data-house="gryffondor" title="Gryffondor" style="width:45px;height:45px;cursor:pointer;opacity:.4;transition:all .3s;filter:grayscale(100%);" onclick="selectClubHouse(this)">
+                <img src="../img/slytherin.png" alt="Serpentard" class="house-choice" data-house="serpentard" title="Serpentard" style="width:45px;height:45px;cursor:pointer;opacity:.4;transition:all .3s;filter:grayscale(100%);" onclick="selectClubHouse(this)">
+                <img src="../img/ravenclaw.png" alt="Serdaigle" class="house-choice" data-house="serdaigle" title="Serdaigle" style="width:45px;height:45px;cursor:pointer;opacity:.4;transition:all .3s;filter:grayscale(100%);" onclick="selectClubHouse(this)">
+                <img src="../img/hufflepuff.png" alt="Poufsouffle" class="house-choice" data-house="poufsouffle" title="Poufsouffle" style="width:45px;height:45px;cursor:pointer;opacity:.4;transition:all .3s;filter:grayscale(100%);" onclick="selectClubHouse(this)">
+              </div>
+              <input type="hidden" id="club-setup-house" name="club-setup-house" value="">
             </div>
 
             <div class="form-group">
@@ -625,11 +625,33 @@
     }
 
     let clubCurrentUser = null;
+    function selectClubHouse(imgEl) {
+      document.querySelectorAll('.house-choice').forEach(element => {
+        element.style.opacity = '0.4';
+        element.style.filter = 'grayscale(100%)';
+        element.style.transform = 'scale(1)';
+      });
+      imgEl.style.opacity = '1';
+      imgEl.style.filter = 'grayscale(0%) drop-shadow(0 0 8px rgba(201,168,76,0.6))';
+      imgEl.style.transform = 'scale(1.15)';
+      document.getElementById('club-setup-house').value = imgEl.dataset.house;
+    }
+
+    function isClubAccount(email) {
+      const normalizedEmail = (email || '').trim().toLowerCase();
+      return normalizedEmail.endsWith('.club') || normalizedEmail.includes('mysteria.club');
+    }
+
     function resetClubSetupForm() {
       document.getElementById('club-setup-first-name').value = '';
       document.getElementById('club-setup-last-name').value = '';
       document.getElementById('club-setup-year').value = '';
       document.getElementById('club-setup-house').value = '';
+      document.querySelectorAll('.house-choice').forEach(element => {
+        element.style.opacity = '0.4';
+        element.style.filter = 'grayscale(100%)';
+        element.style.transform = 'scale(1)';
+      });
       document.getElementById('club-setup-password').value = '';
       document.getElementById('club-setup-first-name-error').style.display = 'none';
       document.getElementById('club-setup-last-name-error').style.display = 'none';
@@ -755,6 +777,10 @@
       }
 
       if (result.requireSetup) {
+        if (!isClubAccount(result.email)) {
+          window.location.href = '../setup-profile.html';
+          return;
+        }
         clubCurrentUser = {
           email: result.email,
           name: result.emailRole?.defaultName || '',
@@ -790,10 +816,19 @@
       const professor = await DataStore.getProfessorByEmail(currentUser.email);
       if (professor) {
         await DataStore.copyProfessorToClub(currentUser.email);
+        btn.textContent = '✨ Connexion réussie !';
+        playLoginTransition(() => {
+          window.location.href = 'club_dashboard.html';
+        });
+        return;
       }
 
-      const defaultRole = professor?.role || currentUser.role || 'Membre de club';
-      showClubSetup(currentUser, defaultRole);
+      if (!isClubAccount(currentUser.email)) {
+        window.location.href = '../setup-profile.html';
+        return;
+      }
+
+      showClubSetup(currentUser, currentUser.role || 'Membre de club');
       btn.textContent = '✨ Connexion réussie !';
       btn.disabled = false;
     }
