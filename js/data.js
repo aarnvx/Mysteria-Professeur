@@ -695,6 +695,20 @@ const DataStore = {
     }
   },
 
+  async deleteClubPost(postId) {
+    try {
+      const { error } = await window.supabaseClient
+        .from('club_posts')
+        .delete()
+        .eq('id', postId);
+      if (error) return { ok: false, error: error.message };
+      return { ok: true };
+    } catch (err) {
+      console.error('Error deleting club post:', err);
+      return { ok: false, error: String(err) };
+    }
+  },
+
   async getPostVotes(postId) {
     const { data, error } = await window.supabaseClient
       .from('club_post_votes')

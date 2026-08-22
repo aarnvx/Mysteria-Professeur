@@ -245,6 +245,7 @@
       justify-content: space-between;
       align-items: flex-start;
       margin-bottom: 0.75rem;
+      gap: 0.75rem;
     }
 
     .post-author {
@@ -264,6 +265,23 @@
     .post-time {
       font-size: 0.8rem;
       color: rgba(200,200,200,0.5);
+    }
+
+    .delete-post-btn {
+      background: transparent;
+      border: 1px solid rgba(220,90,90,0.35);
+      border-radius: 6px;
+      color: rgba(255,150,150,0.85);
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0.3rem 0.55rem;
+      white-space: nowrap;
+    }
+
+    .delete-post-btn:hover {
+      background: rgba(180,50,50,0.18);
+      border-color: rgba(255,120,120,0.65);
+      color: #fff;
     }
 
     .post-title {
@@ -598,13 +616,20 @@
       el.id = `post-${post.id}`;
 
       const time = new Date(post.created_at).toLocaleString('fr-FR');
+      const currentUserEmail = (user.email || '').trim().toLowerCase();
+      const authorEmail = (post.author_email || '').trim().toLowerCase();
+      const userRole = (user.role || '').toLowerCase();
+      const canDelete = authorEmail === currentUserEmail || userRole.includes('admin');
       let html = `
         <div class="post-header">
           <div>
             <div class="post-author">${post.author_name}</div>
             <div class="post-time">${time}</div>
           </div>
-          ${post.is_announcement ? '<div class="post-badge">📢 Annonce</div>' : ''}
+          <div style="display:flex; align-items:center; gap:0.5rem;">
+            ${post.is_announcement ? '<div class="post-badge">📢 Annonce</div>' : ''}
+            ${canDelete ? `<button class="delete-post-btn" type="button" onclick="deletePost('${post.id}')" title="Supprimer ce post">🗑 Supprimer</button>` : ''}
+          </div>
         </div>
         <div class="post-title">${post.title}</div>
       `;
@@ -637,6 +662,22 @@
       loadPostVotes(post.id);
       loadPostComments(post.id);
       return el;
+    }
+
+    async function deletePost(postId) {
+      if (!confirm('Supprimer définitivement ce post ?')) return;
+
+      try {
+        const result = await DataStore.deleteClubPost(postId);
+        if (!result.ok) {
+          alert(`Impossible de supprimer le post : ${result.error}`);
+          return;
+        }
+        await loadPosts();
+      } catch (err) {
+        console.error('Erreur suppression post:', err);
+        alert('Une erreur est survenue pendant la suppression du post.');
+      }
     }
 
     async function loadPostVotes(postId) {
