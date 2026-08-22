@@ -248,7 +248,7 @@
       <li><a href="club_points.html">⭐ Points</a></li>
       <li><a href="club_calendar.html">📅 Calendrier</a></li>
       <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
-      <li><button type="button" id="club-logout-button" class="btn-logout">↩ Déconnexion</button></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
   </nav>
 
@@ -421,10 +421,6 @@
 
     const DISCORD_CLIENT_ID = '1540008220758904913';
     const DISCORD_REDIRECT_URI = 'https://aarnvx.github.io/Mysteria-Professeur/index.html';
-
-    document.getElementById('club-logout-button')?.addEventListener('click', () => {
-      Auth.logout();
-    });
 
     function showClubDiscordPrompt() {
       const modal = document.getElementById('club-discord-modal');
