@@ -387,7 +387,7 @@
 <body>
   <!-- Navigation -->
   <nav class="navbar" role="navigation" aria-label="Navigation principale">
-    <ul>
+    <ul class="navbar-nav">
       <li><a href="club_dashboard.html">🏠 Accueil</a></li>
       <li><a href="club_members.html">👥 Membres</a></li>
       <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
@@ -470,20 +470,73 @@
 
     async function initCommunity() {
       try {
-        // Récupérer le membre du club
-        const clubMember = await DataStore.getClubMemberByEmail(user.email);
-        if (!clubMember || !clubMember.club_id) {
-          document.querySelector('main').innerHTML = '<div style="padding:2rem; color:red;">Accès non autorisé. Vous n\'êtes membre d\'aucun club.</div>';
+        let clubId = null;
+        let clubInfo = null;
+
+        // 1. Vérifier si c'est un manager de club (professeur)
+        const clubs = await DataStore.getClubs();
+        console.log('Clubs disponibles:', clubs);
+
+        const managerClub = clubs.find(c => c.manager_email && c.manager_email.toLowerCase() === user.email.toLowerCase());
+        if (managerClub) {
+          clubId = managerClub.club_id;
+          clubInfo = {
+            club_id: clubId,
+            club_name: managerClub.name || 'Club',
+            avatar: '🎭',
+            role: 'Gérant',
+            name: managerClub.name
+          };
+          console.log('Manager de club trouvé:', clubInfo);
+        }
+
+        // 2. Si pas manager, vérifier club_members
+        if (!clubId) {
+          const clubMember = await DataStore.getClubMemberByEmail(user.email);
+          console.log('clubMember récupéré:', clubMember);
+
+          if (clubMember && clubMember.club_id) {
+            clubId = clubMember.club_id;
+            clubInfo = clubMember;
+          }
+        }
+
+        // 3. Si toujours rien, créer un member par défaut
+        if (!clubId) {
+          const professor = await DataStore.getProfessorByEmail(user.email);
+          console.log('professor récupéré:', professor);
+          
+          if (professor && professor.role && (professor.role.toLowerCase().includes('club') || professor.rank.toLowerCase().includes('manager'))) {
+            clubInfo = await DataStore.upsertClubMember({
+              email: user.email,
+              name: user.name || professor.name || 'Membre',
+              rank: professor.rank || 'Club Manager',
+              role: professor.role || 'Gérant',
+              avatar: professor.avatar || '🎭',
+              club_id: 'general',
+              club_name: 'Générale'
+            });
+            clubId = 'general';
+            console.log('clubMember créé:', clubInfo);
+          }
+        }
+
+        if (!clubId) {
+          const errorMsg = `Accès non autorisé. Email: ${user.email}`;
+          console.error(errorMsg);
+          document.querySelector('main').innerHTML = `<div style="padding:2rem; color:red;">${errorMsg}</div>`;
           return;
         }
 
-        currentClub = clubMember.club_id;
-        document.getElementById('club-avatar').textContent = clubMember.avatar || '🎭';
-        document.getElementById('club-name').textContent = clubMember.club_name || 'Club';
-        document.getElementById('club-role-display').textContent = clubMember.role || 'Membre';
+        currentClub = clubId;
+        document.getElementById('club-avatar').textContent = clubInfo.avatar || '🎭';
+        document.getElementById('club-name').textContent = clubInfo.club_name || clubInfo.name || 'Club';
+        document.getElementById('club-role-display').textContent = clubInfo.role || 'Membre';
 
         // Afficher le lien config si manager
-        if (clubMember.role && clubMember.role.toLowerCase().includes('manager')) {
+        const roleStr = (clubInfo.role || '').toLowerCase();
+        const rankStr = (clubInfo.rank || '').toLowerCase();
+        if (roleStr.includes('manager') || rankStr.includes('manager') || roleStr.includes('gérant')) {
           document.getElementById('club-config-nav-link').style.display = 'block';
         }
 
