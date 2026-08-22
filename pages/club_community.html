@@ -676,7 +676,11 @@
       if (!message) return;
 
       try {
-        await DataStore.sendClubMessage(currentClub, user.email, user.name || user.email, message);
+        const result = await DataStore.sendClubMessage(currentClub, user.email, user.name || user.email, message);
+        if (!result.ok) {
+          alert(`Impossible d'envoyer le message : ${result.error}`);
+          return;
+        }
         input.value = '';
         await loadChatMessages();
       } catch (err) {
@@ -696,12 +700,16 @@
       }
 
       try {
-        await DataStore.createClubPost(currentClub, user.email, user.name || user.email, {
+        const result = await DataStore.createClubPost(currentClub, user.email, user.name || user.email, {
           title,
           content: content || null,
           image_url: imageUrl || null,
           is_announcement: isAnnouncement
         });
+        if (!result.ok) {
+          alert(`Impossible de publier le post : ${result.error}`);
+          return;
+        }
 
         document.getElementById('post-title').value = '';
         document.getElementById('post-content').value = '';
