@@ -585,7 +585,7 @@
   <script>
     const user = requireAuthOrRedirect();
     const DISCORD_CLIENT_ID = '1540008220758904913';
-    const DISCORD_REDIRECT_URI = `${window.location.origin}${window.location.pathname}`;
+    const DISCORD_REDIRECT_URI = 'https://aarnvx.github.io/Mysteria-Professeur/index.html';
     if (user && Auth.isClubContextUser(user) && !Auth.isProfessorContextUser(user)) {
       window.location.href = 'club_dashboard.html';
     }
@@ -623,7 +623,7 @@
       const params = new URLSearchParams(window.location.search);
       const code = params.get('code');
       if (!code) return false;
-      const result = await DataStore.connectDiscord(code, DISCORD_REDIRECT_URI);
+      const result = await DataStore.connectDiscord(code, DISCORD_REDIRECT_URI, 'professors');
       window.history.replaceState({}, document.title, window.location.pathname);
       if (result.ok) {
         const updatedUser = { ...Auth.getCurrentUser(), discord_id: result.discord_id };
@@ -645,6 +645,7 @@
       document.getElementById('discord-connect-close')?.addEventListener('click', closeDiscordConnectPrompt);
       document.getElementById('discord-connect-later')?.addEventListener('click', closeDiscordConnectPrompt);
       document.getElementById('discord-connect-button')?.addEventListener('click', () => {
+        localStorage.setItem('Mysteria_discord_target', 'professors');
         const params = new URLSearchParams({
           client_id: DISCORD_CLIENT_ID,
           response_type: 'code',
