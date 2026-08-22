@@ -271,6 +271,8 @@
       <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
       <li><a href="club_points.html">⭐ Points</a></li>
       <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_community.html">💬 Communauté</a></li>
+      <li id="club-sessions-nav-link"><a href="club_sessions.html">⚡ Sessions</a></li>
       <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
@@ -347,6 +349,9 @@
     const configNavLink = document.getElementById('club-config-nav-link');
     if (configNavLink && currentUser && Auth.canAccessClubConfiguration(currentUser)) {
       configNavLink.style.display = 'list-item';
+    }
+    if (currentUser && Auth.canAccessClubConfiguration(currentUser)) {
+      document.getElementById('club-sessions-nav-link').style.display = 'list-item';
     }
  
     // Verify user has access to club section
@@ -495,10 +500,16 @@
         groupedClubs.get(key).push(member);
       });
 
-      groupedClubs.forEach((categoryMembers, clubId) => {
+      [...groupedClubs.entries()]
+        .sort(([clubIdA], [clubIdB]) => {
+          if (clubIdA === '__unassigned__') return 1;
+          if (clubIdB === '__unassigned__') return -1;
+          return 0;
+        })
+        .forEach(([clubId, categoryMembers]) => {
         const club = categoryMembers[0].club;
-        renderCategory(club ? `🎭 Club de ${club.name}` : '📭 Sans club', categoryMembers);
-      });
+        renderCategory(club ? `🎭 ${club.name}` : '📭 Sans club', categoryMembers);
+        });
     }
 
     function renderEmptyState(message = 'Aucun membre trouvé.') {

@@ -37,6 +37,8 @@
       <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
       <li><a href="club_points.html">⭐ Points</a></li>
       <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_community.html">💬 Communauté</a></li>
+      <li id="club-sessions-nav-link"><a href="club_sessions.html">⚡ Sessions</a></li>
       <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul></nav>
@@ -45,7 +47,10 @@
   <script>
     const database = window.supabaseClient; const user = Auth.getCurrentUser(); if (!user) window.location.href = 'club.html';
     let monthDate = new Date(); let events = []; let clubs = [];
-    const canManage = user && Auth.canAccessClubConfiguration(user); if (!canManage) document.getElementById('event-form').style.display = 'none';
+    const userRole = Auth.normalizeRoleValue(user?.role); const userRank = Auth.normalizeRoleValue(user?.rank);
+    const canManage = user && (Auth.canAccessClubConfiguration(user) || userRole === 'gerant' || userRank === 'gerant'); if (!canManage) document.getElementById('event-form').style.display = 'none';
+    if (canManage) document.getElementById('club-config-nav-link').style.display = 'list-item';
+    if (canManage) document.getElementById('club-sessions-nav-link').style.display = 'list-item';
     function notice(message) { const box = document.getElementById('notice'); box.textContent = message; box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 3000); }
     function renderCalendar() { const year = monthDate.getFullYear(); const month = monthDate.getMonth(); document.getElementById('month').textContent = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(monthDate); const grid = document.getElementById('calendar'); grid.innerHTML = ''; ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'].forEach(day => { const cell = document.createElement('div'); cell.className = 'calendar-day header'; cell.textContent = day; grid.appendChild(cell); }); const first = new Date(year, month, 1).getDay(); const days = new Date(year, month + 1, 0).getDate(); for (let i = 0; i < first; i++) grid.appendChild(document.createElement('div')); for (let day = 1; day <= days; day++) { const cell = document.createElement('div'); const date = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`; cell.className = `calendar-day${events.some(event => event.date === date) ? ' event' : ''}`; cell.textContent = day; cell.onclick = () => document.getElementById('date').value = date; grid.appendChild(cell); } }
     function renderEvents() { const container = document.getElementById('events'); container.innerHTML = events.length ? events.sort((a,b) => a.date.localeCompare(b.date)).map(event => `<div class="event-item"><div class="event-date">${new Date(`${event.date}T12:00:00`).toLocaleDateString('fr-FR')}</div><div class="event-name">${event.name}</div><div class="event-club">${clubs.find(club => club.club_id === event.club_id)?.name || event.club_id}</div></div>`).join('') : '<p class="event-club">Aucun événement ce mois.</p>'; }

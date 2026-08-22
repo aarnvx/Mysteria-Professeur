@@ -24,12 +24,13 @@
     <ul class="navbar-nav">
       <li><a href="club_dashboard.html">🏠 Accueil</a></li>
       <li><a href="club_members.html">👥 Membres</a></li>
+      <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
       <li><a href="club_points.html">⭐ Points</a></li>
       <li><a href="club_calendar.html">📅 Calendrier</a></li>
       <li><a href="club_community.html">💬 Communauté</a></li>
-      <li><a href="club_sessions.html" class="active">⚡ Sessions</a></li>
+      <li id="club-sessions-nav-link"><a href="club_sessions.html" class="active">⚡ Sessions</a></li>
       <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
-      <li><a href="#" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
   </nav>
   <main class="sessions-page">
@@ -47,6 +48,16 @@
     async function init() {
       user = await Auth.getCurrentUser();
       if (!user || !Auth.isClubContextUser(user)) { window.location.href = 'club_dashboard.html'; return; }
+      const role = (user.role || '').toLowerCase();
+      const rank = (user.rank || '').toLowerCase();
+      const isManager = Auth.isClubManagerUser(user) || role.includes('gérant') || rank.includes('gérant');
+      if (isManager) document.getElementById('club-config-nav-link').style.display = 'list-item';
+      if (!isManager) {
+        document.getElementById('session-list').innerHTML = '<div class="empty-state">La gestion des sessions est réservée aux gérants du club.</div>';
+        document.querySelector('.sessions-hero button').style.display = 'none';
+        return;
+      }
+      document.getElementById('club-sessions-nav-link').style.display = 'list-item';
       const clubs = await DataStore.getClubs();
       const member = await DataStore.getClubMemberByEmail(user.email);
       club = clubs.find(item => (item.manager_email || '').toLowerCase() === (user.email || '').toLowerCase()) || clubs.find(item => item.club_id === member?.club_id);

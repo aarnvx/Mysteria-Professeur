@@ -442,7 +442,7 @@
       <li><a href="club_points.html">⭐ Points</a></li>
       <li><a href="club_calendar.html">📅 Calendrier</a></li>
       <li><a href="club_community.html">💬 Communauté</a></li>
-      <li><a href="club_sessions.html">⚡ Sessions</a></li>
+      <li id="club-sessions-nav-link"><a href="club_sessions.html">⚡ Sessions</a></li>
       <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
@@ -516,6 +516,10 @@
     let currentClub = null;
     let chatSubscription = null;
     let postsSubscription = null;
+    const currentPage = window.location.pathname.split('/').pop() || 'club_community.html';
+    document.querySelectorAll('.navbar a[href]').forEach(link => {
+      if (link.getAttribute('href') === currentPage) link.classList.add('active');
+    });
 
     async function initCommunity() {
       try {
@@ -588,6 +592,7 @@
         const canAnnounce = roleStr.includes('manager') || rankStr.includes('manager') || roleStr.includes('gérant') || rankStr.includes('gérant') || (clubInfo.manager_email || '').toLowerCase() === user.email.toLowerCase() || (user.role || '').toLowerCase().includes('admin');
         if (canAnnounce) {
           document.getElementById('club-config-nav-link').style.display = 'block';
+          document.getElementById('club-sessions-nav-link').style.display = 'list-item';
         } else {
           document.getElementById('announcement-field').style.display = 'none';
         }

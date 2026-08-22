@@ -34,6 +34,8 @@
       <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
       <li><a href="club_points.html">⭐ Points</a></li>
       <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_community.html">💬 Communauté</a></li>
+      <li id="club-sessions-nav-link"><a href="club_sessions.html">⚡ Sessions</a></li>
       <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
@@ -54,7 +56,11 @@
     if (!user) window.location.href = 'club.html';
     let clubs = [];
     let points = [];
-    const canManage = user && Auth.canAccessClubConfiguration(user);
+    const userRole = Auth.normalizeRoleValue(user?.role);
+    const userRank = Auth.normalizeRoleValue(user?.rank);
+    const canManage = user && (Auth.canAccessClubConfiguration(user) || userRole === 'gerant' || userRank === 'gerant');
+    if (canManage) document.getElementById('club-config-nav-link').style.display = 'list-item';
+    if (canManage) document.getElementById('club-sessions-nav-link').style.display = 'list-item';
     if (!canManage) document.getElementById('points-form-panel').style.display = 'none';
     function notify(message) { const notice = document.getElementById('notice'); notice.textContent = message; notice.style.display = 'block'; setTimeout(() => notice.style.display = 'none', 3000); }
     async function load() {

@@ -338,6 +338,7 @@
       <li><a href="club_points.html">⭐ Points</a></li>
       <li><a href="club_calendar.html">📅 Calendrier</a></li>
       <li><a href="club_community.html">💬 Communauté</a></li>
+      <li id="club-sessions-nav-link"><a href="club_sessions.html">⚡ Sessions</a></li>
       <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
@@ -385,7 +386,7 @@
           <div class="action-title">Annuaire</div>
           <div class="action-desc">Consulter les membres du club</div>
         </a>
-        <a href="club_sessions.html" class="action-card">
+        <a href="club_sessions.html" id="club-session-action" class="action-card">
           <div class="action-icon">⚡</div>
           <div class="action-title">Nouvelles Sessions</div>
           <div class="action-desc">Planifier une séance</div>
@@ -493,8 +494,10 @@
           const canConfigure = Auth.canAccessClubConfiguration(user);
           const configNavLink = document.getElementById('club-config-nav-link');
           const manageButton = document.getElementById('club-manage-btn');
+          const sessionAction = document.getElementById('club-session-action');
           if (configNavLink) configNavLink.style.display = canConfigure ? 'list-item' : 'none';
           if (manageButton) manageButton.style.display = canConfigure ? 'inline-flex' : 'none';
+          if (sessionAction) sessionAction.style.display = canConfigure ? 'flex' : 'none';
         }
 
         renderClubUser(currentUser);

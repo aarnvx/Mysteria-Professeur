@@ -226,13 +226,13 @@
 
           <div id="professor-house-field">
             <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Maison <span id="house-optional" class="mandatory-badge">Optionnel</span></label>
-            <select id="setup-house" class="form-select">
-              <option value="">Aucune</option>
-              <option value="Gryffondor">🦁 Gryffondor</option>
-              <option value="Serpentard">🐍 Serpentard</option>
-              <option value="Serdaigle">🦅 Serdaigle</option>
-              <option value="Poufsouffle">🦡 Poufsouffle</option>
-            </select>
+            <div style="display:flex; gap:1rem; align-items:center; justify-content:center; padding:.5rem 0;">
+              <img src="img/gryffindor.png" alt="Gryffondor" class="prof-house-choice" data-house="gryffondor" title="Gryffondor" style="width:45px;height:45px;cursor:pointer;opacity:.4;filter:grayscale(100%);transition:all .3s;" onclick="selectSetupHouse(this, '.prof-house-choice')">
+              <img src="img/slytherin.png" alt="Serpentard" class="prof-house-choice" data-house="serpentard" title="Serpentard" style="width:45px;height:45px;cursor:pointer;opacity:.4;filter:grayscale(100%);transition:all .3s;" onclick="selectSetupHouse(this, '.prof-house-choice')">
+              <img src="img/ravenclaw.png" alt="Serdaigle" class="prof-house-choice" data-house="serdaigle" title="Serdaigle" style="width:45px;height:45px;cursor:pointer;opacity:.4;filter:grayscale(100%);transition:all .3s;" onclick="selectSetupHouse(this, '.prof-house-choice')">
+              <img src="img/hufflepuff.png" alt="Poufsouffle" class="prof-house-choice" data-house="poufsouffle" title="Poufsouffle" style="width:45px;height:45px;cursor:pointer;opacity:.4;filter:grayscale(100%);transition:all .3s;" onclick="selectSetupHouse(this, '.prof-house-choice')">
+            </div>
+            <input type="hidden" id="setup-house" value="">
           </div>
           <div id="student-house-field" style="display:none;">
             <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Maison</label>
@@ -261,7 +261,8 @@
   <script>
     const setupUser = Auth.getCurrentUser();
     const setupEmailRole = Auth.getEmailRoleFromAddress(setupUser?.email);
-    const isStudentSetup = setupEmailRole?.role === 'club';
+    const setupRole = (setupUser?.role || '').trim().toLowerCase();
+    const isStudentSetup = setupEmailRole?.role === 'club' || setupRole === 'club' || setupRole.includes('club');
     if (isStudentSetup) {
       document.getElementById('professor-fields').style.display = 'none';
       document.getElementById('student-fields').style.display = 'block';
@@ -272,8 +273,8 @@
       document.getElementById('house-optional').textContent = 'Obligatoire';
     }
 
-    function selectSetupHouse(imgEl) {
-      document.querySelectorAll('.setup-house-choice').forEach(element => {
+    function selectSetupHouse(imgEl, selector = '.setup-house-choice') {
+      document.querySelectorAll(selector).forEach(element => {
         element.style.opacity = '0.4';
         element.style.filter = 'grayscale(100%)';
         element.style.transform = 'scale(1)';

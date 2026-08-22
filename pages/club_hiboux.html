@@ -32,9 +32,11 @@
     <ul class="navbar-nav">
       <li><a href="club_dashboard.html">🏠 Accueil</a></li>
       <li><a href="club_members.html">👥 Membres</a></li>
-      <li><a href="configuration-clubs.html">🎭 Clubs</a></li>
+      <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
       <li><a href="club_points.html">⭐ Points</a></li>
       <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_community.html">💬 Communauté</a></li>
+      <li id="club-sessions-nav-link"><a href="club_sessions.html">⚡ Sessions</a></li>
       <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
@@ -50,6 +52,9 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/supabaseClient.js"></script><script src="../js/auth.js"></script><script src="../js/data.js"></script>
   <script>
     const user = requireAuthOrRedirect();
+    const configNavLink = document.getElementById('club-config-nav-link');
+    if (configNavLink && Auth.canAccessClubConfiguration(user)) configNavLink.style.display = 'list-item';
+    if (user && Auth.canAccessClubConfiguration(user)) document.getElementById('club-sessions-nav-link').style.display = 'list-item';
     const currentPage = window.location.pathname.split('/').pop() || 'club_hiboux.html';
     document.querySelectorAll('.navbar a[href]').forEach(link => { if (link.getAttribute('href') === currentPage) link.classList.add('active'); });
     const cache = new Map(); let subscription = null; let recipients = [];

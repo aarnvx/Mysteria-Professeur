@@ -76,8 +76,15 @@
       </div>
     </div>
     <ul class="navbar-nav">
-      <li><a href="../index.html">🏠 Accueil</a></li>
+      <li><a href="club_dashboard.html">🏠 Accueil</a></li>
+      <li><a href="club_members.html">👥 Membres</a></li>
       <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_community.html">💬 Communauté</a></li>
+      <li id="club-sessions-nav-link"><a href="club_sessions.html">⚡ Sessions</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
   </nav>
 
@@ -247,6 +254,9 @@ MYSTERIA CLUB
       const configNavLink = document.getElementById('club-config-nav-link');
       if (configNavLink && currentUser && Auth.canAccessClubConfiguration(currentUser)) {
         configNavLink.style.display = 'list-item';
+      }
+      if (currentUser && Auth.canAccessClubConfiguration(currentUser)) {
+        document.getElementById('club-sessions-nav-link').style.display = 'list-item';
       }
     })();
 

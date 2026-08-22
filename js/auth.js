@@ -67,7 +67,7 @@ const Auth = {
       }
 
       const emailRole = this.getEmailRoleFromAddress(authData.user.email);
-      const needsClubSetup = preferredArea === 'club' && clubProfile && clubProfile.profile_completed !== true;
+      const needsClubSetup = preferredArea === 'club' && emailRole?.role === 'club' && clubProfile && clubProfile.profile_completed !== true;
       if (!profile || needsClubSetup) {
         const pendingSession = {
           id: authData.user.id,
@@ -277,7 +277,7 @@ const Auth = {
   },
 
   isClubManagerUser(user) {
-    return this.hasRoleSignal(user, ['club_manager', 'gerant de club', 'gerant d\'un club', 'gérant de club', 'gérant d\'un club']);
+    return this.hasRoleSignal(user, ['club_manager', 'gerant', 'gerant de club', 'gerant d\'un club', 'gérant', 'gérant de club', 'gérant d\'un club']);
   },
 
   canAccessClubConfiguration(user) {
