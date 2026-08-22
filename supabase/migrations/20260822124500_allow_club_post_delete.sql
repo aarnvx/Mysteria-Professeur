@@ -2,4 +2,7 @@
 DROP POLICY IF EXISTS "Posts deletable by author or admin" ON club_posts;
 CREATE POLICY "Posts deletable by author or admin" ON club_posts
   FOR DELETE TO authenticated
-  USING (author_email = auth.jwt() ->> 'email' OR auth.jwt() ->> 'role' = 'admin');
+  USING (
+    regexp_replace(lower(trim(author_email)), '^[@^]+', '') = regexp_replace(lower(trim(auth.jwt() ->> 'email')), '^[@^]+', '')
+    OR auth.jwt() ->> 'role' = 'admin'
+  );
