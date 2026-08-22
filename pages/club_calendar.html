@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Calendrier des Clubs - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body.club-page { background: #02030a url('../img/fond3.jpg') center center / cover no-repeat fixed; }
+    .calendar-layout { display: grid; grid-template-columns: 1fr 0.8fr; gap: 2rem; }
+    .panel { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 2rem; }
+    .panel h2 { color: var(--gold); margin: 0 0 0.5rem; }
+    .panel-subtitle { color: var(--text-dim); margin-bottom: 1.5rem; }
+    .calendar-header { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+    .calendar-month { color: var(--gold); font-family: 'Cinzel', serif; font-weight: 700; }
+    .calendar-nav { background: transparent; border: 1px solid var(--border); color: var(--gold); padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer; }
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 0.35rem; }
+    .calendar-day { min-height: 3rem; padding: 0.5rem; border: 1px solid var(--border); border-radius: 6px; color: var(--text); cursor: pointer; }
+    .calendar-day.header { min-height: auto; border: 0; color: var(--gold-dim); font-size: 0.75rem; text-align: center; cursor: default; }
+    .calendar-day.today { border-color: var(--gold); color: var(--gold); }
+    .calendar-day.event { background: rgba(201,168,76,0.16); }
+    .event-item { padding: 0.9rem 0; border-bottom: 1px solid var(--border); }
+    .event-date { color: var(--gold); font-size: 0.8rem; }
+    .event-name { margin-top: 0.25rem; color: var(--text); }
+    .event-club { color: var(--text-dim); font-size: 0.8rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-label { display: block; color: var(--gold-dim); font-size: 0.8rem; margin-bottom: 0.4rem; text-transform: uppercase; }
+    .form-input, .form-select { width: 100%; padding: 0.8rem 1rem; background: rgba(10,10,18,0.85); color: var(--gold); border: 1px solid var(--border); border-radius: 8px; }
+    .notice { display: none; padding: 0.8rem 1rem; margin-bottom: 1rem; border-radius: 8px; background: rgba(76,175,80,0.15); border: 1px solid #4caf50; }
+    @media (max-width: 850px) { .calendar-layout { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body class="club-page">
+  <nav class="navbar"><div class="navbar-brand"><img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;"><div><div class="navbar-title">GESTION CLUBS</div><div class="navbar-subtitle">Événements et compétitions</div></div></div><ul class="navbar-nav">
+      <li><a href="club_dashboard.html">🏠 Accueil</a></li>
+      <li><a href="club_members.html">👥 Membres</a></li>
+      <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul></nav>
+  <main class="container" style="padding-top:3.5rem;padding-bottom:4rem;"><div class="page-header"><div class="page-header-inner"><div><div class="page-title-small">📅 Gestion</div><h1>Calendrier des Clubs</h1></div></div></div><div class="calendar-layout"><section class="panel"><div class="calendar-header"><button class="calendar-nav" id="previous">←</button><div class="calendar-month" id="month"></div><button class="calendar-nav" id="next">→</button></div><div class="calendar-grid" id="calendar"></div></section><section class="panel"><h2>Ajouter un événement</h2><div class="panel-subtitle">Planifier une activité pour un club</div><div id="notice" class="notice"></div><form id="event-form"><div class="form-group"><label class="form-label" for="date">Date</label><input id="date" class="form-input" type="date" required></div><div class="form-group"><label class="form-label" for="club">Club</label><select id="club" class="form-select" required></select></div><div class="form-group"><label class="form-label" for="type">Type</label><select id="type" class="form-select" required><option value="competition">Compétition</option><option value="reunion">Réunion</option><option value="formation">Formation</option><option value="tournoi">Tournoi</option><option value="autre">Autre</option></select></div><div class="form-group"><label class="form-label" for="name">Nom</label><input id="name" class="form-input" required></div><button class="btn btn-primary" type="submit">📅 Ajouter</button></form><div id="events" style="margin-top:2rem;"></div></section></div></main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/supabaseClient.js"></script><script src="../js/auth.js"></script>
+  <script>
+    const database = window.supabaseClient; const user = Auth.getCurrentUser(); if (!user) window.location.href = 'club.html';
+    let monthDate = new Date(); let events = []; let clubs = [];
+    const canManage = user && Auth.canAccessClubConfiguration(user); if (!canManage) document.getElementById('event-form').style.display = 'none';
+    function notice(message) { const box = document.getElementById('notice'); box.textContent = message; box.style.display = 'block'; setTimeout(() => box.style.display = 'none', 3000); }
+    function renderCalendar() { const year = monthDate.getFullYear(); const month = monthDate.getMonth(); document.getElementById('month').textContent = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(monthDate); const grid = document.getElementById('calendar'); grid.innerHTML = ''; ['Dim','Lun','Mar','Mer','Jeu','Ven','Sam'].forEach(day => { const cell = document.createElement('div'); cell.className = 'calendar-day header'; cell.textContent = day; grid.appendChild(cell); }); const first = new Date(year, month, 1).getDay(); const days = new Date(year, month + 1, 0).getDate(); for (let i = 0; i < first; i++) grid.appendChild(document.createElement('div')); for (let day = 1; day <= days; day++) { const cell = document.createElement('div'); const date = `${year}-${String(month + 1).padStart(2,'0')}-${String(day).padStart(2,'0')}`; cell.className = `calendar-day${events.some(event => event.date === date) ? ' event' : ''}`; cell.textContent = day; cell.onclick = () => document.getElementById('date').value = date; grid.appendChild(cell); } }
+    function renderEvents() { const container = document.getElementById('events'); container.innerHTML = events.length ? events.sort((a,b) => a.date.localeCompare(b.date)).map(event => `<div class="event-item"><div class="event-date">${new Date(`${event.date}T12:00:00`).toLocaleDateString('fr-FR')}</div><div class="event-name">${event.name}</div><div class="event-club">${clubs.find(club => club.club_id === event.club_id)?.name || event.club_id}</div></div>`).join('') : '<p class="event-club">Aucun événement ce mois.</p>'; }
+    async function load() { const start = new Date(monthDate.getFullYear(), monthDate.getMonth(), 1).toISOString().slice(0,10); const end = new Date(monthDate.getFullYear(), monthDate.getMonth()+1, 0).toISOString().slice(0,10); const [clubsResult, eventsResult] = await Promise.all([database.from('clubs').select('club_id,name').eq('status','active').order('name'), database.from('calendar_events').select('*').gte('date', start).lte('date', end)]); if (clubsResult.error) throw clubsResult.error; if (eventsResult.error) throw eventsResult.error; clubs = clubsResult.data || []; events = eventsResult.data || []; document.getElementById('club').innerHTML = clubs.map(club => `<option value="${club.club_id}">${club.name}</option>`).join(''); renderCalendar(); renderEvents(); }
+    document.getElementById('previous').onclick = () => { monthDate.setMonth(monthDate.getMonth()-1); load().catch(error => notice(error.message)); }; document.getElementById('next').onclick = () => { monthDate.setMonth(monthDate.getMonth()+1); load().catch(error => notice(error.message)); }; document.getElementById('event-form').onsubmit = async event => { event.preventDefault(); const form = event.target; try { const { error } = await database.from('calendar_events').insert({ date: document.getElementById('date').value, club_id: document.getElementById('club').value, type: document.getElementById('type').value, name: document.getElementById('name').value.trim() }); if (error) throw error; form.reset(); notice('Événement ajouté.'); await load(); } catch (error) { notice(error.message || 'Erreur lors de l’ajout.'); } }; load().catch(error => notice(error.message || 'Impossible de charger le calendrier.'));
+  </script>
+  <script>
+    const currentPage = window.location.pathname.split('/').pop() || 'club_calendar.html';
+    document.querySelectorAll('.navbar a[href]').forEach(link => {
+      if (link.getAttribute('href') === currentPage) link.classList.add('active');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Équipe Professorale - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ── Role category sections ── */
+    .role-section {
+      margin-bottom: 3rem;
+    }
+
+    .role-section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .role-section-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 10px;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid var(--border-bright);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .role-section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--gold);
+      letter-spacing: 0.06em;
+    }
+
+    .role-section-count {
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      margin-left: auto;
+    }
+
+    /* ── Staff cards ── */
+    .staff-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+
+    .staff-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .staff-card::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.04), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .staff-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-3px);
+      box-shadow: var(--glow);
+    }
+
+    .staff-card:hover::after { opacity: 1; }
+
+    /* House accent strip */
+    .staff-card.house-gryffindor { border-top: 3px solid #d3a625; }
+    .staff-card.house-slytherin  { border-top: 3px solid #aaaaaa; }
+    .staff-card.house-ravenclaw  { border-top: 3px solid #946b2d; }
+    .staff-card.house-hufflepuff { border-top: 3px solid #ecb939; }
+    .staff-card.house-none       { border-top: 3px solid var(--gold-dim); }
+
+    .staff-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.08);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      margin: 0 auto 1rem;
+      box-shadow: var(--glow);
+    }
+
+    .staff-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.92rem;
+      font-weight: 600;
+      color: var(--cream);
+      margin-bottom: 0.3rem;
+    }
+
+    .staff-role {
+      font-family: 'Cinzel', serif;
+      font-size: 0.74rem;
+      letter-spacing: 0.08em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+    }
+
+    .staff-badge {
+      display: inline-block;
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.08em;
+      padding: 0.2rem 0.7rem;
+      border-radius: 100px;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid var(--border);
+      color: var(--cream-dim);
+      margin-bottom: 0.5rem;
+    }
+
+    .direction-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.35rem;
+      margin: 0.25rem auto 0.7rem;
+      padding: 0.2rem 0.7rem;
+      border-radius: 999px;
+      font-family: 'Cinzel', serif;
+      font-size: 0.58rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--gold);
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.45);
+      box-shadow: inset 0 0 12px rgba(201,168,76,0.08);
+    }
+
+    .staff-house-pill {
+      display: inline-block;
+      font-size: 0.72rem;
+      padding: 0.15rem 0.6rem;
+      border-radius: 100px;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.06em;
+    }
+
+    .pill-gryffindor { background: rgba(116,0,1,0.3); color: #d3a625; border: 1px solid rgba(211,166,37,0.3); }
+    .pill-slytherin  { background: rgba(26,71,42,0.3); color: #aaaaaa; border: 1px solid rgba(170,170,170,0.2); }
+    .pill-ravenclaw  { background: rgba(14,26,64,0.3); color: #c49a5a; border: 1px solid rgba(148,107,45,0.3); }
+    .pill-hufflepuff { background: rgba(236,185,57,0.1); color: #ecb939; border: 1px solid rgba(236,185,57,0.25); }
+
+    .staff-since {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      margin-top: 0.5rem;
+      font-family: 'EB Garamond', serif;
+    }
+
+    /* ── Org chart / table view ── */
+    .view-toggle {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+
+    .view-btn {
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      padding: 0.4rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .view-btn.active, .view-btn:hover {
+      color: var(--gold);
+      border-color: var(--border-bright);
+      background: rgba(201,168,76,0.06);
+    }
+
+    /* ── Director row ── */
+    .director-card {
+      background: linear-gradient(135deg, rgba(45,0,96,0.3), rgba(201,168,76,0.05));
+      border: 1px solid rgba(201,168,76,0.4);
+      border-radius: 16px;
+      padding: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+      box-shadow: 0 0 40px rgba(201,168,76,0.08);
+    }
+
+    .director-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.12);
+      border: 2px solid var(--gold-dim);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.8rem;
+      box-shadow: var(--glow-strong);
+      flex-shrink: 0;
+    }
+
+    .director-info {}
+    .director-label {
+      font-family: 'Cinzel', serif;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
+      color: var(--gold-dim);
+      text-transform: uppercase;
+      margin-bottom: 0.2rem;
+    }
+
+    .director-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.6rem;
+      font-weight: 700;
+      color: var(--gold-light);
+    }
+
+    .director-role {
+      color: var(--cream-dim);
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 1rem;
+      margin-top: 0.2rem;
+    }
+
+    @media (max-width: 600px) {
+      .director-card { flex-direction: column; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">Mysteria Professeur</div>
+        <div class="navbar-subtitle">Portail Académique</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html">🏠 Accueil</a></li>
+      <li><a href="courses.html">📚 Cours</a></li>
+      <li><a href="planning.html">🗓️ Planning</a></li>
+      <li><a href="points.html">⚡ Points</a></li>
+      <li><a href="blames.html">📜 Blâme</a></li>
+      <li><a href="roles.html" class="active">🎓 Équipe</a></li>
+      <li><a href="hiboux.html">🦉 Hiboux</a></li>
+      <li id="nav-team-create"><a href="team_create.html">➕ Créer identifiants</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <div class="container" style="padding-top:3rem; padding-bottom:4rem; position:relative; z-index:1;">
+
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="page-title-small">Organigramme</div>
+          <h1>🎓 Équipe Professorale</h1>
+        </div>
+        <div style="display:flex; gap:1rem; align-items:center;">
+          <span class="badge badge-gold" id="total-staff-badge"></span>
+          <button id="btn-manage-roles" class="btn btn-primary btn-sm" style="display:none;" onclick="openManageRoles()">⚙️ Gérer l'Équipe</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modale Gérer Rôles -->
+    <div class="modal-overlay" id="manage-roles-modal">
+      <div class="modal" style="max-width: 600px;">
+        <button class="modal-close" onclick="closeManageRoles()">✕</button>
+        <h3>⚙️ Gestion de l'Équipe</h3>
+        <p style="margin-bottom:1.25rem;">Modifiez les grades et fonctions des membres du personnel et des clubs. Pour un rôle de club, utilisez des étiquettes comme <strong>Gérant du club de ...</strong>, etc.</p>
+        <div id="manage-roles-list" style="max-height: 400px; overflow-y: auto; display: flex; flex-direction: column; gap: 0.8rem;">
+          <!-- List generated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- Director highlight -->
+    <div class="director-card" id="director-card">
+      <!-- Rendered by JS -->
+    </div>
+
+    <!-- Categories -->
+    <div id="roles-content">
+      <!-- Rendered by JS -->
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/global-sound.js"></script>
+  <script>
+    requireAuthOrRedirect();
+
+    // Hide "Créer identifiants" link unless user has high-rank permissions (GP / Directeur / Directeur adjoint)
+    (function() {
+      try {
+        const allowed = Auth.hasPermission && Auth.hasPermission('manage_roles');
+        const el = document.getElementById('nav-team-create');
+        if (el) el.style.display = allowed ? '' : 'none';
+      } catch (e) {
+        console.warn('Unable to evaluate permissions for nav team create', e);
+      }
+    })();
+
+    const houseImages = {
+      'gryffondor': 'gryffindor.png',
+      'serpentard': 'slytherin.png',
+      'serdaigle': 'ravenclaw.png',
+      'poufsouffle': 'hufflepuff.png',
+      'gryffindor': 'gryffindor.png',
+      'slytherin': 'slytherin.png',
+      'ravenclaw': 'ravenclaw.png',
+      'hufflepuff': 'hufflepuff.png'
+    };
+
+    const HOUSE_CLASS = {
+      'gryffondor': 'gryf',
+      'serpentard': 'sly',
+      'serdaigle': 'rav',
+      'poufsouffle': 'huff',
+      'gryffindor': 'gryf',
+      'slytherin': 'sly',
+      'ravenclaw': 'rav',
+      'hufflepuff': 'huff'
+    };
+
+    const PILL_CLASS = {
+      'gryffondor': 'pill-gryf',
+      'serpentard': 'pill-sly',
+      'serdaigle': 'pill-rav',
+      'poufsouffle': 'pill-huff',
+      'gryffindor': 'pill-gryf',
+      'slytherin': 'pill-sly',
+      'ravenclaw': 'pill-rav',
+      'hufflepuff': 'pill-huff'
+    };
+
+    function normalizeHouseKey(value) {
+      const raw = String(value || '').trim().toLowerCase();
+      const normalized = raw
+        .replace(/é|è|ê|ë/g, 'e')
+        .replace(/à|â|ä/g, 'a')
+        .replace(/î|ï/g, 'i')
+        .replace(/ô|ö/g, 'o')
+        .replace(/ù|û|ü/g, 'u')
+        .replace(/[^a-z]/g, '');
+
+      const aliases = {
+        gryffindor: 'gryffondor',
+        slytherin: 'serpentard',
+        ravenclaw: 'serdaigle',
+        hufflepuff: 'poufsouffle'
+      };
+
+      return aliases[normalized] || normalized;
+    }
+
+    function getHouseImage(value) {
+      return houseImages[normalizeHouseKey(value)] || 'logo.png';
+    }
+
+    function getHouseClass(value) {
+      return HOUSE_CLASS[normalizeHouseKey(value)] || 'none';
+    }
+
+    function getHousePillClass(value) {
+      return PILL_CLASS[normalizeHouseKey(value)] || '';
+    }
+ 
+    let rolesRealtimeChannels = [];
+ 
+    function createRoleCard(r) {
+      const card = document.createElement('div');
+      card.className = 'role-card';
+      
+      const houseImgFile = getHouseImage(r.house);
+
+      const houseHtml = r.house
+        ? `<div style="display:flex; align-items:center; justify-content:center; width:40px; height:40px; margin-top:0.35rem; border-radius:50%; background:rgba(255,255,255,0.04); border:1px solid rgba(255,255,255,0.08);"><img src="../img/${houseImgFile}" alt="${r.house}" title="${r.house}" style="width:32px;height:32px;object-fit:contain;display:block;"></div>`
+        : '';
+
+      card.innerHTML = `
+        <div style="display:flex; gap:1rem; align-items:center;">
+          <img src="../img/${r.house ? houseImgFile : 'logo.png'}" alt="Avatar" style="width:48px;height:48px;border-radius:50%;object-fit:cover;border:1px solid rgba(255,255,255,0.1);">
+          <div>
+            <div style="font-family:'Cinzel',serif; font-size:1rem; color:var(--gold);">${r.name}</div>
+            <div style="font-size:0.8rem; color:var(--cream-dim);">${r.rank} ${r.role && r.role !== 'Aucune' ? '- ' + r.role : ''}</div>
+            ${houseHtml}
+          </div>
+        </div>
+      `;
+      return card;
+    }
+
+    async function initRoles() {
+      const user = requireAuthOrRedirect();
+      if (!user) return;
+
+      const canManageAll = Auth.hasPermission('manage_roles');
+      const canManageClub = Auth.hasPermission('manage_club_roles');
+      if (canManageAll || canManageClub) {
+        document.getElementById('btn-manage-roles').style.display = 'inline-block';
+      }
+
+      const content = document.getElementById('roles-content');
+      content.innerHTML = '';
+
+      const isClubUser = ((user.role || '').toString().toLowerCase().includes('club') || (user.rank || '').toString().toLowerCase().includes('membre de club') || (user.role || '').toString().toLowerCase().includes('gérant'));
+
+      if (isClubUser) {
+        // Club-focused view: two tabs — Membres (same role) and Équipe (professors/staff)
+        const tabs = document.createElement('div');
+        tabs.style.display = 'flex';
+        tabs.style.gap = '0.5rem';
+        tabs.style.marginBottom = '1rem';
+
+        const btnMembres = document.createElement('button');
+        btnMembres.className = 'view-btn active';
+        btnMembres.textContent = '👥 Membres';
+        const btnEquipe = document.createElement('button');
+        btnEquipe.className = 'view-btn';
+        btnEquipe.textContent = '🎓 Équipe';
+
+        tabs.appendChild(btnMembres);
+        tabs.appendChild(btnEquipe);
+        content.appendChild(tabs);
+
+        const membresContainer = document.createElement('div');
+        const equipeContainer = document.createElement('div');
+        content.appendChild(membresContainer);
+        content.appendChild(equipeContainer);
+
+        async function loadMembres() {
+          membresContainer.innerHTML = '<p>Chargement des membres…</p>';
+          const members = await DataStore.getClubMembersByRole(user.role || user.rank || '');
+          if (!members || members.length === 0) {
+            membresContainer.innerHTML = '<p>Aucun membre trouvé pour votre rôle.</p>';
+            return;
+          }
+          const grid = document.createElement('div');
+          grid.className = 'staff-grid';
+          members.forEach(m => {
+            const houseClass = m.house ? getHouseClass(m.house) : 'none';
+            const card = document.createElement('div');
+            card.className = `staff-card house-${houseClass}`;
+            card.innerHTML = `
+              <div class="staff-avatar">${m.avatar || '🎭'}</div>
+              <div class="staff-name">${m.name || m.email}</div>
+              <div class="staff-role">${m.role || m.rank || 'Membre'}</div>
+              ${m.house ? `<div style="margin-top:0.5rem; display:flex; justify-content:center;"><img src="../img/${getHouseImage(m.house)}" alt="${m.house}" title="${m.house}" style="width:48px;height:48px;object-fit:contain; display:block;"></div>` : ''}
+            `;
+            grid.appendChild(card);
+          });
+          membresContainer.innerHTML = '';
+          membresContainer.appendChild(grid);
+        }
+
+        async function loadEquipe() {
+          equipeContainer.innerHTML = '<p>Chargement de l\'équipe…</p>';
+          const roles = await DataStore.getRoles();
+          if (!roles || roles.length === 0) {
+            equipeContainer.innerHTML = '<p>Aucun membre du personnel trouvé.</p>';
+            return;
+          }
+          const grid = document.createElement('div');
+          grid.className = 'staff-grid';
+          roles.forEach(m => {
+            const houseClass = m.house ? getHouseClass(m.house) : 'none';
+            const card = document.createElement('div');
+            card.className = `staff-card house-${houseClass}`;
+            card.innerHTML = `
+              <div class="staff-avatar">${m.avatar || '🎓'}</div>
+              <div class="staff-name">${m.name}</div>
+              <div class="staff-role">${m.rank || 'Professeur'}</div>
+              ${m.role && m.role !== 'Aucune' ? `<div style="margin-bottom:0.4rem;"><span class="staff-badge">${m.role}</span></div>` : ''}
+              ${m.house ? `<div style="display:flex; justify-content:center;"><img src="../img/${getHouseImage(m.house)}" alt="${m.house}" title="${m.house}" style="width:44px;height:44px;object-fit:contain; display:block;"></div>` : ''}
+            `;
+            grid.appendChild(card);
+          });
+          equipeContainer.innerHTML = '';
+          equipeContainer.appendChild(grid);
+        }
+
+        btnMembres.onclick = () => { btnMembres.classList.add('active'); btnEquipe.classList.remove('active'); membresContainer.style.display = ''; equipeContainer.style.display = 'none'; };
+        btnEquipe.onclick = () => { btnEquipe.classList.add('active'); btnMembres.classList.remove('active'); equipeContainer.style.display = ''; membresContainer.style.display = 'none'; };
+
+        // initial load
+        await loadMembres();
+        await loadEquipe();
+        equipeContainer.style.display = 'none';
+        return;
+      }
+
+      // Fallback / professor view (original behavior)
+      const roles = await DataStore.getRoles();
+      document.getElementById('total-staff-badge').textContent = roles.length + ' membres';
+
+      // Direction: support multiple members without breaking the layout
+      const directionMembers = roles.filter(r => {
+        const rank = (r.rank || '').toString();
+        const role = (r.role || '').toString();
+        return rank.includes('Directeur') || rank.includes('Co-Directeur') || rank.includes('Grand Professeur') || rank.includes('Admin') || rank.includes('Fonda') || role.includes('Directeur') || role.includes('Co-Directeur') || role.includes('Grand Professeur') || role.includes('Admin') || role.includes('Fonda');
+      }).sort((a, b) => {
+        const order = { 'Directeur': 0, 'Co-Directeur': 1, 'Directeur Adjoint': 2, 'Grand Professeur': 3, 'Admin': 4, 'Fonda': 5 };
+        const aRank = (a.rank || '').toString();
+        const bRank = (b.rank || '').toString();
+        const aOrder = order[aRank] ?? (aRank.includes('Co-Directeur') ? 1 : (aRank.includes('Directeur') ? 0 : 99));
+        const bOrder = order[bRank] ?? (bRank.includes('Co-Directeur') ? 1 : (bRank.includes('Directeur') ? 0 : 99));
+        return aOrder - bOrder;
+      });
+      const director = directionMembers.find(r => !r.house) || directionMembers[0] || null;
+
+      if (directionMembers.length > 0) {
+        document.getElementById('director-card').style.display = 'none';
+      } else if (director) {
+        const directorNames = directionMembers.map(r => r.name).slice(0, 3).join(' • ');
+        document.getElementById('director-card').innerHTML = `
+          <div class="director-avatar">${director.avatar || '🎓'}</div>
+          <div class="director-info">
+            <div class="director-label">Direction de Mysteria</div>
+            <div class="director-name">${director.name}</div>
+            <div class="director-role">${director.rank} ${director.role && director.role !== 'Aucune' ? '- ' + director.role : ''}</div>
+            <div style="margin-top:0.75rem; display:flex; gap:0.5rem; flex-wrap:wrap;">
+              <span class="badge badge-gold">⭐ Direction</span>
+            </div>
+            ${directionMembers.length > 1 ? `<div style="margin-top:0.5rem; font-size:0.72rem; color:var(--cream-dim);">${directorNames}</div>` : ''}
+          </div>
+        `;
+        document.getElementById('director-card').style.display = 'flex';
+      } else {
+        document.getElementById('director-card').style.display = 'none';
+      }
+
+      const directionIds = new Set((directionMembers || []).map(r => r.id));
+      const visibleRoles = roles.filter(r => !directionIds.has(r.id));
+
+      const CATEGORIES = [
+        { label: 'Grands Professeurs', icon: '🌟', filter: r => r.rank === 'Grand Professeur' },
+        { label: 'Professeurs Expérimentés', icon: '✨', filter: r => r.rank === 'Professeur Expérimenté' },
+        { label: 'Professeurs Confirmés', icon: '📖', filter: r => r.rank === 'Professeur Confirmé' },
+        { label: 'Professeurs', icon: '📚', filter: r => r.rank === 'Professeur' },
+        { label: 'Professeurs Apprentis', icon: '🌱', filter: r => r.rank === 'Professeur Apprenti' },
+        { label: 'Rédacteurs & Autre', icon: '✍️', filter: r => r.rank === 'Rédacteur' || (!r.rank?.includes('Professeur') && !r.rank?.includes('Directeur') && !r.role?.toLowerCase().includes('club')) }
+      ];
+
+      const content2 = document.getElementById('roles-content');
+      content2.innerHTML = '';
+
+      if (directionMembers.length > 0) {
+        const directionSection = document.createElement('div');
+        directionSection.className = 'role-section fade-in';
+        directionSection.innerHTML = `
+          <div class="role-section-header">
+            <div class="role-section-icon">👑</div>
+            <div class="role-section-title">Direction</div>
+            <span class="role-section-count">${directionMembers.length} membre${directionMembers.length > 1 ? 's' : ''}</span>
+          </div>
+          <div class="staff-grid" id="grid-direction"></div>
+        `;
+        content2.appendChild(directionSection);
+
+        const directionGrid = directionSection.querySelector('.staff-grid');
+        directionMembers.forEach(m => {
+          const houseClass = m.house ? getHouseClass(m.house) : 'none';
+          const card = document.createElement('div');
+          card.className = `staff-card house-${houseClass}`;
+          card.innerHTML = `
+            <div class="staff-avatar">${m.avatar || '👑'}</div>
+            <div class="staff-name">${m.name}</div>
+            <div class="staff-role">${m.rank || 'Directeur'}</div>
+            <div class="direction-badge">👑 Direction</div>
+            ${m.role && m.role !== 'Aucune' ? `<div style="margin-bottom:0.4rem;"><span class="staff-badge">${m.role}</span></div>` : '<div style="margin-bottom:0.4rem;"><span class="staff-badge" style="opacity:0;">-</span></div>'}
+            ${m.house ? `<div style="display:flex; justify-content:center;"><img src="../img/${getHouseImage(m.house)}" alt="${m.house}" title="${m.house}" style="width:44px;height:44px;object-fit:contain; display:block;"></div>` : ''}
+          `;
+          directionGrid.appendChild(card);
+        });
+      }
+
+      CATEGORIES.forEach(cat => {
+        const members = visibleRoles.filter(cat.filter);
+        if (members.length === 0) return;
+
+        const section = document.createElement('div');
+        section.className = 'role-section fade-in';
+        section.innerHTML = `
+          <div class="role-section-header">
+            <div class="role-section-icon">${cat.icon}</div>
+            <div class="role-section-title">${cat.label}</div>
+            <span class="role-section-count">${members.length} membre${members.length > 1 ? 's' : ''}</span>
+          </div>
+          <div class="staff-grid" id="grid-${cat.label.replace(/\s/g,'_')}"></div>
+        `;
+        content2.appendChild(section);
+
+        const grid = section.querySelector('.staff-grid');
+        members.forEach(m => {
+          const houseClass = m.house ? getHouseClass(m.house) : 'none';
+          const card = document.createElement('div');
+          card.className = `staff-card house-${houseClass}`;
+          card.innerHTML = `
+            <div class="staff-avatar">${m.avatar || '🎓'}</div>
+            <div class="staff-name">${m.name}</div>
+            <div class="staff-role">${m.rank || 'Professeur'}</div>
+            ${m.role && m.role !== 'Aucune' ? `<div style="margin-bottom:0.4rem;"><span class="staff-badge">${m.role}</span></div>` : '<div style="margin-bottom:0.4rem;"><span class="staff-badge" style="opacity:0;">-</span></div>'}
+            ${m.house ? `<div style="display:flex; justify-content:center;"><img src="../img/${getHouseImage(m.house)}" alt="${m.house}" title="${m.house}" style="width:22px;height:22px;object-fit:contain; display:block;"></div>` : ''}
+          `;
+          grid.appendChild(card);
+        });
+      });
+
+      const CLUB_CATEGORIES = [
+        { label: 'Club de la Gazette', icon: '📰', filter: r => (r.role || '').toLowerCase().includes('club de la gazette') },
+        { label: 'Club de Duel', icon: '⚔️', filter: r => (r.role || '').toLowerCase().includes('club de duel') },
+        { label: 'Club de Théâtre', icon: '🎭', filter: r => (r.role || '').toLowerCase().includes('club de théâtre') },
+        { label: 'Club de Musique', icon: '🎵', filter: r => (r.role || '').toLowerCase().includes('club de musique') },
+        { label: 'Club de Divination', icon: '🔮', filter: r => (r.role || '').toLowerCase().includes('club de divination') },
+        { label: 'Club de Potions', icon: '🧪', filter: r => (r.role || '').toLowerCase().includes('club de potions') },
+        { label: 'Club de Botanique', icon: '🌿', filter: r => (r.role || '').toLowerCase().includes('club de botanique') }
+      ];
+
+      if (roles.some(r => CLUB_CATEGORIES.some(cat => cat.filter(r)))) {
+        const clubSection = document.createElement('div');
+        clubSection.className = 'role-section fade-in';
+        clubSection.innerHTML = `
+          <div class="role-section-header">
+            <div class="role-section-icon">🛡️</div>
+            <div class="role-section-title">Clubs</div>
+            <span class="role-section-count">${roles.filter(r => (r.role || '').toLowerCase().includes('club')).length} membre${roles.filter(r => (r.role || '').toLowerCase().includes('club')).length > 1 ? 's' : ''}</span>
+          </div>
+          <div class="staff-grid" id="club-categories-grid"></div>
+        `;
+        content2.appendChild(clubSection);
+
+        const clubGrid = clubSection.querySelector('.staff-grid');
+        CLUB_CATEGORIES.forEach(cat => {
+          const members = roles.filter(cat.filter);
+          if (members.length === 0) return;
+          const card = document.createElement('div');
+          card.className = 'staff-card house-none';
+          card.innerHTML = `
+            <div class="staff-avatar">${cat.icon}</div>
+            <div class="staff-name">${cat.label}</div>
+            <div class="staff-role">${members.length} membre${members.length > 1 ? 's' : ''}</div>
+          `;
+          clubGrid.appendChild(card);
+        });
+      }
+    }
+
+    async function openManageRoles() {
+      const roles = await DataStore.getRoles();
+      const list = document.getElementById('manage-roles-list');
+      list.innerHTML = '';
+      const canManageAll = Auth.hasPermission('manage_roles');
+      const canManageClub = Auth.hasPermission('manage_club_roles');
+      const filteredRoles = canManageAll ? roles : roles.filter(r => (r.role || '').toLowerCase().includes('club'));
+      
+      filteredRoles.forEach(m => {
+        const div = document.createElement('div');
+        div.style.display = 'grid';
+        div.style.gridTemplateColumns = '2fr 1.5fr 1.5fr auto';
+        div.style.gap = '0.5rem';
+        div.style.alignItems = 'center';
+        div.style.padding = '0.5rem';
+        div.style.background = 'var(--bg-dark)';
+        div.style.border = '1px solid var(--border)';
+        div.style.borderRadius = '8px';
+        
+        div.innerHTML = `
+          <div style="font-family:'Cinzel',serif; font-size:0.8rem; overflow:hidden; text-overflow:ellipsis;">${m.name}</div>
+          <select class="form-input" id="rank-${m.id}" style="padding:0.4rem; font-size:0.75rem;">
+            <option value="Professeur Apprenti" ${m.rank === 'Professeur Apprenti' ? 'selected' : ''}>Professeur Apprenti</option>
+            <option value="Professeur" ${m.rank === 'Professeur' ? 'selected' : ''}>Professeur</option>
+            <option value="Professeur Confirmé" ${m.rank === 'Professeur Confirmé' ? 'selected' : ''}>Professeur Confirmé</option>
+            <option value="Professeur Expérimenté" ${m.rank === 'Professeur Expérimenté' ? 'selected' : ''}>Professeur Expérimenté</option>
+            <option value="Grand Professeur" ${m.rank === 'Grand Professeur' ? 'selected' : ''}>Grand Professeur</option>
+            <option value="Directeur Adjoint" ${m.rank === 'Directeur Adjoint' ? 'selected' : ''}>Directeur Adjoint</option>
+            <option value="Directeur" ${m.rank === 'Directeur' ? 'selected' : ''}>Directeur</option>
+            <option value="Co-Directeur" ${m.rank === 'Co-Directeur' ? 'selected' : ''}>Co-Directeur</option>
+            <option value="Directeur [Maison]" ${m.rank === 'Directeur [Maison]' ? 'selected' : ''}>Directeur [Maison]</option>
+            <option value="Co-Directeur [Maison]" ${m.rank === 'Co-Directeur [Maison]' ? 'selected' : ''}>Co-Directeur [Maison]</option>
+          </select>
+          <input type="text" class="form-input" id="role-${m.id}" value="${m.role || 'Aucune'}" style="padding:0.4rem; font-size:0.75rem;" placeholder="Fonction (ex: Rédacteur, Gérant...)">
+          <button class="btn btn-sm btn-primary" onclick="saveRole(${m.id})">💾</button>
+        `;
+        list.appendChild(div);
+      });
+            await DataStore.getSessionByCode('TEST123')
+        .then(console.log)
+        .catch(console.error);
+      document.getElementById('manage-roles-modal').classList.add('active');
+    }
+
+    function closeManageRoles() {
+      document.getElementById('manage-roles-modal').classList.remove('active');
+    }
+
+    async function saveRole(id) {
+      const rank = document.getElementById(`rank-${id}`).value;
+      const role = document.getElementById(`role-${id}`).value;
+      const res = await DataStore.updateProfessor(id, { rank, role });
+      if (res && res.ok) {
+        showToast('Rôles mis à jour !', 'success');
+        initRoles();
+      } else {
+        console.error('Failed to save role', { id, rank, role, res });
+        const errMsg = res && res.error ? res.error : 'Erreur de mise à jour';
+        showToast(errMsg, 'error');
+      }
+    }
+
+    initRoles();
+    setupRolesRealtime();
+    window.addEventListener('beforeunload', () => {
+     rolesRealtimeChannels.forEach(channel => DataStore.unsubscribeChannel(channel));
+     rolesRealtimeChannels.length = 0;
+    });
+ 
+    function setupRolesRealtime() {
+     if (!DataStore.subscribeTable) return;
+
+     rolesRealtimeChannels.push(
+       DataStore.subscribeTable({
+         table: 'professors',
+         events: ['INSERT', 'UPDATE', 'DELETE'],
+         onEvent: initRoles
+       })
+     );
+
+     rolesRealtimeChannels.push(
+       DataStore.subscribeTable({
+         table: 'club_members',
+         events: ['INSERT', 'UPDATE', 'DELETE'],
+         onEvent: initRoles
+       })
+     );
+    }
+ 
+    // Particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+      function createParticle() {
+        return { x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+          size:Math.random()*1.2+0.3, speedY:-(Math.random()*0.25+0.08),
+          speedX:(Math.random()-0.5)*0.15, opacity:Math.random()*0.5+0.15,
+          life:0, maxLife:Math.random()*350+200 };
+      }
+      function init() { resize(); for(let i=0;i<60;i++) particles.push(createParticle()); window.addEventListener('resize',resize); }
+      function animate() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        particles.forEach((p,i)=>{
+          p.x+=p.speedX; p.y+=p.speedY; p.life++;
+          const r=p.life/p.maxLife;
+          const a=r<0.2?r/0.2:r>0.8?(1-r)/0.2:1;
+          ctx.globalAlpha=p.opacity*a; ctx.fillStyle='#c9a84c';
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+          if(p.life>=p.maxLife||p.y<0) particles[i]=createParticle();
+        });
+        ctx.globalAlpha=1; requestAnimationFrame(animate);
+      }
+      init(); animate();
+    })();
+  </script>
+</body>
+</html>
+
+
+
+

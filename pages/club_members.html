@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Membres du Club - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ── Club Members Grid ── */
+    .members-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+      margin-top: 1.5rem;
+    }
+
+    .member-category {
+      grid-column: 1 / -1;
+      margin-top: 1.5rem;
+    }
+
+    .member-category:first-child { margin-top: 0; }
+
+    .member-category-title {
+      margin: 0 0 0.75rem;
+      padding-bottom: 0.45rem;
+      border-bottom: 1px solid rgba(201,168,76,0.28);
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      letter-spacing: 0.04em;
+    }
+
+    .member-category-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .member-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .member-card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(201,168,76,0.08), transparent);
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+
+    .member-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-4px);
+      box-shadow: var(--glow);
+    }
+
+    .member-card:hover::before { opacity: 1; }
+
+    .member-avatar {
+      width: 72px;
+      height: 72px;
+      margin: 0 auto 1rem;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.12);
+      border: 2px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      box-shadow: var(--glow-strong);
+    }
+
+    .member-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.05rem;
+      color: var(--gold);
+      margin-bottom: 0.3rem;
+    }
+
+    .member-role {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 0.75rem;
+    }
+
+    .member-house {
+      display: inline-block;
+      padding: 0.35rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.05em;
+      background: rgba(201,168,76,0.08);
+      border: 1px solid rgba(201,168,76,0.3);
+      color: var(--gold-dim);
+    }
+
+    .member-house img {
+      width: 18px;
+      height: 18px;
+      display: block;
+      object-fit: contain;
+      filter: drop-shadow(0 0 5px rgba(201,168,76,0.45));
+    }
+
+    .member-emblem {
+      display: block;
+      padding: 0;
+      border: 0;
+      background: transparent;
+    }
+
+    .member-emblem img {
+      width: 36px;
+      height: 36px;
+      object-fit: contain;
+      filter: drop-shadow(0 0 5px rgba(201,168,76,0.45));
+    }
+
+    /* ── Filter/Search ── */
+    .filter-row {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .search-box {
+      flex: 1;
+      min-width: 250px;
+      position: relative;
+    }
+
+    .search-box input {
+      width: 100%;
+      padding: 0.75rem 1rem 0.75rem 2.5rem;
+      background: rgba(10,10,18,0.85);
+      color: var(--gold);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      font-size: 0.9rem;
+    }
+
+    .search-box input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+    }
+
+    .search-icon {
+      position: absolute;
+      left: 0.8rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-dim);
+      font-size: 1rem;
+    }
+
+    .filter-select {
+      padding: 0.75rem 1rem;
+      background: rgba(10,10,18,0.85);
+      color: var(--gold);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      outline: none;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+
+    .filter-select:focus {
+      border-color: var(--accent);
+    }
+
+    .badge-count {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.8rem;
+      background: rgba(167,139,250,0.15);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.85rem;
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-box {
+      background: rgba(201,168,76,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 0.35rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Empty State ── */
+    .empty-state {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      background: rgba(201,168,76,0.03);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+      color: var(--text-dim);
+    }
+
+    .empty-state-icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 768px) {
+      .members-grid {
+        grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+        gap: 1rem;
+      }
+      .filter-row {
+        flex-direction: column;
+      }
+      .search-box {
+        min-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body class="club-page">
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">MYSTERIA CLUB</div>
+        <div class="navbar-subtitle">Espace réservé aux clubs</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="club_dashboard.html">🏠 Accueil</a></li>
+      <li><a href="club_members.html">👥 Membres</a></li>
+      <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <main class="container" style="padding-top:3.5rem; padding-bottom:4rem; position:relative; z-index:1;">
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="page-title-small">👥 Annuaire</div>
+          <h1>Membres du Club</h1>
+        </div>
+        <div class="badge-count" style="margin-right:0;">
+          <span id="members-count">0</span>
+          <span>membre(s)</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-row" style="display: none;">
+      <div class="stat-box">
+        <div class="stat-number" id="stat-total">0</div>
+        <div class="stat-label">Total</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-active">0</div>
+        <div class="stat-label">Actifs</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-roles">0</div>
+        <div class="stat-label">Rôles différents</div>
+      </div>
+    </div>
+
+    <!-- Filters & Search -->
+    <div class="filter-row">
+      <div class="search-box">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="search-input" placeholder="Rechercher un membre…" autocomplete="off">
+      </div>
+      <select id="role-filter" class="filter-select">
+        <option value="">📋 Tous les rôles</option>
+      </select>
+      <select id="club-filter" class="filter-select">
+        <option value="">🎭 Tous les clubs</option>
+      </select>
+    </div>
+
+    <!-- Members Grid -->
+    <div id="members-container" class="members-grid">
+      <div class="empty-state">
+        <div class="empty-state-icon">📭</div>
+        <p>Chargement des membres…</p>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/global-sound.js"></script>
+  <script>
+    const currentUser = requireAuthOrRedirect();
+    if (!currentUser) {
+      window.location.href = 'club.html';
+    } else {
+
+    function isClubManagerUser(user) {
+      return Auth.isClubManagerUser(user);
+    }
+
+    const configNavLink = document.getElementById('club-config-nav-link');
+    if (configNavLink && currentUser && Auth.canAccessClubConfiguration(currentUser)) {
+      configNavLink.style.display = 'list-item';
+    }
+ 
+    // Verify user has access to club section
+    if (!Auth.isClubContextUser(currentUser) && !Auth.isProfessorContextUser(currentUser)) {
+      window.location.href = 'club_dashboard.html';
+    }
+
+    let allMembers = [];
+    let clubMembersRealtimeChannel = null;
+
+    const houseImages = {
+      gryffondor: '../img/gryffindor.png',
+      serpentard: '../img/slytherin.png',
+      serdaigle: '../img/ravenclaw.png',
+      poufsouffle: '../img/hufflepuff.png'
+    };
+
+    function normalizeEmail(value) {
+      return String(value || '').trim().replace(/^[@^]/, '').toLowerCase();
+    }
+
+    function getHouseImage(house) {
+      const key = normalizeEmail(house).normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+      return houseImages[key] || null;
+    }
+ 
+    async function loadMembers() {
+      try {
+        const members = await DataStore.getClubMembers();
+        let clubs = [];
+        try {
+          clubs = await DataStore.getClubs();
+        } catch (clubsError) {
+          console.warn('Impossible de charger les clubs pour enrichir l’annuaire:', clubsError);
+        }
+        const clubsById = new Map((clubs || []).map(club => [club.club_id, club]));
+        allMembers = (members || []).map(member => ({
+          ...member,
+          club: clubsById.get(member.club_id) || (clubs || []).find(club =>
+            normalizeEmail(club.manager_email) === normalizeEmail(member.email)
+          ) || null
+        }));
+        allMembers = allMembers.map(member => ({
+          ...member,
+          club_id: member.club_id || member.club?.club_id || null
+        }));
+
+        const clubFilter = document.getElementById('club-filter');
+        clubFilter.innerHTML = '<option value="">🎭 Tous les clubs</option>';
+        (clubs || []).forEach(club => {
+          const option = document.createElement('option');
+          option.value = club.club_id;
+          option.textContent = club.name;
+          clubFilter.appendChild(option);
+        });
+
+        if (!allMembers || allMembers.length === 0) {
+          renderEmptyState();
+          return;
+        }
+
+        // Update count
+        document.getElementById('members-count').textContent = allMembers.length;
+
+        // Build role filter options
+        const uniqueRoles = [...new Set(allMembers.map(m => m.role).filter(Boolean))];
+        const roleFilter = document.getElementById('role-filter');
+        roleFilter.innerHTML = '<option value="">📋 Tous les rôles</option>';
+        uniqueRoles.forEach(role => {
+          const option = document.createElement('option');
+          option.value = role;
+          option.textContent = role;
+          roleFilter.appendChild(option);
+        });
+
+        // Update stats
+        updateStats(allMembers);
+
+        // Initial render
+        renderMembers(allMembers);
+
+      } catch (err) {
+        console.error('Erreur chargement membres:', err);
+        renderEmptyState(`Impossible de charger les membres : ${err.message || 'vérifiez les permissions Supabase.'}`);
+      }
+    }
+
+    function updateStats(members) {
+      const statsRow = document.getElementById('stats-row');
+      if (statsRow) statsRow.style.display = 'grid';
+      
+      document.getElementById('stat-total').textContent = members.length;
+      document.getElementById('stat-active').textContent = members.filter(m => m.status !== 'inactive').length;
+      const uniqueRoles = new Set(members.map(m => m.role).filter(Boolean));
+      document.getElementById('stat-roles').textContent = uniqueRoles.size;
+    }
+
+    function renderMembers(members) {
+      const container = document.getElementById('members-container');
+      
+      if (members.length === 0) {
+        renderEmptyState('Aucun membre ne correspond à votre recherche.');
+        return;
+      }
+
+      container.innerHTML = '';
+      const isManager = member => {
+        const signals = `${member.role || ''} ${member.rank || ''}`.toLowerCase();
+        return Boolean(member.club?.manager_email && normalizeEmail(member.email) === normalizeEmail(member.club.manager_email)) || /gérant|gerant|manager/.test(signals);
+      };
+
+      const renderMemberCard = member => {
+        const card = document.createElement('div');
+        card.className = 'member-card';
+        const isClubManager = isManager(member);
+        const houseImage = getHouseImage(member.house);
+        card.innerHTML = `
+          <div class="member-avatar">${member.avatar || '🎭'}</div>
+          <div class="member-name">${member.name || member.email}</div>
+          <div class="member-role">${member.role || member.rank || 'Membre'}</div>
+          ${member.club ? `<div class="member-house">${isClubManager ? `Gérant du ${member.club.name}` : `Membre du ${member.club.name}`}</div>` : ''}
+          ${houseImage ? `<div class="member-emblem"><img src="${houseImage}" alt="${member.house}" title="${member.house}"></div>` : ''}
+        `;
+        return card;
+      };
+
+      const renderCategory = (title, categoryMembers) => {
+        if (!categoryMembers.length) return;
+        const section = document.createElement('section');
+        section.className = 'member-category';
+        section.innerHTML = `<h2 class="member-category-title">${title}</h2>`;
+        const grid = document.createElement('div');
+        grid.className = 'member-category-grid';
+        categoryMembers.forEach(member => grid.appendChild(renderMemberCard(member)));
+        section.appendChild(grid);
+        container.appendChild(section);
+      };
+
+      renderCategory('👑 Gérants de club', members.filter(isManager));
+
+      const regularMembers = members.filter(member => !isManager(member));
+      const groupedClubs = new Map();
+      regularMembers.forEach(member => {
+        const key = member.club?.club_id || '__unassigned__';
+        if (!groupedClubs.has(key)) groupedClubs.set(key, []);
+        groupedClubs.get(key).push(member);
+      });
+
+      groupedClubs.forEach((categoryMembers, clubId) => {
+        const club = categoryMembers[0].club;
+        renderCategory(club ? `🎭 Club de ${club.name}` : '📭 Sans club', categoryMembers);
+      });
+    }
+
+    function renderEmptyState(message = 'Aucun membre trouvé.') {
+      const container = document.getElementById('members-container');
+      container.innerHTML = `
+        <div class="empty-state" style="grid-column: 1 / -1;">
+          <div class="empty-state-icon">📭</div>
+          <p>${message}</p>
+        </div>
+      `;
+    }
+
+    function filterMembers() {
+      const searchTerm = document.getElementById('search-input').value.toLowerCase();
+      const roleFilter = document.getElementById('role-filter').value;
+      const clubFilter = document.getElementById('club-filter').value;
+
+      let filtered = allMembers;
+
+      // Filter by role
+      if (roleFilter) {
+        filtered = filtered.filter(m => m.role === roleFilter);
+      }
+
+      if (clubFilter) {
+        filtered = filtered.filter(m => m.club_id === clubFilter);
+      }
+
+      // Filter by search
+      if (searchTerm) {
+        filtered = filtered.filter(m => 
+          (m.name || '').toLowerCase().includes(searchTerm) ||
+          (m.email || '').toLowerCase().includes(searchTerm) ||
+          (m.role || '').toLowerCase().includes(searchTerm) ||
+          (m.rank || '').toLowerCase().includes(searchTerm) ||
+          (m.club?.name || '').toLowerCase().includes(searchTerm)
+        );
+      }
+
+      document.getElementById('members-count').textContent = filtered.length;
+      renderMembers(filtered);
+    }
+
+    // Event listeners
+    document.getElementById('search-input').addEventListener('input', filterMembers);
+    document.getElementById('role-filter').addEventListener('change', filterMembers);
+    document.getElementById('club-filter').addEventListener('change', filterMembers);
+ 
+    // Load on page init
+    loadMembers();
+    setupClubMembersRealtime();
+ 
+    async function setupClubMembersRealtime() {
+      if (!DataStore.subscribeTable) return;
+      clubMembersRealtimeChannel = DataStore.subscribeTable({
+        table: 'club_members',
+        events: ['INSERT', 'UPDATE', 'DELETE'],
+        onEvent: () => loadMembers()
+      });
+      window.addEventListener('beforeunload', () => {
+        DataStore.unsubscribeChannel(clubMembersRealtimeChannel);
+      });
+    }
+ 
+    // Particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      function createParticle() {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.3,
+          speedY: -(Math.random() * 0.3 + 0.1),
+          speedX: (Math.random() - 0.5) * 0.2,
+          opacity: Math.random() * 0.6 + 0.2,
+          life: 0,
+          maxLife: Math.random() * 300 + 200
+        };
+      }
+      function init() {
+        resize();
+        for (let i = 0; i < 80; i++) particles.push(createParticle());
+        window.addEventListener('resize', resize);
+      }
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.life++;
+          const ratio = p.life / p.maxLife;
+          const alpha = ratio < 0.2 ? ratio / 0.2 : ratio > 0.8 ? (1 - ratio) / 0.2 : 1;
+          ctx.globalAlpha = p.opacity * alpha;
+          ctx.fillStyle = '#c9a84c';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          if (p.life >= p.maxLife || p.y < 0) particles[i] = createParticle();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(animate);
+      }
+      init();
+      animate();
+    })();
+    }
+  </script>
+  <script>
+    const currentPage = window.location.pathname.split('/').pop() || 'club_members.html';
+    document.querySelectorAll('.navbar a[href]').forEach(link => {
+      if (link.getAttribute('href') === currentPage) link.classList.add('active');
+    });
+  </script>
+</body>
+</html>
+

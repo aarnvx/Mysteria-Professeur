@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mysteria RP - Connexion Club</title>
+  <meta name="description" content="Portail de connexion réservé aux membres de club du serveur Mysteria RP." />
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ── Index-specific ── */
+    .login-page {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    .login-deco {
+      position: relative;
+      background: url('../img/bg-login.png') center center / cover no-repeat;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      border-right: 1px solid rgba(201, 168, 76, 0.15);
+      overflow: hidden;
+    }
+
+    .login-deco::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(
+        to right,
+        rgba(6,6,15,0.45) 0%,
+        rgba(6,6,15,0.2) 100%
+      );
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .deco-crest {
+      position: relative;
+      z-index: 1;
+      margin-bottom: 1rem;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    .deco-crest img {
+      width: 90px;
+      height: 90px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 2px solid rgba(201,168,76,0.5);
+      box-shadow: 0 0 20px rgba(201,168,76,0.3), 0 4px 20px rgba(0,0,0,0.6);
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-12px); }
+    }
+
+    .deco-title {
+      font-family: 'Cinzel Decorative', serif;
+      font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+      color: var(--gold);
+      text-align: center;
+      margin-bottom: 0.2rem;
+      text-shadow: 0 0 20px rgba(201,168,76,0.6), 0 2px 5px rgba(0,0,0,0.8);
+      position: relative;
+      z-index: 1;
+    }
+
+    .deco-subtitle {
+      font-family: 'EB Garamond', serif;
+      font-style: italic;
+      font-size: 0.95rem;
+      color: var(--cream-dim);
+      text-align: center;
+      margin-bottom: 1.5rem;
+      position: relative;
+      z-index: 1;
+      text-shadow: 0 1px 6px rgba(0,0,0,0.9);
+    }
+
+    .login-forms {
+      background: var(--bg-dark);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+    }
+
+    .login-section {
+      margin-bottom: 0.8rem;
+    }
+
+    .login-section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .login-section-icon {
+      width: 38px;
+      height: 38px;
+      border-radius: 8px;
+      background: rgba(201,168,76,0.1);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .login-section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+    }
+
+    .login-section-desc {
+      font-size: 0.82rem;
+      color: var(--text-dim);
+      font-family: 'EB Garamond', serif;
+    }
+
+    .input-icon-wrapper {
+      position: relative;
+    }
+
+    .input-prefix {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 0.9rem;
+      pointer-events: none;
+    }
+
+    .input-icon-wrapper .form-input {
+      padding-left: 2.5rem;
+    }
+
+    .form-group { margin-bottom: 0.8rem; }
+
+    .form-input {
+      width: 100%;
+      padding: 0.95rem 1rem;
+      background: rgba(10,10,18,0.85);
+      color: var(--gold);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      outline: none;
+    }
+
+    .form-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(167,139,250,0.15); }
+
+    .form-error {
+      display: none;
+      color: #e87070;
+      font-size: 0.82rem;
+      margin-bottom: 1rem;
+    }
+
+    .btn { width: 100%; padding: 0.95rem 1rem; border-radius: 12px; border: none; cursor: pointer; font-weight: 600; }
+    .btn-primary { background: var(--accent); color: #111827; }
+    .btn-secondary { background: transparent; color: var(--gold); border: 1px solid rgba(201,168,76,0.25); }
+
+    .link-row { text-align: center; margin-top: 1rem; font-size: 0.9rem; color: var(--text-dim); }
+    .link-row a { color: var(--accent); text-decoration: none; }
+
+    .portal-footer {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      font-size: 0.65rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+    }
+
+    .login-transition-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 0, 0, 0.98);
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.8s ease;
+    }
+
+    .login-transition-overlay.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .login-transition-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      background: black;
+      opacity: 0;
+      transition: opacity 0.8s ease;
+    }
+
+    .login-transition-video.visible {
+      opacity: 1;
+    }
+
+    .login-transition-message {
+      position: absolute;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.92);
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      z-index: 1;
+      opacity: 0.92;
+      text-align: center;
+      pointer-events: none;
+    }
+
+    .login-transition-hint {
+      position: absolute;
+      bottom: 4.75rem;
+      left: 50%;
+      transform: translateX(-50%);
+      color: rgba(255,255,255,0.72);
+      font-family: 'Outfit', sans-serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    .login-transition-overlay.active .login-transition-hint {
+      opacity: 1;
+    }
+    
+    @media (max-width: 768px) {
+      .login-page { grid-template-columns: 1fr; }
+      .login-deco { display: none; }
+      .login-forms { padding: 2rem 1.5rem; }
+    }
+  </style>
+</head>
+<body class="club-page">
+  <canvas id="particles-canvas"></canvas>
+
+  <div id="login-transition-overlay" class="login-transition-overlay" aria-hidden="true">
+    <video id="login-transition-video" class="login-transition-video" playsinline preload="auto"></video>
+    <div class="login-transition-message">Chargement...</div>
+    <div class="login-transition-hint">Appuyez sur n'importe quel bouton pour passer</div>
+  </div>
+
+  <div class="login-page">
+ 
+    <div class="login-deco">
+      <div class="deco-crest">
+        <img src="../img/logo.png" alt="MYSTERIA CLUB Logo" />
+      </div>
+      <div class="deco-title">MYSTERIA CLUB</div>
+      <div class="deco-subtitle">Portail des clubs de Mysteria</div>
+      <div class="deco-quote">« L’union des clubs forge la magie du serveur. »</div>
+    </div>
+
+    <div class="login-forms">
+      <div class="login-section">
+        <div class="login-section-header">
+          <div class="login-section-icon">🎭</div>
+          <div>
+            <div class="login-section-title">Connectez-vous</div>
+            <div class="login-section-desc">Accédez à votre espace club personnel</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:1.2rem;">
+          <form id="club-form" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="club-email" style="font-size:0.75rem;">Adresse E-mail</label>
+              <div class="input-icon-wrapper">
+                <span class="input-prefix">✉️</span>
+                <input class="form-input" type="text" id="club-email" name="club-email"
+                  placeholder="@mysteria.club ou @mysteria.prof" autocomplete="username" />
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="club-password" style="font-size:0.75rem;">Mot de passe</label>
+              <div class="input-icon-wrapper">
+                <span class="input-prefix">🔒</span>
+                <input class="form-input" type="password" id="club-password" name="club-password"
+                  placeholder="••••••••" autocomplete="current-password" />
+              </div>
+            </div>
+
+            <div class="form-error" id="club-error"></div>
+
+            <button class="btn btn-primary" type="submit" id="club-btn" style="margin-top:1rem;">
+              <span>🔐</span> Accéder à l'espace club
+            </button>
+          </form>
+        </div>
+
+        <div class="link-row">
+          <a href="../index.html">← Retour à la connexion professeur</a>
+        </div>
+      </div>
+
+      <div class="login-section" id="club-setup-section" style="display:none;">
+        <div class="login-section-header">
+          <div class="login-section-icon">📝</div>
+          <div>
+            <div class="login-section-title">Configuration Club</div>
+            <div class="login-section-desc">Première connexion détectée</div>
+          </div>
+        </div>
+
+        <div class="card" style="padding:1.2rem;">
+          <form id="club-setup-form" novalidate>
+            <div class="form-group">
+              <label class="form-label" for="club-setup-name" style="font-size:0.75rem;">Prénom et Nom RP</label>
+              <div class="input-icon-wrapper">
+                <span class="input-prefix">✍️</span>
+                <input class="form-input" type="text" id="club-setup-name" name="club-setup-name"
+                  placeholder="ex: Severus Rogue" autocomplete="name" />
+              </div>
+              <div class="form-error" id="club-setup-name-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="club-setup-role" style="font-size:0.75rem;">Rôle de club</label>
+              <input class="form-input" type="text" id="club-setup-role" name="club-setup-role"
+                placeholder="ex: Club de Musique, Gérant de club de Duel" />
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="club-setup-password" style="font-size:0.75rem;">Nouveau mot de passe</label>
+              <div class="input-icon-wrapper">
+                <span class="input-prefix">🔒</span>
+                <input class="form-input" type="password" id="club-setup-password" name="club-setup-password"
+                  placeholder="••••••••" autocomplete="new-password" />
+              </div>
+              <div class="form-error" id="club-setup-password-error"></div>
+            </div>
+
+            <div class="form-error" id="club-setup-error"></div>
+            <button class="btn btn-primary" type="submit" id="club-setup-btn" style="margin-top:1rem;">
+              <span>✅</span> Enregistrer le profil club
+            </button>
+          </form>
+        </div>
+
+        <div class="link-row">
+          <a href="../index.html">← Retour à la connexion professeur</a>
+        </div>
+      </div>
+
+      <div class="portal-footer">
+        Mysteria RP Gmod &mdash; Portail Club &mdash; Usage interne uniquement
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/global-sound.js"></script>
+  <script>
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      function createParticle() {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.3,
+          speedY: -(Math.random() * 0.3 + 0.1),
+          speedX: (Math.random() - 0.5) * 0.2,
+          opacity: Math.random() * 0.6 + 0.2,
+          life: 0,
+          maxLife: Math.random() * 300 + 200
+        };
+      }
+      function init() { resize(); for (let i = 0; i < 80; i++) particles.push(createParticle()); window.addEventListener('resize', resize); }
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.life++;
+          const ratio = p.life / p.maxLife;
+          const alpha = ratio < 0.2 ? ratio / 0.2 : ratio > 0.8 ? (1 - ratio) / 0.2 : 1;
+          ctx.globalAlpha = p.opacity * alpha;
+          ctx.fillStyle = '#c9a84c';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          if (p.life >= p.maxLife || p.y < 0) particles[i] = createParticle();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(animate);
+      }
+      init(); animate();
+    })();
+
+    const loginTransitionOverlay = document.getElementById('login-transition-overlay');
+    const loginTransitionVideo = document.getElementById('login-transition-video');
+    const loginTransitionMessage = loginTransitionOverlay.querySelector('.login-transition-message');
+    let loginTransitionCallback = null;
+    let loginTransitionCleanupTimer = null;
+    let loginTransitionFallbackTimer = null;
+    let loginTransitionPrepared = false;
+    let loginTransitionSkipped = false;
+    let loginTransitionSkipHandler = null;
+    const loginTransitionBasePath = window.location.pathname.includes('/pages/') ? '../videos/' : 'videos/';
+
+    function resolveLoginTransitionAsset(relativePath) {
+      return new URL(relativePath, window.location.href).toString();
+    }
+
+    const loginTransitionFallback = resolveLoginTransitionAsset(`${loginTransitionBasePath}Harry Potter Ambient Music  Hogwarts  Relaxing, Studying, Sleeping.mp4`);
+
+    function resolveLoginTransitionVideo(index) {
+      return resolveLoginTransitionAsset(`${loginTransitionBasePath}${index}.mp4`);
+    }
+
+    function pauseLoginBackgroundAudio() {
+      if (window.MysteriaGlobalSound?.pauseForTransition) {
+        window.MysteriaGlobalSound.pauseForTransition();
+      }
+    }
+
+    function resumeLoginBackgroundAudio() {
+      if (window.MysteriaGlobalSound?.resumeAfterTransition) {
+        window.MysteriaGlobalSound.resumeAfterTransition();
+      }
+    }
+
+    function cleanupLoginTransition() {
+      clearTimeout(loginTransitionCleanupTimer);
+      clearTimeout(loginTransitionFallbackTimer);
+      loginTransitionCleanupTimer = null;
+      loginTransitionFallbackTimer = null;
+      if (loginTransitionSkipHandler) {
+        document.removeEventListener('keydown', loginTransitionSkipHandler);
+        window.removeEventListener('mousedown', loginTransitionSkipHandler);
+        window.removeEventListener('touchstart', loginTransitionSkipHandler);
+        loginTransitionSkipHandler = null;
+      }
+      loginTransitionVideo.classList.remove('visible');
+      loginTransitionOverlay.classList.remove('active');
+      loginTransitionCleanupTimer = setTimeout(() => {
+        loginTransitionVideo.pause();
+        loginTransitionVideo.removeAttribute('src');
+        loginTransitionVideo.load();
+        resumeLoginBackgroundAudio();
+        loginTransitionPrepared = false;
+        loginTransitionSkipped = false;
+        if (typeof loginTransitionCallback === 'function') {
+          const cb = loginTransitionCallback;
+          loginTransitionCallback = null;
+          cb();
+        }
+      }, 900);
+    }
+
+    function showLoginTransitionVideo() {
+      loginTransitionVideo.classList.add('visible');
+    }
+
+    function skipLoginTransition() {
+      if (loginTransitionSkipped) return;
+      loginTransitionSkipped = true;
+      loginTransitionMessage.textContent = 'Transition passée';
+      cleanupLoginTransition();
+    }
+
+    function attachLoginTransitionSkip() {
+      if (loginTransitionSkipHandler) return;
+      loginTransitionSkipHandler = (event) => {
+        if (event.target && event.target.closest && event.target.closest('button, input, select, textarea, a')) {
+          return;
+        }
+        if (event.type === 'keydown' && event.key !== 'Enter' && event.key !== ' ') {
+          return;
+        }
+        skipLoginTransition();
+      };
+      document.addEventListener('keydown', loginTransitionSkipHandler);
+      window.addEventListener('mousedown', loginTransitionSkipHandler);
+      window.addEventListener('touchstart', loginTransitionSkipHandler);
+    }
+
+    function startLoginTransition(callback) {
+      loginTransitionCallback = callback;
+      loginTransitionSkipped = false;
+      pauseLoginBackgroundAudio();
+      loginTransitionOverlay.setAttribute('aria-hidden', 'false');
+      loginTransitionOverlay.classList.add('active');
+      loginTransitionMessage.textContent = 'Chargement de votre entrée... Appuyez sur Entrée, Espace ou cliquez pour passer.';
+      loginTransitionVideo.classList.remove('visible');
+      loginTransitionVideo.onloadeddata = showLoginTransitionVideo;
+      loginTransitionVideo.oncanplay = showLoginTransitionVideo;
+      loginTransitionVideo.onplaying = showLoginTransitionVideo;
+      loginTransitionVideo.onended = () => {
+        loginTransitionMessage.textContent = 'Redirection...';
+        cleanupLoginTransition();
+      };
+      loginTransitionVideo.onerror = () => {
+        console.warn('Erreur de lecture de la vidéo de transition club.');
+        cleanupLoginTransition();
+      };
+      attachLoginTransitionSkip();
+      loginTransitionVideo.play().then(() => {
+        if (loginTransitionVideo.readyState >= 2) {
+          showLoginTransitionVideo();
+        }
+      }).catch(() => {
+        cleanupLoginTransition();
+      });
+      loginTransitionFallbackTimer = setTimeout(() => {
+        if (!loginTransitionVideo.classList.contains('visible')) {
+          console.warn('La vidéo de transition club n\'a pas encore rendu de contenu, on poursuit avec le fallback.');
+          showLoginTransitionVideo();
+        }
+      }, 3500);
+    }
+
+    function resetLoginTransitionVideo(src) {
+      loginTransitionVideo.pause();
+      loginTransitionVideo.currentTime = 0;
+      loginTransitionVideo.removeAttribute('src');
+      loginTransitionVideo.load();
+      loginTransitionVideo.src = src;
+      loginTransitionVideo.load();
+      loginTransitionVideo.currentTime = 0;
+    }
+
+    async function prepareLoginTransition() {
+      if (loginTransitionPrepared) return;
+      const videoIndex = Math.floor(Math.random() * 5) + 1;
+      const primarySrc = resolveLoginTransitionVideo(videoIndex);
+      resetLoginTransitionVideo(primarySrc);
+      loginTransitionVideo.muted = true;
+      loginTransitionVideo.loop = false;
+      loginTransitionVideo.setAttribute('playsinline', '');
+      loginTransitionVideo.classList.remove('visible');
+      loginTransitionMessage.textContent = 'Préparation de la transition...';
+      try {
+        await loginTransitionVideo.play();
+        loginTransitionPrepared = true;
+      } catch (err) {
+        console.warn('Préparation de la vidéo de transition club échouée :', err);
+        if (loginTransitionVideo.src !== loginTransitionFallback) {
+          resetLoginTransitionVideo(loginTransitionFallback);
+          try {
+            await loginTransitionVideo.play();
+            loginTransitionPrepared = true;
+          } catch (err2) {
+            console.warn('Fallback vidéo club échoué :', err2);
+          }
+        }
+      }
+    }
+
+    async function playLoginTransition(callback) {
+      if (!loginTransitionPrepared) {
+        await prepareLoginTransition();
+      }
+      if (!loginTransitionPrepared) {
+        callback();
+        return;
+      }
+      loginTransitionVideo.muted = false;
+      startLoginTransition(callback);
+    }
+
+    let clubCurrentUser = null;
+    function resetClubSetupForm() {
+      document.getElementById('club-setup-name').value = '';
+      document.getElementById('club-setup-role').value = '';
+      document.getElementById('club-setup-password').value = '';
+      document.getElementById('club-setup-name-error').style.display = 'none';
+      document.getElementById('club-setup-password-error').style.display = 'none';
+      document.getElementById('club-setup-error').style.display = 'none';
+    }
+
+    function showClubSetup(user, defaultRole) {
+      clubCurrentUser = user;
+      resetClubSetupForm();
+      document.getElementById('club-form').style.display = 'none';
+      document.getElementById('club-setup-section').style.display = 'block';
+      document.getElementById('club-setup-name').value = user.name || '';
+      document.getElementById('club-setup-role').value = defaultRole || user.role || '';
+      document.getElementById('club-setup-name').focus();
+    }
+
+    async function handleClubSetupSubmit(e) {
+      e.preventDefault();
+      try { prepareLoginTransition(); } catch (err) { console.warn('prepareLoginTransition call failed', err); }
+      const name = document.getElementById('club-setup-name').value.trim();
+      const role = document.getElementById('club-setup-role').value.trim() || clubCurrentUser.role || 'Membre de club';
+      const password = document.getElementById('club-setup-password').value;
+      const errEl = document.getElementById('club-setup-error');
+      const btn = document.getElementById('club-setup-btn');
+
+      errEl.style.display = 'none';
+      document.getElementById('club-setup-name').classList.remove('error');
+      document.getElementById('club-setup-password').classList.remove('error');
+
+      if (!name) {
+        document.getElementById('club-setup-name').classList.add('error');
+        document.getElementById('club-setup-name-error').textContent = 'Champ requis.';
+        document.getElementById('club-setup-name-error').style.display = 'block';
+        return;
+      }
+      if (!password || password.length < 6) {
+        document.getElementById('club-setup-password').classList.add('error');
+        document.getElementById('club-setup-password-error').textContent = 'Le mot de passe doit contenir au moins 6 caractères.';
+        document.getElementById('club-setup-password-error').style.display = 'block';
+        return;
+      }
+
+      btn.textContent = 'Enregistrement…';
+      btn.disabled = true;
+
+      const setupResult = await Auth.setupClubProfile(clubCurrentUser.email, name, clubCurrentUser.rank, role, clubCurrentUser.house, password);
+      if (setupResult.ok) {
+        btn.textContent = '✨ Profil club créé !';
+        playLoginTransition(() => {
+          window.location.href = 'club_dashboard.html';
+        });
+      } else {
+        errEl.textContent = setupResult.error;
+        errEl.style.display = 'block';
+        btn.textContent = '✅ Enregistrer le profil club';
+        btn.disabled = false;
+      }
+    }
+
+    async function handleClubLogin(e) {
+      e.preventDefault();
+      try { prepareLoginTransition(); } catch (err) { console.warn('prepareLoginTransition call failed', err); }
+      const email = document.getElementById('club-email').value.trim();
+      const password = document.getElementById('club-password').value;
+      const errEl = document.getElementById('club-error');
+      const btn = document.getElementById('club-btn');
+      errEl.style.display = 'none';
+      document.getElementById('club-email').classList.remove('error');
+      document.getElementById('club-password').classList.remove('error');
+
+      if (!email) {
+        document.getElementById('club-email').classList.add('error');
+        errEl.textContent = 'Champ requis.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if (!password) {
+        document.getElementById('club-password').classList.add('error');
+        errEl.textContent = 'Champ requis.';
+        errEl.style.display = 'block';
+        return;
+      }
+      const normalizedEmail = email.toLowerCase();
+      if (!normalizedEmail.endsWith('.club') && !normalizedEmail.endsWith('.prof') && !normalizedEmail.endsWith('.staff')
+          && !normalizedEmail.includes('mysteria.club') && !normalizedEmail.includes('mysteria.prof')
+          && !normalizedEmail.includes('mysteria.staff')) {
+        document.getElementById('club-email').classList.add('error');
+        errEl.textContent = 'Veuillez utiliser un identifiant valide de club, professeur ou staff.';
+        errEl.style.display = 'block';
+        return;
+      }
+
+      btn.textContent = 'Vérification…';
+      btn.disabled = true;
+
+      let result;
+      try {
+        result = await Auth.login(email, password, 'club');
+      } catch (error) {
+        console.error('Erreur inattendue de connexion club:', error);
+        errEl.textContent = 'Connexion impossible. Réessayez dans quelques instants.';
+        errEl.style.display = 'block';
+        btn.textContent = '🔐 Accéder à l\'espace club';
+        btn.disabled = false;
+        return;
+      }
+      if (!result.ok) {
+        errEl.textContent = result.error;
+        errEl.style.display = 'block';
+        document.getElementById('club-email').classList.add('error');
+        document.getElementById('club-password').classList.add('error');
+        btn.textContent = '🔐 Accéder à l\'espace club';
+        btn.disabled = false;
+        return;
+      }
+
+      if (result.requireSetup) {
+        clubCurrentUser = {
+          email: result.email,
+          name: result.emailRole?.defaultName || '',
+          rank: result.emailRole?.rank || 'Membre de club',
+          role: result.emailRole?.role || 'Membre de club',
+          house: null,
+          avatar: result.emailRole?.avatar || '🎭'
+        };
+        showClubSetup(clubCurrentUser, clubCurrentUser.role);
+        btn.textContent = '✅ Prêt pour la configuration';
+        btn.disabled = false;
+        return;
+      }
+
+      const currentUser = Auth.getCurrentUser();
+      if (!currentUser) {
+        errEl.textContent = 'Impossible de récupérer l’utilisateur.';
+        errEl.style.display = 'block';
+        btn.textContent = '🔐 Accéder à l\'espace club';
+        btn.disabled = false;
+        return;
+      }
+
+      const clubMember = await DataStore.getClubMemberByEmail(currentUser.email);
+      if (clubMember) {
+        btn.textContent = '✨ Connexion réussie !';
+        playLoginTransition(() => {
+          window.location.href = 'club_dashboard.html';
+        });
+        return;
+      }
+
+      const professor = await DataStore.getProfessorByEmail(currentUser.email);
+      if (professor) {
+        await DataStore.copyProfessorToClub(currentUser.email);
+      }
+
+      const defaultRole = professor?.role || currentUser.role || 'Membre de club';
+      showClubSetup(currentUser, defaultRole);
+      btn.textContent = '✨ Connexion réussie !';
+      btn.disabled = false;
+    }
+
+    document.getElementById('club-form').addEventListener('submit', handleClubLogin);
+    document.getElementById('club-setup-form').addEventListener('submit', handleClubSetupSubmit);
+  </script>
+</body>
+</html>
+

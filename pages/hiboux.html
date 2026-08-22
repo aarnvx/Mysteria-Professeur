@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hiboux - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    .hiboux-hero {
+      background: rgba(7, 10, 24, 0.88);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 26px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.03);
+    }
+    .hiboux-hero h1 {
+      margin-bottom: 0.4rem;
+      font-size: clamp(2rem, 3vw, 2.8rem);
+    }
+    .hiboux-hero p {
+      color: var(--text-dim);
+      line-height: 1.8;
+    }
+    .hiboux-grid {
+      display: grid;
+      gap: 1.75rem;
+      grid-template-columns: minmax(280px, 1fr) minmax(320px, 1.5fr);
+    }
+    /* restore page spacing to avoid shifting navbar */
+    .hiboux-panel {
+      background: rgba(11, 14, 35, 0.84);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 1.5rem;
+      box-shadow: 0 24px 50px rgba(0,0,0,0.16);
+      position: relative;
+      z-index: 200; /* bring panels to front above background canvas */
+    }
+    .section-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.35rem;
+      gap: 1rem;
+    }
+    .section-title-row h2 {
+      margin: 0;
+      font-size: 1.3rem;
+    }
+    .missive-form-grid {
+      display: grid;
+      gap: 1rem;
+    }
+    .missive-input,
+    .missive-textarea,
+    .missive-select {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(7, 10, 21, 0.9);
+      color: var(--text);
+      padding: 1rem 1rem;
+      font-family: 'EB Garamond', serif;
+      font-size: 0.95rem;
+      resize: vertical;
+    }
+    .missive-textarea { min-height: 160px; }
+    .missive-form-actions {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0.5rem;
+    }
+    .missive-list {
+      display: grid;
+      gap: 1rem;
+    }
+    .missive-card {
+      background: rgba(14, 18, 44, 0.78);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      padding: 1.35rem 1.6rem;
+      box-shadow: 0 18px 28px rgba(0,0,0,0.15);
+      transition: transform 0.2s ease;
+    }
+    .missive-card:hover { transform: translateY(-1px); }
+    .missive-card-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      margin-bottom: 0.75rem;
+    }
+    .missive-card-message {
+      color: var(--cream);
+      line-height: 1.7;
+      margin-bottom: 1rem;
+      white-space: pre-wrap;
+    }
+
+    /* Modal for viewing missive */
+    .missive-modal-backdrop {
+      position: fixed; inset: 0; background: rgba(2,6,23,0.78); display: flex; align-items: center; justify-content: center;
+      z-index: 2147483000; isolation: isolate; opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 180ms ease, visibility 180ms ease;
+    }
+    .missive-modal-backdrop.open { opacity: 1; visibility: visible; pointer-events: auto; }
+    .missive-modal {
+      position: relative; z-index: 1; background: rgba(8,10,25,0.99); border: 1px solid var(--gold-dim); border-radius: 14px; padding: 1.4rem; width: min(980px, 96%); max-height: 90vh; overflow: auto; box-shadow: 0 24px 60px rgba(0,0,0,0.8);
+    }
+    .missive-modal h3 { margin-top: 0; font-size: 1.25rem; }
+    .missive-modal .actions { display:flex; gap:0.5rem; justify-content:flex-end; margin-top:0.75rem; }
+    .missive-reply-form { display:none; margin-top:1rem; padding-top:1rem; border-top:1px solid rgba(255,255,255,0.08); }
+    .missive-reply-form.open { display:grid; gap:.75rem; }
+    .missive-reply-form textarea { min-height:120px; resize:vertical; }
+    .missive-card-meta {
+      color: var(--text-dim);
+      font-size: 0.82rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .missive-open-btn, .missive-delete-btn { cursor: pointer; padding: 0.4rem 0.6rem; border-radius:6px; font-size:0.85rem; }
+    .missive-open-btn { background: rgba(255,255,255,0.03); color:var(--cream); border:1px solid rgba(255,255,255,0.04); }
+    .missive-delete-btn { background: rgba(170,40,40,0.08); color: #ff9999; border:1px solid rgba(170,40,40,0.12); }
+    .missive-empty {
+      padding: 1.4rem 1rem;
+      border: 1px dashed rgba(255,255,255,0.12);
+      border-radius: 14px;
+      background: rgba(7, 10, 21, 0.7);
+      color: var(--text-dim);
+      text-align: center;
+    }
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.3rem 0.75rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      background: rgba(201,168,76,0.14);
+      color: var(--gold);
+    }
+    .portal-footer {
+      padding: 2rem 0 1rem;
+      text-align: center;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+      font-size: 0.72rem;
+      letter-spacing: 0.08em;
+    }
+    @media (max-width: 960px) {
+      .hiboux-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">Mysteria Professeur</div>
+        <div class="navbar-subtitle">Portail Académique</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html">🏠 Accueil</a></li>
+      <li><a href="courses.html">📚 Cours</a></li>
+      <li><a href="planning.html">🗓️ Planning</a></li>
+      <li><a href="points.html">⚡ Points</a></li>
+      <li><a href="blames.html">📜 Blâme</a></li>
+      <li><a href="roles.html">🎓 Équipe</a></li>
+      <li><a href="hiboux.html" class="active">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+    <div class="hiboux-grid">
+      <section class="hiboux-panel">
+        <div class="section-title-row">
+          <div>
+            <span class="page-title-small">Envoyer</span>
+            <h2>Rédiger une missive</h2>
+          </div>
+          <div style="display:flex;align-items:center;gap:0.5rem;">
+          </div>
+        </div>
+
+        <div class="missive-form-grid">
+          <label class="missive-form-label" for="missive-recipient">Destinataire</label>
+          <select id="missive-recipient" class="missive-select">
+            <option value="">Tous les professeurs</option>
+          </select>
+            <label class="missive-form-label" for="missive-image">Image (optionnel)</label>
+            <input id="missive-image" type="file" accept="image/*" />
+            <label style="display:flex;align-items:center;gap:0.5rem;"><input id="missive-signature" type="checkbox" /> Ajouter ma signature</label>
+          <label class="missive-form-label" for="missive-title">Titre</label>
+          <input id="missive-title" class="missive-input" type="text" placeholder="Titre de la missive (optionnel)" />
+          <label class="missive-form-label" for="missive-message">Message</label>
+          <textarea id="missive-message" class="missive-textarea" placeholder="Écrivez votre missive ici..."></textarea>
+          <div class="missive-form-actions">
+            <button id="missive-submit" class="btn btn-primary" type="button" onclick="submitMissive()">Envoyer la missive</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="hiboux-panel">
+        <div class="section-title-row">
+          <div>
+            <span class="page-title-small">Réception</span>
+            <h2>Courrier</h2>
+          </div>
+        </div>
+        <div id="missive-list">
+          <h3>Vos missives</h3>
+          <div class="missive-list" id="missive-sent-list">
+            <div class="missive-empty">Chargement des missives…</div>
+          </div>
+          <h3 style="margin-top:2rem;">Missives reçues</h3>
+          <div class="missive-list" id="missive-received-list">
+            <div class="missive-empty">Chargement des missives…</div>
+          </div>
+        </div>
+      </section>
+    </div>
+    <footer class="portal-footer">Portail Académique Mysteria</footer>
+  </div>
+
+  <!-- Modal to view and reply to a missive -->
+  <div id="missive-modal-backdrop" class="missive-modal-backdrop">
+    <div class="missive-modal" role="dialog" aria-modal="true">
+      <div id="modal-content">
+        <h3 id="modal-title">Missive</h3>
+        <div id="modal-meta" style="color:var(--text-dim);font-size:0.9rem;margin-bottom:0.75rem;"></div>
+        <div id="modal-message" style="white-space:pre-wrap;color:var(--cream);"></div>
+        <div id="modal-image-container" style="margin-top:0.75rem;"></div>
+        <form id="missive-reply-form" class="missive-reply-form">
+          <label class="missive-form-label" for="missive-reply-title">Titre de la réponse</label>
+          <input id="missive-reply-title" class="missive-input" type="text" />
+          <label class="missive-form-label" for="missive-reply-message">Réponse</label>
+          <textarea id="missive-reply-message" class="missive-textarea" placeholder="Écrivez votre réponse..."></textarea>
+          <div class="actions">
+            <button id="missive-reply-cancel" class="btn" type="button">Annuler</button>
+            <button id="missive-reply-submit" class="btn btn-primary" type="submit">Envoyer la réponse</button>
+          </div>
+        </form>
+        <div class="actions">
+          <button id="modal-reply" class="btn" type="button" onclick="return window.openMissiveReplyForm(event)">Répondre</button>
+          <button id="modal-delete" class="btn btn-danger">Supprimer</button>
+          <button id="modal-close" class="btn">Fermer</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script>
+    const user = requireAuthOrRedirect();
+    if (user && Auth.isClubContextUser(user) && !Auth.isProfessorContextUser(user)) {
+      window.location.href = 'club_hiboux.html';
+    }
+
+    const missiveCache = new Map();
+    const recipientNameByEmail = new Map();
+    let missiveSubscription = null;
+
+    function escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatActivityDate(rawDate) {
+      const ts = new Date(rawDate);
+      if (Number.isNaN(ts.getTime())) return 'Date inconnue';
+      return ts.toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function normalizeString(value) {
+      return String(value || '').trim().toLowerCase();
+    }
+
+    function isMissiveRelevant(missive) {
+      if (!missive) return false;
+      if (!missive.recipient || missive.recipient === '') return true;
+      if (!user) return false;
+      const recipient = normalizeString(missive.recipient);
+      const author = normalizeString(missive.author);
+      const email = normalizeString(user.email);
+      const name = normalizeString(user.name);
+      return recipient === email || recipient === name || author === email || author === name;
+    }
+
+    function renderMissiveCard(missive, isReceived = false) {
+      const rawRecipient = missive?.recipient || '';
+      const recipientLabel = rawRecipient
+        ? recipientNameByEmail.get(rawRecipient.toLowerCase()) || rawRecipient
+        : 'Tous les professeurs';
+      const authorLabel = missive?.author
+        ? recipientNameByEmail.get(missive.author.toLowerCase()) || missive.author
+        : 'Anonyme';
+      const title = `<div class="missive-card-title">${escapeHtml(missive?.title || 'Sans sujet')}</div>`;
+      const label = !rawRecipient
+        ? 'Envoi global'
+        : rawRecipient === user.email || rawRecipient === user.name
+          ? 'Reçu'
+          : 'Envoyé';
+      const meta = [`Auteur: ${escapeHtml(authorLabel)}`, `Destinataire: ${escapeHtml(recipientLabel)}`, `${label}`, escapeHtml(formatActivityDate(missive.created_at || missive.updated_at || new Date().toISOString()))].join(' · ');
+      const messagePreview = '';
+
+      const canDeleteCard = [String(missive.author || ''), String(missive.recipient || '')].map(s => s.toLowerCase()).includes(String(user?.email || user?.name || '').toLowerCase());
+      const safeId = escapeHtml(missive.id || '');
+      const openBtn = `<button class="btn btn-sm missive-open-btn" data-id="${safeId}" onclick="openMissiveModal('${safeId}')">Ouvrir</button>`;
+      const deleteBtn = canDeleteCard ? ` <button class="btn btn-sm btn-danger missive-delete-btn" data-id="${safeId}">Supprimer</button>` : '';
+
+      return `
+        <div class="missive-card" id="missive-card-${escapeHtml(missive.id || Math.random().toString(36).slice(2))}">
+          ${title}
+          ${messagePreview}
+          <div class="missive-card-meta">${meta}</div>
+          <div style="margin-top:0.75rem;display:flex;gap:0.5rem;justify-content:flex-end;">
+            ${openBtn}${deleteBtn}
+          </div>
+        </div>
+      `;
+    }
+
+    function setMissiveListEmpty(message, listId = 'missive-list') {
+      const list = document.getElementById(listId);
+      if (list) {
+        list.innerHTML = `<div class="missive-empty">${message}</div>`;
+      }
+    }
+
+    function addMissiveToList(missive, listId = 'missive-list') {
+      if (!missive || !document.getElementById(listId)) return;
+      // Assure que la missive a un identifiant stable pour le cache et les identifiants DOM.
+      const listEl = document.getElementById(listId);
+      const mid = missive.id || ('mk_' + Math.random().toString(36).slice(2, 9));
+      if (missiveCache.has(mid)) return;
+      if (!isMissiveRelevant(missive)) return;
+      // Réaffecte l'id à l'objet pour garder une cohérence globale.
+      if (!missive.id) missive.id = mid;
+      missiveCache.set(mid, missive);
+      const list = document.getElementById(listId);
+      if (!list) return;
+      if (list.firstChild && list.firstChild.classList && list.firstChild.classList.contains('missive-empty')) {
+        list.innerHTML = '';
+      }
+      list.insertAdjacentHTML('afterbegin', renderMissiveCard(missive, listId === 'missive-received-list'));
+      console.log('Missive ajoutée à la liste', missive.id || mid);
+      // Attache les gestionnaires aux boutons de la carte ajoutée pour garantir le bon fonctionnement des clics.
+      const cardId = missive.id || mid;
+      const cardEl = document.getElementById('missive-card-' + cardId);
+      if (cardEl) {
+        const openBtn = cardEl.querySelector('.missive-open-btn');
+        if (openBtn) {
+          openBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            console.log('open button click (listener)', cardId);
+            openMissiveModal(cardId);
+          });
+        }
+        const delBtn = cardEl.querySelector('.missive-delete-btn');
+        if (delBtn) {
+          delBtn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            try {
+              const res = await DataStore.deleteMissive(cardId);
+              if (!res.ok) return alert('Erreur lors de la suppression : ' + (res.error || 'Unknown'));
+              // remove from cache and DOM
+              missiveCache.delete(cardId);
+              const el = document.getElementById('missive-card-' + cardId);
+              if (el && el.parentNode) el.parentNode.removeChild(el);
+              showToast('Missive supprimée.', 'success');
+            } catch (err) {
+              console.error('Erreur suppression via listener :', err);
+              alert('Erreur lors de la suppression : ' + (err && err.message ? err.message : String(err)));
+            }
+          });
+        }
+      }
+    }
+
+    // Lie les gestionnaires UI de manière robuste (appel unique)
+    function bindUIHandlers() {
+      if (window.__hibouxHandlersBound) return;
+      window.__hibouxHandlersBound = true;
+
+      // Délègue les clics sur les cartes de missive pour ouvrir la modale et gérer la suppression.
+      const missiveListEl = document.getElementById('missive-list');
+      if (missiveListEl) {
+        missiveListEl.addEventListener('click', async event => {
+          const openBtn = event.target.closest('.missive-open-btn');
+          const delBtn = event.target.closest('.missive-delete-btn');
+          if (openBtn) {
+            const id = openBtn.dataset.id;
+            console.log('open button clicked (delegated)', id);
+            if (id) openMissiveModal(id);
+            return;
+          }
+          if (delBtn) {
+            const id = delBtn.dataset.id;
+            console.log('delete button clicked (delegated)', id);
+            if (!id) return;
+            try {
+              const res = await DataStore.deleteMissive(id);
+              console.log('Delete result (delegated):', res);
+              if (!res.ok) return alert('Erreur lors de la suppression : ' + (res.error || 'Unknown'));
+              missiveCache.delete(id);
+              const el = document.getElementById('missive-card-' + id);
+              if (el && el.parentNode) el.parentNode.removeChild(el);
+              showToast('Missive supprimée.', 'success');
+            } catch (err) {
+              console.error('Erreur suppression (delegated):', err);
+              alert('Erreur lors de la suppression : ' + (err && err.message ? err.message : String(err)));
+            }
+            return;
+          }
+          // fallback: click anywhere on the card opens modal
+          const card = event.target.closest('.missive-card');
+          if (!card) return;
+          const id = card.id && card.id.replace('missive-card-', '');
+          console.log('missive card clicked (delegated)', id, 'target', event.target);
+          if (!id) return;
+          openMissiveModal(id);
+        });
+      }
+
+      // Boutons de la modale
+      const closeBtn = document.getElementById('modal-close');
+      if (closeBtn) closeBtn.addEventListener('click', closeMissiveModal);
+
+      const replyCancelBtn = document.getElementById('missive-reply-cancel');
+      if (replyCancelBtn) replyCancelBtn.addEventListener('click', () => {
+        document.getElementById('missive-reply-form').classList.remove('open');
+      });
+
+      const replyForm = document.getElementById('missive-reply-form');
+      if (replyForm) replyForm.addEventListener('submit', async event => {
+        event.preventDefault();
+        const backdrop = document.getElementById('missive-modal-backdrop');
+        const original = backdrop.__missive || missiveCache.get(backdrop.dataset.missiveId);
+        const message = document.getElementById('missive-reply-message').value.trim();
+        const submitButton = document.getElementById('missive-reply-submit');
+        if (!original || !message) return alert('Veuillez saisir une réponse.');
+        submitButton.disabled = true;
+        try {
+          const result = await DataStore.addMissive({
+            title: document.getElementById('missive-reply-title').value.trim(),
+            message,
+            author: user?.email || user?.name || 'Anonyme',
+            recipient: original.author || ''
+          });
+          if (!result.ok) return alert('Erreur : ' + result.error);
+          if (result.missive) await DataStore.notifyMissiveOnDiscord(result.missive);
+          closeMissiveModal();
+          await loadMissives();
+          showToast('Réponse envoyée.', 'success');
+        } catch (error) {
+          console.error('Erreur lors de la réponse à la missive :', error);
+          alert('Erreur lors de l\'envoi de la réponse : ' + (error.message || error));
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      const modalDeleteBtn = document.getElementById('modal-delete');
+      if (modalDeleteBtn) modalDeleteBtn.addEventListener('click', async () => {
+        const id = document.getElementById('missive-modal-backdrop').dataset.missiveId;
+        if (!id) return;
+        try {
+          const res = await DataStore.deleteMissive(id);
+          console.log('Delete result (modal):', res);
+          if (!res.ok) return alert('Erreur lors de la suppression : ' + (res.error || 'Unknown'));
+          missiveCache.delete(id);
+          const el = document.getElementById('missive-card-' + id);
+          if (el && el.parentNode) el.parentNode.removeChild(el);
+          closeMissiveModal();
+          showToast('Missive supprimée.', 'success');
+        } catch (err) {
+          console.error('Erreur suppression (modal):', err);
+          alert('Erreur lors de la suppression : ' + (err && err.message ? err.message : String(err)));
+        }
+      });
+
+      // Gestionnaire d'aperçu pour l'upload d'image.
+      const imgInput = document.getElementById('missive-image');
+      if (imgInput) imgInput.addEventListener('change', (ev) => {
+        const f = ev.target.files && ev.target.files[0];
+        if (!f) return;
+        const p = document.getElementById('missive-message');
+        const preview = document.createElement('div');
+        preview.style.marginTop = '0.5rem';
+        preview.innerText = `Fichier prêt : ${f.name}`;
+        if (p && p.parentNode) p.parentNode.insertBefore(preview, p.nextSibling);
+      });
+    }
+
+    async function loadMissiveRecipients() {
+      try {
+        const recipients = await DataStore.getAllProfessors();
+        const select = document.getElementById('missive-recipient');
+        if (!select) return;
+        select.innerHTML = '';
+        recipientNameByEmail.clear();
+        const allOption = document.createElement('option');
+        allOption.value = '';
+        allOption.textContent = 'Tous les professeurs';
+        select.appendChild(allOption);
+        recipients.forEach(recipient => {
+          const value = recipient.email || recipient.id;
+          const label = recipient.name || recipient.email || recipient.id;
+          if (value && recipient.name) {
+            recipientNameByEmail.set(value.toLowerCase(), recipient.name);
+          }
+          const option = document.createElement('option');
+          option.value = value;
+          option.textContent = label;
+          select.appendChild(option);
+        });
+      } catch (err) {
+        console.error('Erreur lors du chargement des destinataires de missive :', err);
+      }
+    }
+
+    async function loadMissives() {
+      try {
+        const missives = await DataStore.getMissives(80);
+        const list = document.getElementById('missive-list');
+        if (!list) return;
+        missiveCache.clear();
+        if (!Array.isArray(missives) || missives.length === 0) {
+          setMissiveListEmpty('Aucune missive envoyée.', 'missive-sent-list');
+          setMissiveListEmpty('Aucune missive reçue.', 'missive-received-list');
+          return;
+        }
+        const sent = missives.filter(missive => normalizeString(missive.author) === normalizeString(user.email));
+        const received = missives.filter(missive => !sent.includes(missive));
+        document.getElementById('missive-sent-list').innerHTML = '';
+        document.getElementById('missive-received-list').innerHTML = '';
+        sent.forEach(missive => addMissiveToList(missive, 'missive-sent-list'));
+        received.forEach(missive => addMissiveToList(missive, 'missive-received-list'));
+        if (!sent.length) setMissiveListEmpty('Aucune missive envoyée.', 'missive-sent-list');
+        if (!received.length) setMissiveListEmpty('Aucune missive reçue.', 'missive-received-list');
+      } catch (err) {
+        console.error('Erreur lors du chargement des missives :', err);
+        setMissiveListEmpty('Impossible de charger les missives.');
+      }
+    }
+
+    async function submitMissive() {
+      const title = document.getElementById('missive-title')?.value || '';
+      let message = document.getElementById('missive-message')?.value || '';
+      const recipient = document.getElementById('missive-recipient')?.value || '';
+      if (!message.trim()) {
+        alert('Veuillez saisir un message pour la missive.');
+        return;
+      }
+      const button = document.getElementById('missive-submit');
+      if (button) button.disabled = true;
+      try {
+        // Gère le téléversement d'image optionnel.
+        const imageInput = document.getElementById('missive-image');
+        if (imageInput && imageInput.files && imageInput.files[0]) {
+          const file = imageInput.files[0];
+          // bucket 'missives' recommended (create in Supabase storage if missing)
+          const path = `missives/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9_.-]/g,'_')}`;
+          const upload = await DataStore.uploadFileToStorage('missives', path, file);
+          if (upload.ok && upload.publicUrl) {
+            message += `\n\nImage: ${upload.publicUrl}`;
+          } else {
+            console.warn('Image upload failed:', upload.error);
+          }
+        }
+
+        // Signature optionnelle.
+        const sigCheckbox = document.getElementById('missive-signature');
+        if (sigCheckbox && sigCheckbox.checked && user && user.name) {
+          const parts = String(user.name).split(' ');
+          const signature = parts.length > 1 ? `${parts[0]} ${parts[parts.length-1].slice(0,1)}.` : user.name;
+          message += `\n\n-- ${signature}`;
+        }
+
+        const result = await DataStore.addMissive({
+          title,
+          message,
+          author: user?.email || user?.name || 'Anonyme',
+          recipient: recipient || ''
+        });
+        if (!result.ok) {
+          alert('Erreur : ' + result.error);
+          if (result.error && result.error.toLowerCase().includes('session')) {
+            localStorage.removeItem('Mysteria_auth');
+            window.location.href = '../index.html';
+          }
+          return;
+        }
+        if (result.missive) {
+          const notification = await DataStore.notifyMissiveOnDiscord(result.missive);
+          if (!notification.ok) {
+            console.warn('Notification Discord non envoyée :', notification.error);
+            showToast(`Hibou enregistré. Discord : ${notification.error || 'erreur inconnue'}`, 'error');
+          }
+        }
+        if (result.missive) {
+          addMissiveToList(result.missive);
+        } else {
+          await loadMissives();
+        }
+        showToast('Missive envoyée.', 'success');
+        document.getElementById('missive-title').value = '';
+        document.getElementById('missive-message').value = '';
+        document.getElementById('missive-recipient').value = '';
+      } catch (err) {
+        console.error('Erreur lors de l\'envoi de la missive :', err);
+          const msg = err && err.message ? err.message : String(err);
+          alert('Erreur lors de l\'envoi de la missive : ' + msg + '\n\nOuvrez la console (F12) pour voir plus de détails.');
+      } finally {
+        if (button) button.disabled = false;
+      }
+    }
+
+    window.openMissiveReplyForm = function openMissiveReplyForm(event) {
+      if (event) event.preventDefault();
+      const backdrop = document.getElementById('missive-modal-backdrop');
+      const missive = backdrop?.__missive || missiveCache.get(backdrop?.dataset.missiveId);
+      const replyForm = document.getElementById('missive-reply-form');
+      if (!backdrop || !missive || !replyForm) return false;
+      document.getElementById('missive-reply-title').value = missive.title ? `Re: ${missive.title}` : 'Re:';
+      document.getElementById('missive-reply-message').value = `@${missive.author || ''}\n\n`;
+      replyForm.classList.add('open');
+      document.getElementById('missive-reply-message').focus();
+      return false;
+    };
+
+    function openMissiveModal(id) {
+      const missive = missiveCache.get(id);
+      if (!missive) return;
+      const backdrop = document.getElementById('missive-modal-backdrop');
+      document.getElementById('modal-title').textContent = missive.title || 'Missive';
+      document.getElementById('modal-meta').textContent = `Auteur: ${missive.author || 'Anonyme'} · Destinataire: ${missive.recipient || 'Tous' } · ${formatActivityDate(missive.created_at || missive.updated_at)}`;
+      document.getElementById('modal-message').textContent = missive.message || '';
+      document.getElementById('missive-reply-form').classList.remove('open');
+      const imgContainer = document.getElementById('modal-image-container');
+      imgContainer.innerHTML = '';
+      const urlMatch = (missive.message || '').match(/https?:\/\/[^\s]+/);
+      if (urlMatch) {
+        const a = document.createElement('a');
+        a.href = urlMatch[0]; a.textContent = 'Ouvrir pièce jointe'; a.target = '_blank';
+        imgContainer.appendChild(a);
+      }
+      backdrop.classList.add('open');
+      backdrop.dataset.missiveId = id;
+      backdrop.__missive = missive;
+      document.body.style.overflow = 'hidden';
+      // Ferme la modale quand on clique sur le fond.
+      const onBackdropClick = function(e) { if (e.target === backdrop) closeMissiveModal(); };
+      const onKey = function(e) { if (e.key === 'Escape') closeMissiveModal(); };
+      backdrop._onBackdropClick = onBackdropClick;
+      backdrop._onKey = onKey;
+      backdrop.addEventListener('click', onBackdropClick);
+      document.addEventListener('keyup', onKey);
+      // Affiche ou masque la suppression selon l'auteur.
+      const userId = String(user?.email || user?.name || '').toLowerCase();
+      const canDelete = [String(missive.author || ''), String(missive.recipient || '')].map(s => s.toLowerCase()).includes(userId);
+      document.getElementById('modal-delete').style.display = canDelete ? 'inline-block' : 'none';
+    }
+
+    function closeMissiveModal() {
+      const backdrop = document.getElementById('missive-modal-backdrop');
+      if (!backdrop) return;
+      backdrop.classList.remove('open');
+      delete backdrop.dataset.missiveId;
+      delete backdrop.__missive;
+      document.body.style.overflow = '';
+      // Nettoie les gestionnaires si présents.
+      if (backdrop._onKey) {
+        document.removeEventListener('keyup', backdrop._onKey);
+        delete backdrop._onKey;
+      }
+      if (backdrop._onBackdropClick) {
+        backdrop.removeEventListener('click', backdrop._onBackdropClick);
+        delete backdrop._onBackdropClick;
+      }
+    }
+
+    function notifyMissiveArrival(missive) {
+      if (!missive || !isMissiveRelevant(missive)) return;
+      addMissiveToList(missive);
+      const sender = missive.author || 'un professeur';
+      showToast(`Nouvelle missive de ${sender}`, 'success');
+    }
+
+    function setupMissiveRealtime() {
+      if (missiveSubscription) return;
+      const email = user?.email ? user.email.toLowerCase() : '';
+      const name = user?.name || '';
+      const channels = DataStore.subscribeMissives(newMissive => {
+        if (!newMissive) return;
+        notifyMissiveArrival(newMissive);
+      }, { email, name });
+      missiveSubscription = channels;
+    }
+
+    (async () => {
+      try {
+        bindUIHandlers();
+        // Ensure modal backdrop is hidden on load
+        const backdrop = document.getElementById('missive-modal-backdrop');
+        if (backdrop) backdrop.classList.remove('open');
+
+        if (!user) return;
+        const hasSession = await Auth.hasValidSession();
+        if (!hasSession) {
+          Auth.logout();
+          return;
+        }
+        await loadMissiveRecipients();
+        await loadMissives();
+        setupMissiveRealtime();
+
+        window.addEventListener('beforeunload', () => {
+          if (Array.isArray(missiveSubscription)) {
+            missiveSubscription.forEach(ch => DataStore.unsubscribeChannel(ch));
+          } else if (missiveSubscription) {
+            DataStore.unsubscribeChannel(missiveSubscription);
+          }
+        });
+      } catch (err) {
+        console.error('Erreur initialisation hiboux :', err);
+      }
+    })();
+  </script>
+</body>
+</html>

@@ -1,0 +1,1657 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Configuration Clubs - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ── Config Styles ── */
+    .config-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .config-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+    }
+
+    .config-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1.3rem;
+      color: var(--gold);
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .config-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .club-category-nav {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+      margin: 0 0 2rem;
+    }
+
+    .club-category-link {
+      display: flex;
+      align-items: center;
+      gap: 0.7rem;
+      min-height: 4.5rem;
+      padding: 0.9rem 1rem;
+      color: var(--text);
+      background: rgba(201,168,76,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      text-decoration: none;
+      transition: border-color 0.2s, background 0.2s, transform 0.2s;
+    }
+
+    .club-category-link:hover,
+    .club-category-link:focus-visible {
+      color: var(--gold-light);
+      background: rgba(201,168,76,0.12);
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+    }
+
+    .club-category-icon {
+      font-size: 1.5rem;
+      flex: 0 0 auto;
+    }
+
+    .club-category-name {
+      display: block;
+      color: var(--gold);
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      font-weight: 600;
+    }
+
+    .club-category-description {
+      display: block;
+      margin-top: 0.2rem;
+      color: var(--text-dim);
+      font-size: 0.72rem;
+    }
+
+    .legacy-management-section {
+      display: none;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    .form-label {
+      display: block;
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      color: var(--gold-dim);
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+    }
+
+    .form-input, .form-select {
+      width: 100%;
+      padding: 0.8rem 1rem;
+      background: rgba(10,10,18,0.85);
+      color: var(--gold);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-size: 0.95rem;
+      outline: none;
+      font-family: inherit;
+    }
+
+    .form-input:focus, .form-select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(167,139,250,0.15);
+    }
+
+    .form-input.error {
+      border-color: #e87070;
+      background: rgba(232,112,112,0.05);
+    }
+
+    .form-error {
+      display: none;
+      color: #e87070;
+      font-size: 0.8rem;
+      margin-top: 0.3rem;
+    }
+
+    .form-error.show {
+      display: block;
+    }
+
+    .generated-field {
+      background: rgba(201,168,76,0.05);
+      border: 1px solid var(--border-bright);
+      padding: 0.8rem 1rem;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: monospace;
+      font-size: 0.9rem;
+    }
+
+    .generated-value {
+      color: var(--gold-light);
+      font-weight: 600;
+    }
+
+    .copy-btn {
+      background: rgba(167,139,250,0.2);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+      padding: 0.3rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.3s;
+    }
+
+    .copy-btn:hover {
+      background: rgba(167,139,250,0.4);
+    }
+
+    .copy-btn.copied {
+      background: rgba(76,175,80,0.3);
+      border-color: #4caf50;
+      color: #4caf50;
+    }
+
+    /* ── Stats Row ── */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+
+    .stat-box {
+      background: rgba(201,168,76,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 0.75rem;
+      color: var(--text-dim);
+      margin-top: 0.35rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Clubs List ── */
+    .clubs-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .club-item {
+      background: rgba(201,168,76,0.05);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .club-info {
+      flex: 1;
+    }
+
+    .club-name {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .club-id {
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      font-family: monospace;
+    }
+
+    .club-badge {
+      display: inline-block;
+      padding: 0.25rem 0.6rem;
+      background: rgba(201,168,76,0.2);
+      border: 1px solid var(--border-bright);
+      border-radius: 4px;
+      font-size: 0.7rem;
+      color: var(--gold-dim);
+      margin-top: 0.25rem;
+    }
+
+    .club-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-icon {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 0.4rem 0.6rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s;
+    }
+
+    .btn-icon:hover {
+      background: rgba(201,168,76,0.1);
+      color: var(--gold);
+      border-color: var(--border-bright);
+    }
+
+    /* ── Alerts ── */
+    .alert {
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .alert.show {
+      display: flex;
+    }
+
+    .alert-success {
+      background: rgba(76,175,80,0.1);
+      border: 1px solid rgba(76,175,80,0.3);
+      color: #4caf50;
+    }
+
+    .alert-error {
+      background: rgba(232,112,112,0.1);
+      border: 1px solid rgba(232,112,112,0.3);
+      color: #e87070;
+    }
+
+    .alert-icon {
+      font-size: 1.2rem;
+    }
+
+    /* ── Points System ── */
+    .points-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .points-table thead {
+      background: rgba(201,168,76,0.1);
+    }
+
+    .points-table th {
+      padding: 0.75rem;
+      text-align: left;
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-size: 0.8rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .points-table td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+    }
+
+    .points-input {
+      width: 80px;
+      padding: 0.4rem;
+      background: rgba(10,10,18,0.85);
+      color: var(--gold);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      text-align: center;
+      font-size: 0.85rem;
+    }
+
+    .points-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(167,139,250,0.15);
+    }
+
+    /* ── Calendar ── */
+    .calendar-container {
+      background: rgba(10,10,18,0.85);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+
+    .calendar-nav {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .calendar-nav button {
+      background: rgba(201,168,76,0.1);
+      border: 1px solid var(--border);
+      color: var(--gold);
+      padding: 0.4rem 0.8rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.3s;
+    }
+
+    .calendar-nav button:hover {
+      background: rgba(201,168,76,0.2);
+    }
+
+    .calendar-month {
+      font-family: 'Cinzel', serif;
+      font-size: 1.1rem;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 0.5rem;
+    }
+
+    .calendar-day-header {
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      color: var(--gold-dim);
+      padding: 0.5rem 0;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .calendar-day {
+      aspect-ratio: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(201,168,76,0.05);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .calendar-day:hover {
+      background: rgba(201,168,76,0.15);
+      border-color: var(--border-bright);
+    }
+
+    .calendar-day.today {
+      background: rgba(167,139,250,0.2);
+      border-color: var(--accent);
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .calendar-day.event {
+      background: rgba(76,175,80,0.2);
+      border-color: rgba(76,175,80,0.5);
+      color: #4caf50;
+    }
+
+    .calendar-day.other-month {
+      color: var(--text-dim);
+      opacity: 0.4;
+      background: transparent;
+      border: 1px dashed var(--border);
+    }
+
+    .event-form {
+      margin-top: 1.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .event-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .event-item {
+      background: rgba(201,168,76,0.05);
+      border-left: 3px solid var(--gold);
+      padding: 0.75rem;
+      border-radius: 6px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .event-info {
+      flex: 1;
+    }
+
+    .event-date {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .event-name {
+      color: var(--text);
+      font-size: 0.9rem;
+      margin-top: 0.25rem;
+    }
+
+    .event-delete {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-dim);
+      padding: 0.3rem 0.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.3s;
+    }
+
+    .event-delete:hover {
+      background: rgba(232,112,112,0.1);
+      border-color: #e87070;
+      color: #e87070;
+    }
+
+    @media (max-width: 1024px) {
+      .config-container {
+        grid-template-columns: 1fr;
+      }
+
+      .club-category-nav {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 560px) {
+      .club-category-nav {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="club-page">
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">GESTION CLUBS</div>
+        <div class="navbar-subtitle">Configuration des clubs et accès</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="club_dashboard.html">🏠 Accueil</a></li>
+      <li><a href="club_members.html">👥 Membres</a></li>
+      <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <main class="container" style="padding-top:3.5rem; padding-bottom:4rem; position:relative; z-index:1;">
+
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="page-title-small">🎭 Administration</div>
+          <h1>Gestion des Clubs</h1>
+        </div>
+      </div>
+    </div>
+
+    <!-- Stats -->
+    <div class="stats-row" id="stats-container">
+      <div class="stat-box">
+        <div class="stat-number" id="stat-clubs">0</div>
+        <div class="stat-label">CLUBS CRÉÉS</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-members">0</div>
+        <div class="stat-label">MEMBRES TOTAUX</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-number" id="stat-active">0</div>
+        <div class="stat-label">CLUBS ACTIFS</div>
+      </div>
+    </div>
+
+    <!-- Main Config Grid -->
+    <div id="club-management" class="config-container">
+
+      <!-- Club Creation Card -->
+      <div class="config-card" id="club-creation-section">
+        <h2 class="config-title">➕ Créer un Nouveau Club</h2>
+        <div class="config-subtitle">Générez automatiquement un identifiant club unique</div>
+
+        <div id="alert-create" class="alert alert-success">
+          <div class="alert-icon">✅</div>
+          <span id="alert-create-text"></span>
+        </div>
+
+        <div id="alert-error" class="alert alert-error">
+          <div class="alert-icon">❌</div>
+          <span id="alert-error-text"></span>
+        </div>
+
+        <form id="club-creation-form" novalidate>
+          <!-- Club Name -->
+          <div class="form-group">
+            <label class="form-label">Nom du Club</label>
+            <input type="text" id="new-club-name" class="form-input" placeholder="ex: Club de Duellisme" required>
+            <div class="form-error" id="error-name"></div>
+          </div>
+
+          <!-- Club Description -->
+          <div class="form-group">
+            <label class="form-label">Description (Optionnel)</label>
+            <input type="text" id="new-club-description" class="form-input" placeholder="ex: Pour apprendre le duel magique">
+            <div class="form-error" id="error-description"></div>
+          </div>
+
+          <!-- Club Type -->
+          <div class="form-group">
+            <label class="form-label">Type de Club</label>
+            <select id="new-club-type" class="form-select" required>
+              <option value="">-- Sélectionner --</option>
+              <option value="academique">📚 Académique</option>
+              <option value="sport">⚽ Sport</option>
+              <option value="art">🎨 Art & Culture</option>
+              <option value="magie">✨ Magie Spécialisée</option>
+              <option value="autre">🎭 Autre</option>
+            </select>
+            <div class="form-error" id="error-type"></div>
+          </div>
+
+          <!-- Club Manager Professor -->
+          <div class="form-group">
+            <label class="form-label">Email du Gérant (.prof)</label>
+            <input type="email" id="new-club-manager" class="form-input" placeholder="ex: albus@mysteria.prof" required>
+            <div class="form-error" id="error-manager"></div>
+          </div>
+
+          <!-- Generated Club ID -->
+          <div class="form-group">
+            <label class="form-label">Identifiant Club</label>
+            <div class="generated-field">
+              <span class="generated-value" id="generated-club-id">-</span>
+              <button type="button" class="copy-btn" id="copy-club-id" onclick="copyToClipboard('generated-club-id', 'copy-club-id')">📋 Copier</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 1.5rem;">
+            🎫 Créer le Club
+          </button>
+        </form>
+      </div>
+
+      <!-- Student Identifier Card -->
+      <div class="config-card" id="student-creation-section">
+        <h2 class="config-title">🎫 Créer un identifiant élève</h2>
+        <div class="config-subtitle">Générez un accès .club et affectez l’élève à un club existant</div>
+
+        <form id="student-creation-form" novalidate>
+          <div class="form-group">
+            <label class="form-label" for="student-club">Club</label>
+            <select id="student-club" class="form-select" required>
+              <option value="">-- Sélectionner un club --</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="student-name">Nom de l’élève</label>
+            <input type="text" id="student-name" class="form-input" placeholder="ex: Harry Potter" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="student-role">Rôle dans le club</label>
+            <input type="text" id="student-role" class="form-input" placeholder="ex: Membre, Officier" value="Membre de club" required>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Identifiant élève généré (.club)</label>
+            <div class="generated-field">
+              <span class="generated-value" id="generated-student-id">-</span>
+              <button type="button" class="copy-btn" onclick="copyToClipboard('generated-student-id', 'copy-student-id')">📋 Copier</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mot de passe généré</label>
+            <div class="generated-field">
+              <span class="generated-value" id="generated-student-password">-</span>
+              <button type="button" class="copy-btn" id="copy-student-password" onclick="copyToClipboard('generated-student-password', 'copy-student-password')">📋 Copier</button>
+            </div>
+          </div>
+
+          <button type="submit" class="btn btn-primary" style="width:100%;">🎫 Créer et affecter l’élève</button>
+        </form>
+      </div>
+
+      <!-- Clubs List Card -->
+      <div class="config-card">
+        <h2 class="config-title">📋 Clubs Récents</h2>
+        <div class="config-subtitle">Les 10 derniers clubs créés</div>
+
+        <div id="clubs-list-container" class="clubs-list">
+          <p style="text-align: center; color: var(--text-dim);">Chargement des clubs…</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Section Points de Club -->
+    <div id="club-points" class="legacy-management-section" style="margin-top: 3rem;">
+      <div class="page-header">
+        <div class="page-header-inner">
+          <div>
+            <div class="page-title-small">⭐ Gestion</div>
+            <h2>Points de Club</h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-container">
+        <!-- Points Table -->
+        <div class="config-card" style="grid-column: 1 / -1;">
+          <h2 class="config-title">🏆 Classement des Points</h2>
+          <div class="config-subtitle">Gestion des points par club</div>
+
+          <table class="points-table">
+            <thead>
+              <tr>
+                <th>Club</th>
+                <th>Points</th>
+                <th>Rang</th>
+                <th>Membres</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="points-table-body">
+              <tr>
+                <td colspan="5" style="text-align: center; color: var(--text-dim);">Chargement des clubs…</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Add Points Card -->
+        <div class="config-card" id="add-points-section">
+          <h2 class="config-title">➕ Ajouter des Points</h2>
+          <div class="config-subtitle">Attribuez des points pour des activités</div>
+
+          <div id="alert-points" class="alert alert-success">
+            <div class="alert-icon">✅</div>
+            <span id="alert-points-text"></span>
+          </div>
+
+          <form id="add-points-form" novalidate>
+            <div class="form-group">
+              <label class="form-label">Club</label>
+              <select id="points-club" class="form-select" required>
+                <option value="">-- Sélectionner un club --</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Raison</label>
+              <select id="points-reason" class="form-select" required>
+                <option value="">-- Sélectionner --</option>
+                <option value="participation">🎭 Participation</option>
+                <option value="victoire">🏅 Victoire</option>
+                <option value="challenge">⚡ Défi Spécial</option>
+                <option value="event">🎪 Événement</option>
+                <option value="autre">📝 Autre</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Nombre de Points</label>
+              <input type="number" id="points-amount" class="form-input" placeholder="ex: 10" min="1" max="100" required>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Description (Optionnel)</label>
+              <input type="text" id="points-description" class="form-input" placeholder="ex: Victoire au tournoi de Quidditch">
+            </div>
+
+            <button type="submit" class="btn btn-primary" style="width: 100%;">
+              ✅ Ajouter Points
+            </button>
+          </form>
+        </div>
+
+        <!-- Points History -->
+        <div class="config-card">
+          <h2 class="config-title">📊 Historique Récent</h2>
+          <div class="config-subtitle">Les 10 dernières attributions</div>
+
+          <div id="points-history" style="max-height: 400px; overflow-y: auto;">
+            <p style="text-align: center; color: var(--text-dim);">Chargement…</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section Calendrier -->
+    <div id="club-calendar" class="legacy-management-section" style="margin-top: 3rem; margin-bottom: 4rem;">
+      <div class="page-header">
+        <div class="page-header-inner">
+          <div>
+            <div class="page-title-small">📅 Événements</div>
+            <h2>Calendrier des Clubs</h2>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-container">
+        <!-- Calendar -->
+        <div class="config-card" style="grid-column: 1 / -1;">
+          <h2 class="config-title">📅 Calendrier des Événements</h2>
+          <div class="config-subtitle">Événements et compétitions des clubs</div>
+
+          <div class="calendar-container">
+            <div class="calendar-header">
+              <button class="calendar-nav" id="prev-month">← Précédent</button>
+              <div class="calendar-month" id="current-month">Juillet 2026</div>
+              <button class="calendar-nav" id="next-month">Suivant →</button>
+            </div>
+
+            <div class="calendar-grid" id="calendar-grid">
+              <!-- Days will be generated -->
+            </div>
+
+            <div class="event-form" id="add-event-section">
+              <h3 style="font-family: 'Cinzel', serif; color: var(--gold); margin-bottom: 1rem;">Ajouter un Événement</h3>
+              <form id="add-event-form" novalidate style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                <div>
+                  <label class="form-label">Date</label>
+                  <input type="date" id="event-date" class="form-input" required>
+                </div>
+
+                <div>
+                  <label class="form-label">Club</label>
+                  <select id="event-club" class="form-select" required>
+                    <option value="">-- Sélectionner --</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="form-label">Type d'Événement</label>
+                  <select id="event-type" class="form-select" required>
+                    <option value="">-- Sélectionner --</option>
+                    <option value="competition">⚔️ Compétition</option>
+                    <option value="reunion">📢 Réunion</option>
+                    <option value="formation">📚 Formation</option>
+                    <option value="tournoi">🏆 Tournoi</option>
+                    <option value="autre">🎭 Autre</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label class="form-label">Nom de l'Événement</label>
+                  <input type="text" id="event-name" class="form-input" placeholder="ex: Tournoi de Quidditch" required>
+                </div>
+
+                <button type="submit" class="btn btn-primary" style="grid-column: 1 / -1;">
+                  📌 Ajouter l'Événement
+                </button>
+              </form>
+
+              <h3 style="font-family: 'Cinzel', serif; color: var(--gold); margin: 1.5rem 0 1rem;">Événements du Mois</h3>
+              <div class="event-list" id="events-list">
+                <p style="text-align: center; color: var(--text-dim);">Aucun événement</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Particles Background -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <!-- Auth Module -->
+  <script src="../js/auth.js"></script>
+  
+  <script>
+    // ────────────────────────────────────────────────────────────
+    // CONFIGURATION CLUBS
+    // ────────────────────────────────────────────────────────────
+ 
+    const database = window.supabaseClient;
+    let allClubs = [];
+
+    // ── Initialize ──
+    async function initializeClubConfigPage() {
+      try {
+        // Check auth
+        const user = Auth.getCurrentUser();
+        if (!user) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        if (!database) {
+          showError('La connexion à la base de données n\'est pas disponible.');
+          console.error('Supabase client unavailable');
+          return;
+        }
+
+        // Allow club managers, professor managers, GPs, directors, and co-directors
+        if (!Auth.canAccessClubConfiguration(user)) {
+          window.location.href = 'club_dashboard.html';
+          return;
+        }
+
+        // Check if user can create (club managers and higher)
+        const canCreate = Auth.hasRoleSignal(user, ['prof_manager', 'gp', 'directeur', 'co_directeur', 'club_manager']);
+        
+        // Hide creation sections if no permission
+        if (!canCreate) {
+          document.getElementById('club-creation-section').style.display = 'none';
+          document.getElementById('student-creation-section').style.display = 'none';
+          document.getElementById('add-points-section').style.display = 'none';
+          document.getElementById('add-event-section').style.display = 'none';
+        }
+
+        // Load clubs
+        await loadClubs();
+
+        // Setup form listeners
+        setupFormListeners();
+        await finalInit();
+      } catch (error) {
+        console.error('Init error:', error);
+        showError('Erreur lors de l\'initialisation');
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', initializeClubConfigPage);
+
+    // ── Setup Form Listeners ──
+    function setupFormListeners() {
+      const form = document.getElementById('club-creation-form');
+      const nameInput = document.getElementById('new-club-name');
+      
+      form.addEventListener('submit', handleClubCreation);
+      nameInput.addEventListener('input', generateClubId);
+
+      const studentForm = document.getElementById('student-creation-form');
+      const studentNameInput = document.getElementById('student-name');
+      if (studentForm && studentNameInput) {
+        studentForm.addEventListener('submit', handleStudentCreation);
+        studentNameInput.addEventListener('input', generateStudentIdentifier);
+      }
+      
+      // Generate initial ID if name exists
+      if (nameInput.value) {
+        generateClubId();
+      }
+    }
+
+    // ── Generate Club ID (club-name format) ──
+    function generateClubId() {
+      const name = document.getElementById('new-club-name').value.trim();
+      
+      if (!name) {
+        document.getElementById('generated-club-id').textContent = '-';
+        return;
+      }
+
+      // Normalize: lowercase, remove accents, replace spaces with hyphens
+      const normalized = name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '') // Remove accents
+        .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric with hyphens
+        .replace(/^-|-$/g, ''); // Remove leading/trailing hyphens
+
+      const clubId = `club-${normalized}`;
+      document.getElementById('generated-club-id').textContent = clubId;
+    }
+
+    function generateStudentIdentifier() {
+      const name = document.getElementById('student-name').value.trim();
+      const identifier = document.getElementById('generated-student-id');
+      const password = document.getElementById('generated-student-password');
+      if (!name) {
+        identifier.textContent = '-';
+        password.textContent = '-';
+        return;
+      }
+
+      const normalized = name
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '');
+
+      identifier.textContent = `${normalized}@mysteria.club`;
+      password.textContent = generatePassword();
+    }
+
+    // ── Generate Secure Password ──
+    function generatePassword() {
+      const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+      let password = '';
+      for (let i = 0; i < 12; i++) {
+        password += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return password;
+    }
+
+    // ── Copy to Clipboard ──
+    function copyToClipboard(elementId, buttonId) {
+      const text = document.getElementById(elementId).textContent;
+      navigator.clipboard.writeText(text).then(() => {
+        const btn = document.getElementById(buttonId);
+        btn.textContent = '✅ Copié!';
+        btn.classList.add('copied');
+        setTimeout(() => {
+          btn.textContent = '📋 Copier';
+          btn.classList.remove('copied');
+        }, 2000);
+      });
+    }
+
+    // ── Handle Club Creation ──
+    async function handleClubCreation(e) {
+      e.preventDefault();
+      
+      const name = document.getElementById('new-club-name').value.trim();
+      const description = document.getElementById('new-club-description').value.trim();
+      const type = document.getElementById('new-club-type').value;
+      const managerEmail = document.getElementById('new-club-manager').value.trim();
+      const clubId = document.getElementById('generated-club-id').textContent;
+
+      // Validation
+      if (!name || !type || !managerEmail || clubId === '-' || !managerEmail.toLowerCase().endsWith('.prof')) {
+        showError('Veuillez remplir tous les champs requis');
+        return;
+      }
+
+      try {
+        const { data, error } = await database.functions.invoke('create-club', {
+          body: {
+            club_id: clubId,
+            name,
+            description,
+            type,
+            manager_email: managerEmail
+          }
+        });
+
+        if (error) throw error;
+
+        showSuccess(`Catégorie de club créée : ${name}`);
+        
+        // Reset form
+        document.getElementById('club-creation-form').reset();
+        document.getElementById('generated-club-id').textContent = '-';
+
+        // Reload clubs list
+        await loadClubs();
+      } catch (error) {
+        console.error('Creation error:', error);
+        let message = error.message || 'Erreur lors de la création du club';
+        if (error.context?.json) {
+          try {
+            const details = await error.context.json();
+            message = details.error || message;
+          } catch (parseError) {
+            console.warn('Réponse de création de club illisible:', parseError);
+          }
+        }
+        showError(message);
+      }
+    }
+
+    // ── Load Clubs List ──
+    async function loadClubs() {
+      try {
+        const { data: clubs, error } = await database
+          .from('clubs')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+
+        if (error) throw error;
+
+        allClubs = clubs || [];
+        renderClubsList();
+        updateStats();
+        populateStudentClubSelect();
+      } catch (error) {
+        console.error('Load error:', error);
+        showError('Erreur lors du chargement des clubs');
+      }
+    }
+
+    function populateStudentClubSelect() {
+      const select = document.getElementById('student-club');
+      if (!select) return;
+      select.innerHTML = '<option value="">-- Sélectionner un club --</option>' + allClubs
+        .filter(club => club.status === 'active')
+        .map(club => `<option value="${club.club_id}">${club.name}</option>`)
+        .join('');
+    }
+
+    async function handleStudentCreation(event) {
+      event.preventDefault();
+      const clubId = document.getElementById('student-club').value;
+      const name = document.getElementById('student-name').value.trim();
+      const role = document.getElementById('student-role').value.trim() || 'Membre de club';
+      const email = document.getElementById('generated-student-id').textContent;
+      const password = document.getElementById('generated-student-password').textContent;
+
+      if (!clubId || !name || !email.endsWith('@mysteria.club') || password === '-') {
+        showError('Sélectionnez un club et renseignez le nom de l’élève.');
+        return;
+      }
+
+      try {
+        const { data, error } = await database.functions.invoke('create-club-member', {
+          body: {
+            email,
+            password,
+            name,
+            role,
+            club_id: clubId
+          }
+        });
+
+        if (error) throw error;
+        showSuccess(`Élève créé et affecté au club : ${email}`);
+
+        document.getElementById('student-creation-form').reset();
+        document.getElementById('generated-student-id').textContent = '-';
+        document.getElementById('generated-student-password').textContent = '-';
+      } catch (error) {
+        console.error('Student creation error:', error);
+        let message = error.message || 'Erreur lors de la création de l’élève';
+        if (error.context?.json) {
+          try {
+            const details = await error.context.json();
+            message = details.error || message;
+          } catch (parseError) {
+            console.warn('Réponse de création de membre illisible:', parseError);
+          }
+        }
+        showError(message);
+      }
+    }
+
+    // ── Render Clubs List ──
+    function renderClubsList() {
+      const container = document.getElementById('clubs-list-container');
+
+      if (allClubs.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-dim);">Aucun club créé pour le moment</p>';
+        return;
+      }
+
+      container.innerHTML = allClubs.map(club => `
+        <div class="club-item">
+          <div class="club-info">
+            <div class="club-name">🎭 ${club.name}</div>
+            <div class="club-id">${club.club_id}</div>
+            <div class="club-badge">${club.type}</div>
+            <div class="club-badge" style="margin-left: 0.5rem;">${club.status}</div>
+          </div>
+          <div class="club-actions">
+            <button class="btn-icon" onclick="copyClubId('${club.club_id}')" title="Copier l'ID">📋</button>
+            <button class="btn-icon" onclick="editClub('${club.club_id}')" title="Modifier">✏️</button>
+            <button class="btn-icon" onclick="deleteClub('${club.club_id}')" title="Supprimer">🗑️</button>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // ── Copy Club ID ──
+    function copyClubId(clubId) {
+      navigator.clipboard.writeText(clubId);
+      showSuccess('ID copié!');
+    }
+
+    // ── Edit Club ──
+    async function editClub(clubId) {
+      const club = allClubs.find(item => item.club_id === clubId);
+      if (!club) return;
+
+      const name = prompt('Nom du club', club.name || '');
+      if (name === null) return;
+      const description = prompt('Description du club', club.description || '');
+      if (description === null) return;
+      const managerEmail = prompt('Email du gérant', club.manager_email || '');
+      if (managerEmail === null) return;
+      if (!name.trim() || !managerEmail.trim()) {
+        showError('Le nom et l\'email du gérant sont requis');
+        return;
+      }
+
+      try {
+        const { error } = await database
+          .from('clubs')
+          .update({
+            name: name.trim(),
+            description: description.trim(),
+            manager_email: managerEmail.trim().toLowerCase()
+          })
+          .eq('club_id', clubId);
+
+        if (error) throw error;
+        showSuccess('Club modifié');
+        await loadClubs();
+      } catch (error) {
+        console.error('Edit error:', error);
+        showError('Erreur lors de la modification');
+      }
+    }
+
+    // ── Delete Club ──
+    async function deleteClub(clubId) {
+      if (!confirm(`Êtes-vous sûr de vouloir supprimer le club ${clubId}?`)) return;
+
+      try {
+        const { error } = await database
+          .from('clubs')
+          .delete()
+          .eq('club_id', clubId);
+
+        if (error) throw error;
+
+        showSuccess('Club supprimé');
+        await loadClubs();
+      } catch (error) {
+        console.error('Delete error:', error);
+        showError('Erreur lors de la suppression');
+      }
+    }
+
+    // ── Update Stats ──
+    function updateStats() {
+      const totalClubs = allClubs.length;
+      const activeClubs = allClubs.filter(c => c.status === 'active').length;
+
+      document.getElementById('stat-clubs').textContent = totalClubs;
+      document.getElementById('stat-active').textContent = activeClubs;
+      database
+        .from('club_members')
+        .select('id', { count: 'exact', head: true })
+        .then(({ count, error }) => {
+          if (error) throw error;
+          document.getElementById('stat-members').textContent = count || 0;
+        })
+        .catch(error => console.error('Members count error:', error));
+    }
+
+    // ── Show Success Alert ──
+    function showSuccess(message) {
+      const alert = document.getElementById('alert-create');
+      const text = document.getElementById('alert-create-text');
+      text.textContent = message;
+      alert.classList.add('show');
+      setTimeout(() => alert.classList.remove('show'), 3000);
+    }
+
+    // ── Show Error Alert ──
+    function showError(message) {
+      const alert = document.getElementById('alert-error');
+      const text = document.getElementById('alert-error-text');
+      text.textContent = message;
+      alert.classList.add('show');
+      setTimeout(() => alert.classList.remove('show'), 3000);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // POINTS SYSTEM
+    // ════════════════════════════════════════════════════════════
+
+    let clubPoints = {};
+
+    // ── Populate Points Club Select ──
+    async function populatePointsClubSelect() {
+      const select = document.getElementById('points-club');
+      select.innerHTML = '<option value="">-- Sélectionner un club --</option>';
+      
+      allClubs.forEach(club => {
+        const option = document.createElement('option');
+        option.value = club.club_id;
+        option.textContent = club.name;
+        select.appendChild(option);
+      });
+    }
+
+    // ── Add Points Handler ──
+    document.getElementById('add-points-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const clubId = document.getElementById('points-club').value;
+      const reason = document.getElementById('points-reason').value;
+      const amount = parseInt(document.getElementById('points-amount').value);
+      const description = document.getElementById('points-description').value;
+
+      if (!clubId || !reason || !amount) {
+        showError('Veuillez remplir tous les champs requis');
+        return;
+      }
+
+      try {
+        const { data, error } = await database
+          .from('club_points')
+          .insert([{
+            club_id: clubId,
+            points: amount,
+            reason: reason,
+            description: description,
+            awarded_at: new Date().toISOString()
+          }])
+          .select();
+
+        if (error) throw error;
+
+        showPointsAlert(`${amount} points attribués! 🎉`);
+        document.getElementById('add-points-form').reset();
+        await loadClubPoints();
+      } catch (error) {
+        console.error('Points error:', error);
+        showError('Erreur lors de l\'attribution des points');
+      }
+    });
+
+    // ── Load Club Points ──
+    async function loadClubPoints() {
+      try {
+        const { data: points, error } = await database
+          .from('club_points')
+          .select('*')
+          .order('awarded_at', { ascending: false });
+
+        if (error) throw error;
+
+        clubPoints = {};
+        points.forEach(p => {
+          clubPoints[p.club_id] = (clubPoints[p.club_id] || 0) + p.points;
+        });
+
+        renderPointsTable();
+        renderPointsHistory(points.slice(0, 10));
+      } catch (error) {
+        console.error('Load points error:', error);
+      }
+    }
+
+    // ── Render Points Table ──
+    function renderPointsTable() {
+      const tbody = document.getElementById('points-table-body');
+      
+      const sorted = [...allClubs].sort((a, b) => {
+        const pointsA = clubPoints[a.club_id] || 0;
+        const pointsB = clubPoints[b.club_id] || 0;
+        return pointsB - pointsA;
+      });
+
+      tbody.innerHTML = sorted.map((club, index) => {
+        const points = clubPoints[club.club_id] || 0;
+        return `
+          <tr>
+            <td><strong>${club.name}</strong></td>
+            <td><strong style="color: var(--gold); font-size: 1.1rem;">${points}</strong></td>
+            <td>#${index + 1}</td>
+            <td>0</td>
+            <td>
+              <button class="btn-icon" onclick="viewClubPoints('${club.club_id}')" title="Voir détails">📊</button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // ── Render Points History ──
+    function renderPointsHistory(points) {
+      const container = document.getElementById('points-history');
+      
+      if (points.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-dim);">Aucun événement</p>';
+        return;
+      }
+
+      container.innerHTML = points.map(p => {
+        const club = allClubs.find(c => c.club_id === p.club_id);
+        const date = new Date(p.awarded_at).toLocaleDateString('fr-FR');
+        
+        const icons = {
+          'participation': '🎭',
+          'victoire': '🏅',
+          'challenge': '⚡',
+          'event': '🎪',
+          'autre': '📝'
+        };
+
+        return `
+          <div class="event-item">
+            <div class="event-info">
+              <div class="event-date">${icons[p.reason] || '📌'} ${club?.name || p.club_id}</div>
+              <div class="event-name">${p.reason}: +${p.points} pts</div>
+              <small style="color: var(--text-dim);">${date}</small>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── View Club Points ──
+    function viewClubPoints(clubId) {
+      const club = allClubs.find(c => c.club_id === clubId);
+      const points = clubPoints[clubId] || 0;
+      alert(`${club?.name || clubId}\n\nPoints totaux: ${points}`);
+    }
+
+    // ── Show Points Alert ──
+    function showPointsAlert(message) {
+      const alert = document.getElementById('alert-points');
+      const text = document.getElementById('alert-points-text');
+      text.textContent = message;
+      alert.classList.add('show');
+      setTimeout(() => alert.classList.remove('show'), 3000);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // CALENDAR SYSTEM
+    // ════════════════════════════════════════════════════════════
+
+    let currentDate = new Date();
+    let calendarEvents = [];
+
+    // ── Initialize Calendar ──
+    function initCalendar() {
+      document.getElementById('prev-month')?.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() - 1);
+        renderCalendar();
+      });
+
+      document.getElementById('next-month')?.addEventListener('click', () => {
+        currentDate.setMonth(currentDate.getMonth() + 1);
+        renderCalendar();
+      });
+
+      // Populate event club select
+      const eventClubSelect = document.getElementById('event-club');
+      if (eventClubSelect) {
+        eventClubSelect.innerHTML = '<option value="">-- Sélectionner --</option>';
+        allClubs.forEach(club => {
+          const option = document.createElement('option');
+          option.value = club.club_id;
+          option.textContent = club.name;
+          eventClubSelect.appendChild(option);
+        });
+      }
+
+      // Add event form handler
+      document.getElementById('add-event-form')?.addEventListener('submit', handleAddEvent);
+
+      renderCalendar();
+      loadCalendarEvents();
+    }
+
+    // ── Render Calendar ──
+    function renderCalendar() {
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+      
+      // Update header
+      const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
+                         'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
+      document.getElementById('current-month').textContent = `${monthNames[month]} ${year}`;
+
+      // Clear grid
+      const grid = document.getElementById('calendar-grid');
+      grid.innerHTML = '';
+
+      // Day headers
+      const dayHeaders = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+      dayHeaders.forEach(day => {
+        const header = document.createElement('div');
+        header.className = 'calendar-day-header';
+        header.textContent = day;
+        grid.appendChild(header);
+      });
+
+      // First day of month
+      const firstDay = new Date(year, month, 1).getDay();
+      
+      // Days from previous month
+      const prevMonthDays = new Date(year, month, 0).getDate();
+      for (let i = firstDay - 1; i >= 0; i--) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day other-month';
+        day.textContent = prevMonthDays - i;
+        grid.appendChild(day);
+      }
+
+      // Days of current month
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const today = new Date();
+      
+      for (let d = 1; d <= daysInMonth; d++) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day';
+        day.textContent = d;
+
+        const date = new Date(year, month, d);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // Check if today
+        if (date.toDateString() === today.toDateString()) {
+          day.classList.add('today');
+        }
+
+        // Check if has events
+        if (calendarEvents.some(e => e.date === dateStr)) {
+          day.classList.add('event');
+        }
+
+        day.addEventListener('click', () => {
+          document.getElementById('event-date').value = dateStr;
+        });
+
+        grid.appendChild(day);
+      }
+
+      // Days from next month
+      const totalCells = grid.children.length - 7; // Subtract day headers
+      const remainingCells = 42 - totalCells;
+      for (let d = 1; d <= remainingCells; d++) {
+        const day = document.createElement('div');
+        day.className = 'calendar-day other-month';
+        day.textContent = d;
+        grid.appendChild(day);
+      }
+    }
+
+    // ── Add Event Handler ──
+    async function handleAddEvent(e) {
+      e.preventDefault();
+
+      const date = document.getElementById('event-date').value;
+      const clubId = document.getElementById('event-club').value;
+      const type = document.getElementById('event-type').value;
+      const name = document.getElementById('event-name').value;
+
+      if (!date || !clubId || !type || !name) {
+        showError('Veuillez remplir tous les champs');
+        return;
+      }
+
+      try {
+        const { data, error } = await database
+          .from('calendar_events')
+          .insert([{
+            date: date,
+            club_id: clubId,
+            type: type,
+            name: name,
+            created_at: new Date().toISOString()
+          }])
+          .select();
+
+        if (error) throw error;
+
+        showPointsAlert('Événement ajouté! 📅');
+        document.getElementById('add-event-form').reset();
+        await loadCalendarEvents();
+        renderCalendar();
+      } catch (error) {
+        console.error('Event error:', error);
+        showError('Erreur lors de l\'ajout de l\'événement');
+      }
+    }
+
+    // ── Load Calendar Events ──
+    async function loadCalendarEvents() {
+      try {
+        const { data: events, error } = await database
+          .from('calendar_events')
+          .select('*')
+          .gte('date', new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString().split('T')[0])
+          .lte('date', new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).toISOString().split('T')[0]);
+
+        if (error) throw error;
+
+        calendarEvents = events || [];
+        renderCalendar();
+        renderEventsList();
+      } catch (error) {
+        console.error('Load events error:', error);
+      }
+    }
+
+    // ── Render Events List ──
+    function renderEventsList() {
+      const container = document.getElementById('events-list');
+
+      if (calendarEvents.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-dim);">Aucun événement ce mois</p>';
+        return;
+      }
+
+      const sorted = [...calendarEvents].sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      container.innerHTML = sorted.map(event => {
+        const club = allClubs.find(c => c.club_id === event.club_id);
+        const date = new Date(event.date).toLocaleDateString('fr-FR');
+        
+        const typeIcons = {
+          'competition': '⚔️',
+          'reunion': '📢',
+          'formation': '📚',
+          'tournoi': '🏆',
+          'autre': '🎭'
+        };
+
+        return `
+          <div class="event-item">
+            <div class="event-info">
+              <div class="event-date">${typeIcons[event.type] || '📌'} ${date}</div>
+              <div class="event-name">${event.name}</div>
+              <small style="color: var(--text-dim);">${club?.name || event.club_id}</small>
+            </div>
+            <button class="event-delete" onclick="deleteEvent('${event.id}')">🗑️</button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // ── Delete Event ──
+    async function deleteEvent(eventId) {
+      if (!confirm('Supprimer cet événement?')) return;
+
+      try {
+        const { error } = await database
+          .from('calendar_events')
+          .delete()
+          .eq('id', eventId);
+
+        if (error) throw error;
+
+        showPointsAlert('Événement supprimé');
+        await loadCalendarEvents();
+      } catch (error) {
+        console.error('Delete error:', error);
+        showError('Erreur lors de la suppression');
+      }
+    }
+
+    // ── Initial Load ──
+    async function finalInit() {
+      await populatePointsClubSelect();
+      if (document.getElementById('club-points')?.classList.contains('legacy-management-section')) return;
+      await loadClubPoints();
+      initCalendar();
+    }
+  </script>
+  <script>
+    const currentPage = window.location.pathname.split('/').pop() || 'configuration-clubs.html';
+    document.querySelectorAll('.navbar a[href]').forEach(link => {
+      if (link.getAttribute('href') === currentPage) link.classList.add('active');
+    });
+  </script>
+</body>
+</html>
+

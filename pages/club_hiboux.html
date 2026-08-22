@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hiboux des Clubs - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .club-mail-grid { display:grid; grid-template-columns:minmax(280px,1fr) minmax(320px,1.5fr); gap:1.75rem; }
+    .mail-panel { background:rgba(11,14,35,.84); border:1px solid rgba(255,255,255,.08); border-radius:20px; padding:1.5rem; box-shadow:0 24px 50px rgba(0,0,0,.16); }
+    .mail-panel h2 { margin:0; font-size:1.3rem; }
+    .mail-title { display:flex; justify-content:space-between; align-items:center; margin-bottom:1.35rem; }
+    .mail-form { display:grid; gap:1rem; }
+    .mail-input, .mail-select, .mail-textarea { width:100%; border-radius:14px; border:1px solid rgba(255,255,255,.12); background:rgba(7,10,21,.9); color:var(--text); padding:1rem; font-family:'EB Garamond',serif; font-size:.95rem; }
+    .mail-textarea { min-height:160px; resize:vertical; }
+    .mail-list { display:grid; gap:1rem; }
+    .mail-card { background:rgba(14,18,44,.78); border:1px solid rgba(255,255,255,.08); border-radius:18px; padding:1.35rem 1.6rem; }
+    .mail-card h3 { color:var(--gold); font-family:'Cinzel',serif; font-size:1rem; margin:0 0 .7rem; }
+    .mail-message { color:var(--cream); white-space:pre-wrap; line-height:1.7; margin-bottom:1rem; }
+    .mail-meta { color:var(--text-dim); font-size:.82rem; }
+    .mail-actions { display:flex; gap:.5rem; justify-content:flex-end; margin-top:.75rem; }
+    .mail-empty { padding:1.4rem 1rem; border:1px dashed rgba(255,255,255,.12); border-radius:14px; color:var(--text-dim); text-align:center; }
+    .mail-modal { position:fixed; inset:0; display:none; place-items:center; background:rgba(2,6,23,.65); z-index:9999; }
+    .mail-modal.open { display:grid; }
+    .mail-modal-content { width:min(720px,94%); max-height:90vh; overflow:auto; background:rgba(8,10,25,.97); border-radius:14px; padding:1.4rem; }
+    @media (max-width:960px) { .club-mail-grid { grid-template-columns:1fr; } }
+  </style>
+</head>
+<body class="club-page">
+  <nav class="navbar">
+    <div class="navbar-brand"><img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,.3);"><div><div class="navbar-title">MYSTERIA CLUB</div><div class="navbar-subtitle">Courrier des clubs</div></div></div>
+    <ul class="navbar-nav">
+      <li><a href="club_dashboard.html">🏠 Accueil</a></li>
+      <li><a href="club_members.html">👥 Membres</a></li>
+      <li><a href="configuration-clubs.html">🎭 Clubs</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+  <main class="container" style="padding-top:3.5rem;padding-bottom:4rem;">
+    <div class="page-header"><div class="page-header-inner"><div><div class="page-title-small">🦉 Courrier</div><h1>Hiboux du Club</h1></div></div></div>
+    <div class="club-mail-grid">
+      <section class="mail-panel"><div class="mail-title"><div><span class="page-title-small">Envoyer</span><h2>Rédiger une missive</h2></div></div><form id="mail-form" class="mail-form"><label for="recipient">Destinataire</label><select id="recipient" class="mail-select" required></select><label for="image">Image (optionnel)</label><input id="image" type="file" accept="image/*"><label><input id="signature" type="checkbox"> Ajouter ma signature</label><label for="title">Titre</label><input id="title" class="mail-input" type="text"><label for="message">Message</label><textarea id="message" class="mail-textarea" required></textarea><button id="send" class="btn btn-primary" type="submit">🦉 Envoyer la missive</button></form></section>
+      <section class="mail-panel"><div class="mail-title"><div><span class="page-title-small">Courrier</span><h2>Vos missives</h2></div></div><div id="sent-list" class="mail-list"><div class="mail-empty">Chargement...</div></div><div class="mail-title" style="margin-top:2rem;"><div><span class="page-title-small">Réception</span><h2>Missives reçues</h2></div></div><div id="received-list" class="mail-list"><div class="mail-empty">Chargement...</div></div></section>
+    </div>
+  </main>
+  <div id="modal" class="mail-modal"><div class="mail-modal-content"><h2 id="modal-title">Missive</h2><p id="modal-meta" class="mail-meta"></p><div id="modal-message" class="mail-message"></div><div id="modal-image"></div><div class="mail-actions"><button id="reply" class="btn">Répondre</button><button id="delete" class="btn btn-danger">Supprimer</button><button id="close" class="btn">Fermer</button></div></div></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="../js/supabaseClient.js"></script><script src="../js/auth.js"></script><script src="../js/data.js"></script>
+  <script>
+    const user = requireAuthOrRedirect();
+    const currentPage = window.location.pathname.split('/').pop() || 'club_hiboux.html';
+    document.querySelectorAll('.navbar a[href]').forEach(link => { if (link.getAttribute('href') === currentPage) link.classList.add('active'); });
+    const cache = new Map(); let subscription = null; let recipients = [];
+    const escapeHtml = value => String(value || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    const dateLabel = value => { const date = new Date(value); return Number.isNaN(date.getTime()) ? 'Date inconnue' : date.toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' }); };
+    function relevant(mail) { if (!mail.recipient) return true; const target = String(mail.recipient).toLowerCase(); return target === String(user.email || '').toLowerCase() || target === String(user.name || '').toLowerCase() || String(mail.author || '').toLowerCase() === String(user.email || '').toLowerCase(); }
+    function render(mail) { const id = mail.id; cache.set(id, mail); const recipient = recipients.find(item => String(item.email || item.id) === String(mail.recipient)); const author = recipients.find(item => String(item.email || item.id) === String(mail.author)); return `<article class="mail-card" id="mail-${escapeHtml(id)}"><h3>${escapeHtml(mail.title || 'Missive')}</h3><div class="mail-message">${escapeHtml(mail.message)}</div><div class="mail-meta">De: ${escapeHtml(author?.name || mail.author || 'Anonyme')} · À: ${escapeHtml(recipient?.name || mail.recipient || 'Tous les membres de club')} · ${dateLabel(mail.created_at)}</div><div class="mail-actions"><button class="btn mail-open" data-id="${escapeHtml(id)}">Ouvrir</button>${String(mail.author || '').toLowerCase() === String(user.email || '').toLowerCase() ? `<button class="btn btn-danger mail-delete" data-id="${escapeHtml(id)}">Supprimer</button>` : ''}</div></article>`; }
+    async function loadRecipients() { recipients = await DataStore.getClubMembers(); const select = document.getElementById('recipient'); select.innerHTML = '<option value="">Tous les membres de club</option>' + recipients.filter(item => item.email || item.id).map(item => `<option value="${escapeHtml(item.email || item.id)}">${escapeHtml(item.name || item.email || item.id)}</option>`).join(''); }
+    async function loadMails() { const mails = (await DataStore.getMissives(100)).filter(relevant); const sent = mails.filter(mail => String(mail.author || '').toLowerCase() === String(user.email || '').toLowerCase()); const received = mails.filter(mail => !sent.includes(mail)); cache.clear(); document.getElementById('sent-list').innerHTML = sent.length ? sent.map(render).join('') : '<div class="mail-empty">Aucune missive envoyée.</div>'; document.getElementById('received-list').innerHTML = received.length ? received.map(render).join('') : '<div class="mail-empty">Aucune missive reçue.</div>'; }
+    async function sendMail(event) { event.preventDefault(); const button = document.getElementById('send'); button.disabled = true; try { let message = document.getElementById('message').value.trim(); const file = document.getElementById('image').files[0]; if (file) { const upload = await DataStore.uploadFileToStorage('missives', `missives/${Date.now()}_${file.name.replace(/[^a-zA-Z0-9_.-]/g,'_')}`, file); if (upload.ok && upload.publicUrl) message += `\n\nImage: ${upload.publicUrl}`; } if (document.getElementById('signature').checked && user.name) message += `\n\n-- ${user.name}`; const result = await DataStore.addMissive({ title: document.getElementById('title').value.trim(), message, author: user.email || user.name, recipient: document.getElementById('recipient').value }); if (!result.ok) throw new Error(result.error); if (result.missive) await DataStore.notifyMissiveOnDiscord(result.missive); event.target.reset(); await loadMails(); } catch (error) { alert(error.message || 'Erreur lors de l’envoi.'); } finally { button.disabled = false; } }
+    function openMail(id) { const mail = cache.get(id); if (!mail) return; document.getElementById('modal-title').textContent = mail.title || 'Missive'; document.getElementById('modal-meta').textContent = `De: ${mail.author || 'Anonyme'} · ${dateLabel(mail.created_at)}`; document.getElementById('modal-message').textContent = mail.message || ''; document.getElementById('modal').classList.add('open'); document.getElementById('modal').dataset.id = id; }
+    async function deleteMail(id) { const result = await DataStore.deleteMissive(id); if (!result.ok) throw new Error(result.error); document.getElementById(`mail-${id}`)?.remove(); cache.delete(id); document.getElementById('modal').classList.remove('open'); }
+    document.getElementById('mail-form').addEventListener('submit', sendMail); document.getElementById('close').onclick = () => document.getElementById('modal').classList.remove('open'); document.getElementById('reply').onclick = () => { const mail = cache.get(document.getElementById('modal').dataset.id); if (!mail) return; document.getElementById('recipient').value = mail.author || ''; document.getElementById('title').value = mail.title ? `Re: ${mail.title}` : 'Re:'; document.getElementById('message').value = `@${mail.author || ''}\n\n`; document.getElementById('modal').classList.remove('open'); document.getElementById('message').focus(); }; document.querySelectorAll('.mail-list').forEach(list => list.addEventListener('click', async event => { const open = event.target.closest('.mail-open'); const remove = event.target.closest('.mail-delete'); try { if (open) openMail(open.dataset.id); if (remove) await deleteMail(remove.dataset.id); } catch (error) { alert(error.message || 'Erreur lors de la suppression.'); } }));
+    function setupRealtime() { subscription = DataStore.subscribeMissives(async () => { await loadMails(); }, { email: String(user.email || '').toLowerCase(), name: user.name || '' }); window.addEventListener('beforeunload', () => { if (Array.isArray(subscription)) subscription.forEach(channel => DataStore.unsubscribeChannel(channel)); else if (subscription) DataStore.unsubscribeChannel(subscription); }); }
+    (async () => { if (!user) return; if (!Auth.isClubContextUser(user)) { window.location.href = 'hiboux.html'; return; } try { await loadRecipients(); await loadMails(); setupRealtime(); } catch (error) { document.getElementById('sent-list').innerHTML = `<div class="mail-empty">${escapeHtml(error.message || 'Impossible de charger les missives.')}</div>`; document.getElementById('received-list').innerHTML = ''; } })();
+  </script>
+</body>
+</html>

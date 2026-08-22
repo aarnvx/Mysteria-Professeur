@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Points de Maison - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ── House Cards ── */
+    .houses-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .house-card {
+      border-radius: 14px;
+      padding: 1.75rem 1.5rem;
+      border: 1px solid;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .house-card:hover {
+      transform: translateY(-4px);
+    }
+
+    .house-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+    }
+
+    /* Gryffondor */
+    .house-card.gryffindor {
+      background: linear-gradient(160deg, rgba(116,0,1,0.25), rgba(211,166,37,0.05));
+      border-color: rgba(211,166,37,0.3);
+      box-shadow: 0 0 30px rgba(116,0,1,0.1);
+    }
+    .house-card.gryffindor::before { background: linear-gradient(90deg, #740001, #d3a625); }
+    .house-card.gryffindor:hover { box-shadow: 0 0 40px rgba(116,0,1,0.2); }
+    .house-card.gryffindor .house-name { color: var(--gryffindor-gold); }
+    .house-card.gryffindor .house-pts { color: var(--gryffindor-gold); }
+
+    /* Serpentard */
+    .house-card.slytherin {
+      background: linear-gradient(160deg, rgba(26,71,42,0.3), rgba(170,170,170,0.03));
+      border-color: rgba(170,170,170,0.2);
+      box-shadow: 0 0 30px rgba(26,71,42,0.1);
+    }
+    .house-card.slytherin::before { background: linear-gradient(90deg, #1a472a, #aaaaaa); }
+    .house-card.slytherin:hover { box-shadow: 0 0 40px rgba(26,71,42,0.2); }
+    .house-card.slytherin .house-name { color: var(--slytherin-silver); }
+    .house-card.slytherin .house-pts { color: var(--slytherin-silver); }
+
+    /* Serdaigle */
+    .house-card.ravenclaw {
+      background: linear-gradient(160deg, rgba(14,26,64,0.4), rgba(148,107,45,0.05));
+      border-color: rgba(148,107,45,0.3);
+      box-shadow: 0 0 30px rgba(14,26,64,0.2);
+    }
+    .house-card.ravenclaw::before { background: linear-gradient(90deg, #0e1a40, #946b2d); }
+    .house-card.ravenclaw:hover { box-shadow: 0 0 40px rgba(14,26,64,0.3); }
+    .house-card.ravenclaw .house-name { color: #c49a5a; }
+    .house-card.ravenclaw .house-pts { color: #c49a5a; }
+
+    /* Poufsouffle */
+    .house-card.hufflepuff {
+      background: linear-gradient(160deg, rgba(236,185,57,0.12), rgba(55,46,41,0.2));
+      border-color: rgba(236,185,57,0.25);
+      box-shadow: 0 0 30px rgba(236,185,57,0.05);
+    }
+    .house-card.hufflepuff::before { background: linear-gradient(90deg, #ecb939, #372e29); }
+    .house-card.hufflepuff:hover { box-shadow: 0 0 40px rgba(236,185,57,0.15); }
+    .house-card.hufflepuff .house-name { color: var(--hufflepuff-yellow); }
+    .house-card.hufflepuff .house-pts { color: var(--hufflepuff-yellow); }
+
+    .house-emoji {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+      display: block;
+      filter: drop-shadow(0 0 10px rgba(201,168,76,0.3));
+    }
+
+    .house-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.8rem;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 0.5rem;
+      font-weight: 700;
+    }
+
+    .house-pts {
+      font-family: 'Cinzel', serif;
+      font-size: 3rem;
+      font-weight: 900;
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+
+    .house-pts-label {
+      font-size: 0.72rem;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .house-blames {
+      margin-top: 0.75rem;
+      font-size: 0.78rem;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.06em;
+    }
+
+    .house-card-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1.25rem;
+    }
+
+    .house-btn {
+      flex: 1;
+      border: 1px solid;
+      border-radius: 8px;
+      padding: 0.5rem;
+      font-family: 'Cinzel', serif;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      cursor: pointer;
+      background: transparent;
+      transition: all 0.2s;
+    }
+
+    .house-btn-add {
+      color: #7ddb8c;
+      border-color: rgba(80,180,100,0.3);
+    }
+    .house-btn-add:hover {
+      background: rgba(80,180,100,0.1);
+      border-color: rgba(80,180,100,0.6);
+    }
+
+    .house-btn-remove {
+      color: #e87070;
+      border-color: rgba(200,80,80,0.3);
+    }
+    .house-btn-remove:hover {
+      background: rgba(200,80,80,0.1);
+      border-color: rgba(200,80,80,0.6);
+    }
+
+    /* Leaderboard bar */
+    .leaderboard {
+      margin-bottom: 3rem;
+    }
+
+    .leader-bar {
+      margin-bottom: 0.75rem;
+    }
+
+    .leader-bar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.3rem;
+    }
+
+    .leader-bar-name {
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      letter-spacing: 0.1em;
+    }
+
+    .leader-bar-pts {
+      font-family: 'Cinzel', serif;
+      font-size: 0.82rem;
+      font-weight: 700;
+    }
+
+    .leader-bar-track {
+      height: 8px;
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .leader-bar-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .fill-gryf  { background: linear-gradient(90deg, #740001, #d3a625); }
+    .fill-sly   { background: linear-gradient(90deg, #1a472a, #aaaaaa); }
+    .fill-rav   { background: linear-gradient(90deg, #0e1a40, #946b2d); }
+    .fill-huff  { background: linear-gradient(90deg, #2a1a00, #ecb939); }
+
+    /* History */
+    .history-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.6rem;
+    }
+
+    .history-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      padding: 0.8rem 1.2rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .history-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .history-text { flex: 1; font-size: 0.88rem; color: var(--cream-dim); }
+    .history-time { font-family: 'Cinzel', serif; font-size: 0.7rem; color: var(--text-dim); letter-spacing: 0.06em; white-space: nowrap; }
+
+    .history-empty {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-dim);
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      letter-spacing: 0.1em;
+      border: 1px dashed var(--border);
+      border-radius: 10px;
+    }
+
+    /* Modal point form */
+    .pts-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+
+    @media (max-width: 900px) { .houses-row { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .houses-row { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">Mysteria Professeur</div>
+        <div class="navbar-subtitle">Portail Académique</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html">🏠 Accueil</a></li>
+      <li><a href="courses.html">📚 Cours</a></li>
+      <li><a href="planning.html">🗓️ Planning</a></li>
+      <li><a href="points.html" class="active">⚡ Points</a></li>
+      <li><a href="blames.html">📜 Blâme</a></li>
+      <li><a href="roles.html">🎓 Équipe</a></li>
+      <li><a href="hiboux.html">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <div class="container" style="padding-top:3rem; padding-bottom:4rem; position:relative; z-index:1;">
+
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div>
+          <div class="page-title-small">Coupe des Quatre Maisons</div>
+          <h1>⚡ Points de Maison</h1>
+        </div>
+        <button class="btn btn-sm btn-danger" id="reset-btn" onclick="confirmReset()">⚠ Remise à zéro</button>
+      </div>
+    </div>
+
+    <!-- House cards -->
+    <div class="houses-row" id="houses-row">
+      <!-- Rendered by JS -->
+    </div>
+
+    <!-- Leaderboard -->
+    <div class="leaderboard">
+      <div class="section-title-row" style="margin-bottom:1.25rem;">
+        <div>
+          <div class="page-title-small">Classement</div>
+          <h2>Coupe des Maisons</h2>
+        </div>
+        <span id="leader-badge" class="badge badge-gold" style="font-size:0.8rem;"></span>
+      </div>
+
+      <div class="card">
+        <div id="leaderboard-bars"></div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div>
+      <div class="section-title-row" style="margin-bottom:1.25rem;">
+        <div>
+          <div class="page-title-small">Traçabilité</div>
+          <h2>Historique des Actions</h2>
+        </div>
+        <span style="font-family:'Cinzel',serif; font-size:0.75rem; color:var(--text-dim);" id="log-count"></span>
+      </div>
+      <div id="history-list" class="history-list"></div>
+    </div>
+
+  </div>
+
+  <!-- Modal ajout/retrait points -->
+  <div class="modal-overlay" id="pts-modal">
+    <div class="modal">
+      <button class="modal-close" onclick="closeModal()">✕</button>
+      <h3 id="modal-title">Ajouter des points</h3>
+      <p id="modal-desc" style="margin-bottom:1.25rem;">Renseignez le nombre de points et la raison.</p>
+
+      <div class="pts-form-row">
+        <div class="form-group">
+          <label class="form-label" for="pts-amount">Nombre de points</label>
+          <input class="form-input" type="number" id="pts-amount" min="1" max="100" value="10" />
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="pts-house-display">Maison</label>
+          <input class="form-input" type="text" id="pts-house-display" readonly />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="pts-reason">Raison</label>
+        <input class="form-input" type="text" id="pts-reason" placeholder="ex: Excellente participation…" />
+      </div>
+
+      <div style="display:flex; gap:0.75rem; margin-top:0.5rem;">
+        <button class="btn btn-primary" id="modal-confirm-btn" onclick="confirmPoints()">Confirmer</button>
+        <button class="btn btn-sm" onclick="closeModal()" style="flex:0.4;">Annuler</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/global-sound.js"></script>
+  <script>
+    const user = requireAuthOrRedirect();
+
+    const HOUSES = [
+      { key: 'gryffondor', name: 'Gryffondor', emoji: '🦁', img: '../img/gryffindor.png', fillClass: 'fill-gryf' },
+      { key: 'serpentard', name: 'Serpentard', emoji: '🐍', img: '../img/slytherin.png', fillClass: 'fill-sly' },
+      { key: 'serdaigle', name: 'Serdaigle', emoji: '🦅', img: '../img/ravenclaw.png', fillClass: 'fill-rav' },
+      { key: 'poufsouffle', name: 'Poufsouffle', emoji: '🦡', img: '../img/hufflepuff.png', fillClass: 'fill-huff' },
+    ];
+
+    function normalizeHouseKey(value) {
+      if (!value || typeof value !== 'string') return '';
+      const key = value.trim().toLowerCase();
+      if (key === 'slytherin') return 'serpentard';
+      return key;
+    }
+
+    function getHouseDisplayName(value) {
+      const normalized = normalizeHouseKey(value);
+      const match = HOUSES.find(h => h.key === normalized);
+      return match ? match.name : (value || 'Maison');
+    }
+
+    let pendingAction = null; // { house, type: 'add'|'remove' }
+    let pointsRealtimeChannels = [];
+
+    async function renderHouses() {
+      const pts = await DataStore.getPoints();
+      const container = document.getElementById('houses-row');
+      container.innerHTML = '';
+
+      HOUSES.forEach(h => {
+        const data = pts[h.key] || { points: 0, blames: 0 };
+        const card = document.createElement('div');
+        card.className = `house-card ${h.key}`;
+        card.innerHTML = `
+          <div class="house-emoji"><img src="${h.img}" alt="${h.name}" style="width:80px;height:80px;object-fit:contain;filter:drop-shadow(0 0 12px rgba(201,168,76,0.4));"></div>
+          <div class="house-name">${h.name}</div>
+          <div class="house-pts" id="pts-${h.key}">${data.points}</div>
+          <div class="house-pts-label">Points</div>
+          <div class="house-blames">⚠ ${data.blames} retrait${data.blames > 1 ? 's' : ''}</div>
+          <div class="house-card-actions">
+            <button class="house-btn house-btn-add" onclick="openModal('${h.key}','${h.name}','add')">＋ Ajouter</button>
+            <button class="house-btn house-btn-remove" onclick="openModal('${h.key}','${h.name}','remove')">－ Retirer</button>
+          </div>
+        `;
+        container.appendChild(card);
+      });
+
+      renderLeaderboard(pts);
+    }
+
+    function renderLeaderboard(pts) {
+      const sorted = [...HOUSES].map(h => ({ ...h, pts: pts[h.key]?.points || 0 }))
+        .sort((a, b) => b.pts - a.pts);
+
+      const max = sorted[0].pts || 1;
+
+      document.getElementById('leader-badge').textContent = '🏆 ' + sorted[0].name + ' en tête';
+
+      const bars = document.getElementById('leaderboard-bars');
+      bars.innerHTML = '';
+
+      sorted.forEach((h, i) => {
+        const pct = Math.max(4, Math.round((h.pts / max) * 100));
+        const bar = document.createElement('div');
+        bar.className = 'leader-bar';
+        bar.innerHTML = `
+          <div class="leader-bar-header">
+            <span class="leader-bar-name">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '4️⃣'} ${h.emoji || '🏠'} ${h.name}</span>
+            <span class="leader-bar-pts">${h.pts} pts</span>
+          </div>
+          <div class="leader-bar-track">
+            <div class="leader-bar-fill ${h.fillClass}" style="width:0%" data-target="${pct}"></div>
+          </div>
+        `;
+        bars.appendChild(bar);
+      });
+
+      // Animate bars
+      setTimeout(() => {
+        document.querySelectorAll('.leader-bar-fill').forEach(el => {
+          el.style.width = el.dataset.target + '%';
+        });
+      }, 100);
+    }
+
+    async function renderHistory() {
+      const log = await DataStore.getLog();
+      const listEl = document.getElementById('history-list');
+      document.getElementById('log-count').textContent = log.length + ' entrée(s)';
+
+      listEl.innerHTML = '';
+
+      if (log.length === 0) {
+        listEl.innerHTML = '<div class="history-empty">Aucune action enregistrée pour le moment.</div>';
+        return;
+      }
+
+      const houseColors = {
+        gryffindor: '#d3a625',
+        slytherin: '#aaaaaa',
+        ravenclaw: '#946b2d',
+        hufflepuff: '#ecb939',
+      };
+
+      const houseNames = {
+        gryffondor: 'Gryffondor',
+        serpentard: 'Serpentard',
+        slytherin: 'Serpentard',
+        serdaigle: 'Serdaigle',
+        ravenclaw: 'Serdaigle',
+        poufsouffle: 'Poufsouffle',
+        hufflepuff: 'Poufsouffle',
+      };
+
+      log.slice(0, 30).forEach(entry => {
+        const isAdd = entry.amount > 0;
+        const normalizedHouse = normalizeHouseKey(entry.house);
+        const color = houseColors[normalizedHouse] || '#c9a84c';
+        const name = getHouseDisplayName(entry.house);
+        const date = new Date(entry.ts).toLocaleString('fr-FR', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
+
+        const item = document.createElement('div');
+        item.className = 'history-item';
+        item.innerHTML = `
+          <div class="history-dot" style="background:${isAdd ? '#7ddb8c' : '#e87070'};"></div>
+          <div class="history-text">
+            <strong>${name}</strong> ${isAdd ? '<span style="color:#7ddb8c">+' + entry.amount + ' points</span>' : '<span style="color:#e87070">' + entry.amount + ' points</span>'}
+            ${entry.reason ? '- ' + entry.reason : ''}
+            <span style="font-size:0.78rem; color:var(--text-dim);"> · par ${entry.actor}</span>
+          </div>
+          <div class="history-time">${date}</div>
+        `;
+        listEl.appendChild(item);
+      });
+    }
+
+    function openModal(houseKey, houseName, type) {
+      pendingAction = { house: houseKey, type };
+      const isAdd = type === 'add';
+      document.getElementById('modal-title').textContent = isAdd ? '➕ Ajouter des points' : '➖ Retirer des points / Blâme';
+      document.getElementById('modal-desc').textContent = isAdd
+        ? `Attribuer des points à ${houseName}.`
+        : `Retirer des points à ${houseName}. Un blâme sera automatiquement enregistré.`;
+      document.getElementById('pts-house-display').value = houseName;
+      document.getElementById('pts-amount').value = 10;
+      document.getElementById('pts-reason').value = '';
+      document.getElementById('modal-confirm-btn').style.borderColor = isAdd ? 'rgba(80,180,100,0.5)' : 'rgba(200,80,80,0.5)';
+      document.getElementById('modal-confirm-btn').style.color = isAdd ? '#7ddb8c' : '#e87070';
+      document.getElementById('pts-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('pts-modal').classList.remove('active');
+      pendingAction = null;
+    }
+
+    async function confirmPoints() {
+      if (!pendingAction) return;
+      const amount = parseInt(document.getElementById('pts-amount').value) || 0;
+      const reason = document.getElementById('pts-reason').value.trim();
+
+      if (amount <= 0) {
+        showToast('Veuillez entrer un nombre de points valide.', 'error');
+        return;
+      }
+
+      const finalAmount = pendingAction.type === 'add' ? amount : -amount;
+      await DataStore.addPoints(pendingAction.house, finalAmount, reason, user ? user.name : 'Inconnu');
+
+      closeModal();
+      await renderHouses();
+      await renderHistory();
+      showToast(finalAmount > 0 ? `+${finalAmount} points accordés !` : `${finalAmount} points retirés.`, finalAmount > 0 ? 'success' : 'error');
+    }
+
+    async function confirmReset() {
+      if (!Auth.hasPermission('manage_roles')) {
+        alert('Vous n\'avez pas la permission d\'effectuer cette action.');
+        return;
+      }
+      if (confirm('⚠ Remettre tous les compteurs à zéro ? Cette action est irréversible.')) {
+        await DataStore.resetPoints();
+        await renderHouses();
+        await renderHistory();
+        showToast('Compteurs remis à zéro.', 'info');
+      }
+    }
+
+    async function initPage() {
+      await renderHouses();
+      await renderHistory();
+    }
+     
+    initPage();
+    setupPointsRealtime();
+ 
+    function setupPointsRealtime() {
+      if (!DataStore.subscribeTable) return;
+      pointsRealtimeChannels.push(
+        DataStore.subscribeTable({
+          table: 'house_points',
+          events: ['INSERT', 'UPDATE', 'DELETE'],
+          onEvent: renderHouses
+        })
+      );
+      pointsRealtimeChannels.push(
+        DataStore.subscribeTable({
+          table: 'house_log',
+          events: ['INSERT', 'UPDATE', 'DELETE'],
+          onEvent: renderHistory
+        })
+      );
+      window.addEventListener('beforeunload', () => {
+        pointsRealtimeChannels.forEach(channel => DataStore.unsubscribeChannel(channel));
+        pointsRealtimeChannels.length = 0;
+      });
+    }
+
+    // Particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width=window.innerWidth; canvas.height=window.innerHeight; }
+      function createParticle() {
+        return { x:Math.random()*canvas.width, y:Math.random()*canvas.height,
+          size:Math.random()*1.2+0.3, speedY:-(Math.random()*0.25+0.08),
+          speedX:(Math.random()-0.5)*0.15, opacity:Math.random()*0.5+0.15,
+          life:0, maxLife:Math.random()*350+200 };
+      }
+      function init() { resize(); for(let i=0;i<60;i++) particles.push(createParticle()); window.addEventListener('resize',resize); }
+      function animate() {
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        particles.forEach((p,i)=>{
+          p.x+=p.speedX; p.y+=p.speedY; p.life++;
+          const r=p.life/p.maxLife;
+          const a=r<0.2?r/0.2:r>0.8?(1-r)/0.2:1;
+          ctx.globalAlpha=p.opacity*a; ctx.fillStyle='#c9a84c';
+          ctx.beginPath(); ctx.arc(p.x,p.y,p.size,0,Math.PI*2); ctx.fill();
+          if(p.life>=p.maxLife||p.y<0) particles[i]=createParticle();
+        });
+        ctx.globalAlpha=1; requestAnimationFrame(animate);
+      }
+      init(); animate();
+    })();
+  </script>
+</body>
+</html>
+
+
+
+

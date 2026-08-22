@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mysteria RP - Dashboard Club</title>
+  <link rel="stylesheet" href="../css/style.css" />
+  <style>
+    /* ── Club Dashboard Custom Styles ── */
+    .club-hero {
+      background: linear-gradient(135deg, rgba(201,168,76,0.1) 0%, rgba(167,139,250,0.08) 100%);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .club-hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 120% 80%, rgba(201,168,76,0.15), transparent);
+      pointer-events: none;
+    }
+
+    .club-header {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .club-avatar-large {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: rgba(201,168,76,0.15);
+      border: 3px solid var(--gold);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.5rem;
+      box-shadow: var(--glow-strong);
+      flex-shrink: 0;
+    }
+
+    .club-info {
+      flex: 1;
+    }
+
+    .club-greeting {
+      font-family: 'Cinzel', serif;
+      font-size: 0.85rem;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 0.3rem;
+    }
+
+    .club-user-name {
+      font-family: 'Cinzel', serif;
+      font-size: 1.8rem;
+      color: var(--gold);
+      font-weight: 700;
+      margin-bottom: 0.4rem;
+    }
+
+    .club-user-role {
+      color: var(--cream-dim);
+      font-size: 1rem;
+    }
+
+    .club-actions {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    /* ── Stats Grid ── */
+    .club-stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .stat-card {
+      background: rgba(10,10,18,0.6);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1.25rem;
+      text-align: center;
+      transition: all 0.3s;
+    }
+
+    .stat-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+      box-shadow: var(--glow);
+    }
+
+    .stat-number {
+      font-family: 'Cinzel', serif;
+      font-size: 2rem;
+      color: var(--gold);
+      font-weight: 700;
+    }
+
+    .stat-label {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+      margin-top: 0.4rem;
+      letter-spacing: 0.05em;
+    }
+
+    /* ── Quick Actions ── */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .action-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .action-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-4px);
+      box-shadow: var(--glow);
+      background: rgba(167,139,250,0.05);
+    }
+
+    .action-icon {
+      font-size: 2.5rem;
+    }
+
+    .action-title {
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      color: var(--gold);
+      font-weight: 600;
+    }
+
+    .action-desc {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    /* ── Club Categories ── */
+    .club-categories {
+      margin-top: 3rem;
+    }
+
+    .categories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .category-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.3s;
+      cursor: pointer;
+    }
+
+    .category-card:hover {
+      border-color: var(--border-bright);
+      transform: translateY(-2px);
+      box-shadow: var(--glow);
+    }
+
+    .category-icon {
+      font-size: 2rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .category-name {
+      font-family: 'Cinzel', serif;
+      color: var(--gold);
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .category-count {
+      font-size: 0.8rem;
+      color: var(--text-dim);
+    }
+
+    /* ── Recent Activity ── */
+    .activity-section {
+      margin-top: 3rem;
+    }
+
+    @media (max-width: 768px) {
+      .club-header {
+        flex-direction: column;
+        text-align: center;
+      }
+      .club-actions {
+        justify-content: center;
+      }
+      .quick-actions {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="club-page">
+  <canvas id="particles-canvas"></canvas>
+
+  <!-- Navbar -->
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,0.3);box-shadow:0 0 12px rgba(201,168,76,0.2);">
+      <div>
+        <div class="navbar-title">MYSTERIA CLUB</div>
+        <div class="navbar-subtitle">Espace réservé aux clubs</div>
+      </div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="club_dashboard.html">🏠 Accueil</a></li>
+      <li><a href="club_members.html">👥 Membres</a></li>
+      <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
+      <li><button type="button" id="club-logout-button" class="btn-logout">↩ Déconnexion</button></li>
+    </ul>
+  </nav>
+
+  <main class="container" style="padding-top:3.5rem; padding-bottom:4rem; position:relative; z-index:1;">
+
+    <!-- Hero Section -->
+    <div class="club-hero">
+      <div class="club-header">
+        <div class="club-avatar-large" id="club-avatar">🎭</div>
+        <div class="club-info">
+          <div class="club-greeting">Bienvenue dans l'espace club</div>
+          <div class="club-user-name" id="club-name">Membre de Club</div>
+          <div class="club-user-role" id="club-role">Chargement…</div>
+          <div class="club-actions">
+            <button id="club-manage-btn" class="btn btn-secondary btn-sm" style="display:none; margin-top:0.5rem;">⚙️ Gérer le club</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="club-stats">
+        <div class="stat-card">
+          <div class="stat-number" id="stat-members">0</div>
+          <div class="stat-label">MEMBRES</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-events">0</div>
+          <div class="stat-label">ÉVÉNEMENTS</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number" id="stat-sessions">0</div>
+          <div class="stat-label">SESSIONS</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <section class="card" style="padding:2rem;">
+      <h2 style="margin-bottom: 1.5rem;">⚡ Accès rapide</h2>
+      <div class="quick-actions">
+        <a href="club_members.html" class="action-card">
+          <div class="action-icon">👥</div>
+          <div class="action-title">Annuaire</div>
+          <div class="action-desc">Consulter les membres du club</div>
+        </a>
+        <a href="session_builder.html" class="action-card">
+          <div class="action-icon">⚡</div>
+          <div class="action-title">Nouvelles Sessions</div>
+          <div class="action-desc">Planifier une séance</div>
+        </a>
+        <a href="club_points.html" class="action-card">
+          <div class="action-icon">📊</div>
+          <div class="action-title">Points & Classements</div>
+          <div class="action-desc">Voir les scores actuels</div>
+        </a>
+        <a href="club_calendar.html" class="action-card">
+          <div class="action-icon">📅</div>
+          <div class="action-title">Calendrier</div>
+          <div class="action-desc">Événements à venir</div>
+        </a>
+      </div>
+    </section>
+
+    <!-- Club Categories -->
+    <section class="club-categories card" style="padding:2rem;">
+      <h2>🛡️ Catégories de club</h2>
+      <div class="categories-grid" id="categories-container">
+        <!-- Generated by JS -->
+      </div>
+    </section>
+
+    <!-- Recent Activity -->
+    <section class="activity-section card" style="padding:2rem;">
+      <h2>📜 Activité récente</h2>
+      <div id="activity-container" class="activity-list" style="margin-top:1.5rem; min-height:200px;">
+        <p style="text-align:center; color:var(--text-dim);">Chargement…</p>
+      </div>
+    </section>
+
+  </main>
+
+  <div class="modal-overlay" id="club-discord-modal" aria-hidden="true">
+    <div class="modal" style="max-width:520px;">
+      <button class="modal-close" type="button" onclick="closeClubDiscordPrompt()">✕</button>
+      <h3>🔗 Connecter Discord</h3>
+      <p>Reliez votre compte Discord pour recevoir les notifications de hiboux en message privé.</p>
+      <div id="club-discord-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+      <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+        <button class="btn btn-primary" id="club-discord-button" type="button">Connecter mon Discord</button>
+        <button class="btn" id="club-discord-later" type="button">Plus tard</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script src="../js/global-sound.js"></script>
+  <script>
+    // Initialize dashboard safely
+    (async () => {
+      try {
+        // Get current user
+        let currentUser = await Auth.getCurrentUser();
+        if (!currentUser) {
+          window.location.href = 'login.html';
+          return;
+        }
+
+        // Verify club access
+        if (!Auth.isClubContextUser(currentUser) && !Auth.isProfessorContextUser(currentUser)) {
+          window.location.href = 'dashboard.html';
+          return;
+        }
+
+        function formatClubRole(user) {
+          const role = (user?.role || '').toString().toLowerCase();
+          const rank = (user?.rank || '').toString().toLowerCase();
+
+          if (role === 'club_manager' || rank === 'club_manager') {
+            return 'Gérant d\'un Club';
+          }
+          if (role === 'club_member' || rank === 'club_member') {
+            return 'Membre d\'un Club';
+          }
+          if (role === 'prof_manager' || rank === 'prof_manager') {
+            return 'Gestionnaire de Professeurs';
+          }
+          return [user?.rank, user?.role].filter(Boolean).join(' - ') || 'Membre';
+        }
+
+        function renderClubUser(user) {
+          document.getElementById('club-avatar').textContent = user.avatar || '🎭';
+          document.getElementById('club-name').textContent = user.name || 'Membre de Club';
+          document.getElementById('club-role').textContent = formatClubRole(user);
+
+          const canConfigure = Auth.canAccessClubConfiguration(user);
+          const configNavLink = document.getElementById('club-config-nav-link');
+          const manageButton = document.getElementById('club-manage-btn');
+          if (configNavLink) configNavLink.style.display = canConfigure ? 'list-item' : 'none';
+          if (manageButton) manageButton.style.display = canConfigure ? 'inline-flex' : 'none';
+        }
+
+        renderClubUser(currentUser);
+        window.addEventListener('auth:user-updated', event => {
+          currentUser = event.detail;
+          if (!Auth.isClubContextUser(currentUser) && !Auth.isProfessorContextUser(currentUser)) {
+            window.location.href = 'dashboard.html';
+            return;
+          }
+          renderClubUser(currentUser);
+        });
+
+        setupClubDiscordConnection();
+        await completeClubDiscordConnection();
+
+        // Initialize dashboard
+        await initDashboard(currentUser);
+        const clubMember = await DataStore.getClubMemberByEmail(currentUser.email);
+        const isClubUser = Auth.isClubContextUser(currentUser);
+        if (isClubUser && !currentUser.discord_id && (!clubMember || !clubMember.discord_id)) {
+          showClubDiscordPrompt();
+        }
+      } catch (err) {
+        console.error('Dashboard init error:', err);
+        document.getElementById('club-role').textContent = 'Erreur de chargement';
+      }
+    })();
+
+    const DISCORD_CLIENT_ID = '1540008220758904913';
+    const DISCORD_REDIRECT_URI = 'https://aarnvx.github.io/Mysteria-Professeur/index.html';
+
+    document.getElementById('club-logout-button')?.addEventListener('click', () => {
+      Auth.logout();
+    });
+
+    function showClubDiscordPrompt() {
+      const modal = document.getElementById('club-discord-modal');
+      if (modal) {
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+    }
+
+    function closeClubDiscordPrompt() {
+      const modal = document.getElementById('club-discord-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    async function completeClubDiscordConnection() {
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (!code) return false;
+      const result = await DataStore.connectDiscord(code, DISCORD_REDIRECT_URI, 'club_members');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      if (!result.ok) {
+        const errorEl = document.getElementById('club-discord-error');
+        if (errorEl) {
+          errorEl.textContent = result.error || 'Connexion Discord impossible.';
+          errorEl.style.display = 'block';
+        }
+        showClubDiscordPrompt();
+        return false;
+      }
+      const updatedUser = { ...Auth.getCurrentUser(), discord_id: result.discord_id };
+      localStorage.setItem('Mysteria_auth', JSON.stringify(updatedUser));
+      closeClubDiscordPrompt();
+      showToast('Compte Discord connecté.', 'success');
+      return true;
+    }
+
+    function setupClubDiscordConnection() {
+      document.getElementById('club-discord-button')?.addEventListener('click', () => {
+        localStorage.setItem('Mysteria_discord_target', 'club_members');
+        const params = new URLSearchParams({
+          client_id: DISCORD_CLIENT_ID,
+          response_type: 'code',
+          redirect_uri: DISCORD_REDIRECT_URI,
+          scope: 'identify'
+        });
+        window.location.href = `https://discord.com/oauth2/authorize?${params}`;
+      });
+      document.getElementById('club-discord-later')?.addEventListener('click', closeClubDiscordPrompt);
+    }
+
+    async function initDashboard(currentUser) {
+      try {
+        const members = await DataStore.getClubMembers();
+        const supabase = window.supabaseClient;
+        const [{ count: eventCount }, { count: sessionCount }] = await Promise.all([
+          supabase.from('calendar_events').select('id', { count: 'exact', head: true }),
+          supabase.from('sessions').select('id', { count: 'exact', head: true })
+        ]);
+
+        document.getElementById('stat-members').textContent = members.length;
+        document.getElementById('stat-sessions').textContent = sessionCount || '0';
+        document.getElementById('stat-events').textContent = eventCount || '0';
+
+        // Categories
+        const CLUB_CATEGORIES = [
+          { label: 'Club de la Gazette', key: 'gazette', icon: '📰' },
+          { label: 'Club de Duel', key: 'duel', icon: '⚔️' },
+          { label: 'Club de Théâtre', key: 'théâtre', icon: '🎭' },
+          { label: 'Club de Musique', key: 'musique', icon: '🎵' },
+          { label: 'Club de Divination', key: 'divination', icon: '🔮' },
+          { label: 'Club de Potions', key: 'potions', icon: '🧪' },
+          { label: 'Club de Botanique', key: 'botanique', icon: '🌿' }
+        ];
+
+        const categoriesContainer = document.getElementById('categories-container');
+        categoriesContainer.innerHTML = '';
+
+        CLUB_CATEGORIES.forEach(cat => {
+          const memberCount = members.filter(member => {
+            const memberRole = (member.role || '').toLowerCase();
+            return memberRole.includes(cat.key.toLowerCase());
+          }).length;
+          const card = document.createElement('div');
+          card.className = 'category-card';
+          card.innerHTML = `
+            <div class="category-icon">${cat.icon}</div>
+            <div class="category-name">${cat.label}</div>
+            <div class="category-count">${memberCount} membre${memberCount === 1 ? '' : 's'}</div>
+          `;
+          categoriesContainer.appendChild(card);
+        });
+
+        // Activity
+        const activity = [
+          { icon: '👥', badge: 'Membres', title: `${members.length} membre${members.length === 1 ? '' : 's'} enregistré${members.length === 1 ? '' : 's'}`, time: 'Maintenant' },
+          { icon: '📝', badge: 'Sessions', title: `${sessionCount || 0} session${sessionCount === 1 ? '' : 's'} planifiée${sessionCount === 1 ? '' : 's'}`, time: 'Maintenant' },
+          { icon: '🎉', badge: 'Événements', title: `${eventCount || 0} événement${eventCount === 1 ? '' : 's'} au calendrier`, time: 'Maintenant' }
+        ];
+
+        const activityContainer = document.getElementById('activity-container');
+        activityContainer.innerHTML = activity.map(item => `
+          <div class="activity-item">
+            <div class="activity-icon" style="background:rgba(201,168,76,0.12); font-size:1.3rem;">${item.icon}</div>
+            <div class="activity-text">
+              <div class="activity-main">${item.title}</div>
+              <div class="activity-meta">${item.time}</div>
+            </div>
+            <span class="badge badge-gold">${item.badge}</span>
+          </div>
+        `).join('');
+
+      } catch (err) {
+        console.error('Erreur initialisation dashboard:', err);
+      }
+    }
+
+    // Particles
+    (function() {
+      const canvas = document.getElementById('particles-canvas');
+      const ctx = canvas.getContext('2d');
+      let particles = [];
+      function resize() { canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+      function createParticle() {
+        return {
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height,
+          size: Math.random() * 1.5 + 0.3,
+          speedY: -(Math.random() * 0.3 + 0.1),
+          speedX: (Math.random() - 0.5) * 0.2,
+          opacity: Math.random() * 0.6 + 0.2,
+          life: 0,
+          maxLife: Math.random() * 300 + 200
+        };
+      }
+      function init() {
+        resize();
+        for (let i = 0; i < 80; i++) particles.push(createParticle());
+        window.addEventListener('resize', resize);
+      }
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        particles.forEach((p, i) => {
+          p.x += p.speedX;
+          p.y += p.speedY;
+          p.life++;
+          const ratio = p.life / p.maxLife;
+          const alpha = ratio < 0.2 ? ratio / 0.2 : ratio > 0.8 ? (1 - ratio) / 0.2 : 1;
+          ctx.globalAlpha = p.opacity * alpha;
+          ctx.fillStyle = '#c9a84c';
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+          if (p.life >= p.maxLife || p.y < 0) particles[i] = createParticle();
+        });
+        ctx.globalAlpha = 1;
+        requestAnimationFrame(animate);
+      }
+      init();
+      animate();
+    })();
+  </script>
+  <script>
+    const currentPage = window.location.pathname.split('/').pop() || 'club_dashboard.html';
+    document.querySelectorAll('.navbar a[href]').forEach(link => {
+      if (link.getAttribute('href') === currentPage) link.classList.add('active');
+    });
+  </script>
+</body>
+</html>
+

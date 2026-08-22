@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Planning journalier - Mysteria Professeur</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    body { background: #02030a url('../img/fond2.jpg') center / cover fixed no-repeat; }
+    .planning-toolbar { display:flex; align-items:end; gap:1rem; flex-wrap:wrap; margin-bottom:1.5rem; }
+    .planning-toolbar .form-group { min-width:180px; flex:1; }
+    .day-switcher { display:flex; align-items:center; gap:.75rem; margin-left:auto; }
+    .day-switcher button { min-width:42px; }
+    .planning-layout { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(300px,.75fr); gap:1.25rem; align-items:start; }
+    .schedule-panel, .booking-panel { background:rgba(9,9,24,.9); border:1px solid var(--border); border-radius:10px; padding:1rem; }
+    .schedule-header { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:.75rem; }
+    .schedule-date { color:var(--gold); font-family:'Cinzel',serif; }
+    .schedule { display:flex; gap:.5rem; overflow-x:auto; overflow-y:hidden; padding:.25rem .25rem .85rem; border-top:1px solid var(--border); scrollbar-width:thin; scrollbar-color:var(--gold-dim) rgba(255,255,255,.08); }
+    .schedule::-webkit-scrollbar { height:10px; }
+    .schedule::-webkit-scrollbar-track { background:rgba(255,255,255,.08); border-radius:5px; }
+    .schedule::-webkit-scrollbar-thumb { background:var(--gold-dim); border-radius:5px; }
+    .schedule-slot { flex:0 0 138px; }
+    .time-label { min-height:auto; padding:.45rem .25rem; color:var(--text-dim); font-size:.75rem; text-align:center; border-bottom:1px solid rgba(255,255,255,.07); }
+    .time-cell { min-height:110px; padding:.35rem; border:1px solid var(--border); border-radius:6px; cursor:pointer; transition:background .2s; }
+    .time-cell:hover { background:rgba(201,168,76,.08); }
+    .time-cell.is-booked { cursor:default; }
+    .booking-chip { height:100%; min-height:42px; padding:.45rem .6rem; border-left:3px solid var(--gold); border-radius:4px; background:rgba(201,168,76,.15); color:var(--text); font-size:.78rem; }
+    .booking-chip strong { display:block; color:var(--gold); margin-bottom:.15rem; }
+    .empty-schedule { min-width:100%; padding:2rem; color:var(--text-dim); text-align:center; }
+    .booking-panel h2 { margin-top:0; color:var(--gold); font-family:'Cinzel',serif; font-size:1.05rem; }
+    .booking-panel .form-group { margin-bottom:1rem; }
+    .booking-panel small { color:var(--text-dim); }
+    .notice { margin-top:1rem; color:var(--text-dim); font-size:.82rem; }
+    @media (max-width:850px) { .planning-layout { grid-template-columns:1fr; } .day-switcher { margin-left:0; } }
+  </style>
+</head>
+<body>
+  <canvas id="particles-canvas"></canvas>
+  <nav class="navbar">
+    <div class="navbar-brand">
+      <img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;border:1px solid rgba(201,168,76,.3);">
+      <div><div class="navbar-title">Mysteria Professeur</div><div class="navbar-subtitle">Portail Académique</div></div>
+    </div>
+    <ul class="navbar-nav">
+      <li><a href="dashboard.html">🏠 Accueil</a></li>
+      <li><a href="courses.html">📚 Cours</a></li>
+      <li><a href="planning.html" class="active">🗓️ Planning</a></li>
+      <li><a href="points.html">⚡ Points</a></li>
+      <li><a href="blames.html">📜 Blâme</a></li>
+      <li><a href="roles.html">🎓 Équipe</a></li>
+      <li><a href="hiboux.html">🦉 Hiboux</a></li>
+      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+
+  <main class="container" style="padding-top:3rem;padding-bottom:4rem;position:relative;z-index:1;">
+    <div class="page-header">
+      <div class="page-header-inner">
+        <div><div class="page-title-small">Organisation pédagogique</div><h1>🗓️ Planning journalier</h1></div>
+        <div class="day-switcher"><button class="btn btn-secondary btn-sm" id="previous-day" title="Jour précédent">←</button><button class="btn btn-secondary btn-sm" id="today-button">Aujourd'hui</button><button class="btn btn-secondary btn-sm" id="next-day" title="Jour suivant">→</button></div>
+      </div>
+    </div>
+
+    <div class="planning-toolbar">
+      <div class="form-group"><label class="form-label" for="planning-date">Date</label><input class="form-input" type="date" id="planning-date"></div>
+      <div class="form-group"><label class="form-label" for="planning-year">Année</label><select class="form-input" id="planning-year"><option value="all">Toutes les années</option><option>1A</option><option>2A</option><option>3A</option><option>4A</option><option>5A</option><option>6A</option><option>7A</option></select></div>
+      <div class="form-group"><label class="form-label" for="planning-subject-filter">Matière</label><select class="form-input" id="planning-subject-filter"><option value="all">Toutes les matières</option></select></div>
+    </div>
+
+    <div class="planning-layout">
+      <section class="schedule-panel">
+        <div class="schedule-header"><strong class="schedule-date" id="schedule-date"></strong><small id="reservation-count"></small></div>
+        <div class="schedule" id="schedule"><div class="empty-schedule">Chargement du planning…</div></div>
+      </section>
+      <aside class="booking-panel">
+        <h2>Réserver un créneau</h2>
+        <form id="booking-form">
+          <div class="form-group"><label class="form-label" for="booking-subject">Matière</label><select class="form-input" id="booking-subject" required><option value="">Choisir une matière</option></select></div>
+          <div class="form-group"><label class="form-label" for="booking-year">Année</label><select class="form-input" id="booking-year" required><option value="">Choisir une année</option><option>1A</option><option>2A</option><option>3A</option><option>4A</option><option>5A</option><option>6A</option><option>7A</option></select></div>
+          <div class="form-group"><label class="form-label" for="booking-time">Heure de début</label><select class="form-input" id="booking-time" required></select></div>
+          <div class="form-group"><label class="form-label" for="booking-note">Note <span>(optionnel)</span></label><input class="form-input" type="text" id="booking-note" maxlength="120" placeholder="Salle, thème, précision…"></div>
+          <button class="btn btn-primary" type="submit">Réserver 30 minutes</button>
+        </form>
+        <p class="notice">Un créneau dure 30 minutes maximum. Cliquez aussi sur une case libre pour la sélectionner.</p>
+        <p id="booking-message" class="notice" role="status"></p>
+      </aside>
+    </div>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script>
+    const currentUser = requireAuthOrRedirect();
+    if (!currentUser) throw new Error('Utilisateur non authentifie');
+    const database = window.supabaseClient;
+    let selectedDate = new Date();
+    let reservations = [];
+    let courses = [];
+    let planningRealtimeChannel = null;
+    const defaultSubjects = ['Sortilèges', 'DCFM', 'Astronomie', 'Métamorphose', 'Soins aux créatures', 'Histoire de la Magie', 'Potions', 'Botanique', 'Divination', 'Vol sur balai', 'Alchimie', 'Étude des Moldus', 'Arithmancie'];
+    const startMinutes = 18 * 60;
+    const endMinutes = 27 * 60;
+
+    const dateKey = date => date.toISOString().slice(0, 10);
+    const formatDate = date => date.toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#039;' })[char]);
+
+    function setMessage(message, isError = false) {
+      const element = document.getElementById('booking-message');
+      element.textContent = message;
+      element.style.color = isError ? 'var(--danger)' : 'var(--gold-dim)';
+    }
+
+    function populateTimeOptions() {
+      const select = document.getElementById('booking-time');
+      const formatTime = total => `${String(Math.floor((total % 1440) / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+      for (let slot = startMinutes; slot < endMinutes; slot += 30) {
+        const start = formatTime(slot);
+        const end = formatTime(slot + 30);
+        select.insertAdjacentHTML('beforeend', `<option value="${start}">${start} - ${end}</option>`);
+      }
+    }
+
+    function populateSubjectOptions() {
+      const names = [...new Set([...defaultSubjects, ...courses.map(course => course.tag).filter(Boolean)])].sort();
+      const selects = [document.getElementById('booking-subject'), document.getElementById('planning-subject-filter')];
+      selects.forEach((select, index) => {
+        select.innerHTML = index ? '<option value="all">Toutes les matières</option>' : '<option value="">Choisir une matière</option>';
+        names.forEach(name => select.insertAdjacentHTML('beforeend', `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`));
+      });
+    }
+
+    function isOverlapping(reservation, time) {
+      const start = Number(time.slice(0, 2)) * 60 + Number(time.slice(3)) + (Number(time.slice(0, 2)) < 18 ? 1440 : 0);
+      const reservationStart = Number(reservation.start_time.slice(0, 2)) * 60 + Number(reservation.start_time.slice(3, 5)) + (Number(reservation.start_time.slice(0, 2)) < 18 ? 1440 : 0);
+      const reservationEnd = Number(reservation.end_time.slice(0, 2)) * 60 + Number(reservation.end_time.slice(3, 5)) + (Number(reservation.end_time.slice(0, 2)) < 18 ? 1440 : 0);
+      return start >= reservationStart && start < reservationEnd;
+    }
+
+    function renderSchedule() {
+      const schedule = document.getElementById('schedule');
+      const yearFilter = document.getElementById('planning-year').value;
+      const subjectFilter = document.getElementById('planning-subject-filter').value;
+      const filtered = reservations.filter(item => (!yearFilter || yearFilter === 'all' || item.school_year === yearFilter) && (!subjectFilter || subjectFilter === 'all' || item.subject === subjectFilter));
+      schedule.innerHTML = '';
+      const formatTime = total => `${String(Math.floor((total % 1440) / 60)).padStart(2, '0')}:${String(total % 60).padStart(2, '0')}`;
+      for (let slot = startMinutes; slot < endMinutes; slot += 30) {
+        const time = formatTime(slot);
+        const slotColumn = document.createElement('div'); slotColumn.className = 'schedule-slot';
+        const label = document.createElement('div'); label.className = 'time-label'; label.textContent = time;
+        const cell = document.createElement('div'); cell.className = 'time-cell';
+        const reservation = filtered.find(item => isOverlapping(item, time));
+        if (reservation) {
+          cell.classList.add('is-booked');
+          cell.innerHTML = `<div class="booking-chip"><strong>${escapeHtml(reservation.subject)} · ${escapeHtml(reservation.school_year)}</strong>${escapeHtml(reservation.teacher_name || reservation.teacher_email)}${reservation.note ? `<br><small>${escapeHtml(reservation.note)}</small>` : ''}</div>`;
+        } else {
+          cell.title = `Réserver ${time}`;
+          cell.addEventListener('click', () => { document.getElementById('booking-time').value = time; document.getElementById('booking-subject').focus(); });
+        }
+        slotColumn.append(label, cell);
+        schedule.append(slotColumn);
+      }
+      document.getElementById('schedule-date').textContent = formatDate(selectedDate);
+      document.getElementById('reservation-count').textContent = `${filtered.length} réservation${filtered.length > 1 ? 's' : ''}`;
+    }
+
+    async function loadData() {
+      setMessage('');
+      document.getElementById('planning-date').value = dateKey(selectedDate);
+      document.getElementById('schedule-date').textContent = formatDate(selectedDate);
+      const [reservationResult, courseResult] = await Promise.all([
+        database.from('lesson_slots').select('*').eq('date', dateKey(selectedDate)).order('start_time'),
+        DataStore.getCourses()
+      ]);
+      if (reservationResult.error) throw reservationResult.error;
+      reservations = reservationResult.data || [];
+      courses = courseResult || [];
+      populateSubjectOptions();
+      renderSchedule();
+    }
+
+    document.getElementById('planning-date').addEventListener('change', event => { selectedDate = new Date(`${event.target.value}T12:00:00`); loadData().catch(error => setMessage(error.message, true)); });
+    document.getElementById('planning-year').addEventListener('change', renderSchedule);
+    document.getElementById('planning-subject-filter').addEventListener('change', renderSchedule);
+    document.getElementById('previous-day').addEventListener('click', () => { selectedDate.setDate(selectedDate.getDate() - 1); loadData().catch(error => setMessage(error.message, true)); });
+    document.getElementById('next-day').addEventListener('click', () => { selectedDate.setDate(selectedDate.getDate() + 1); loadData().catch(error => setMessage(error.message, true)); });
+    document.getElementById('today-button').addEventListener('click', () => { selectedDate = new Date(); loadData().catch(error => setMessage(error.message, true)); });
+
+    document.getElementById('booking-form').addEventListener('submit', async event => {
+      event.preventDefault();
+      const subject = document.getElementById('booking-subject').value;
+      const schoolYear = document.getElementById('booking-year').value;
+      const startTime = document.getElementById('booking-time').value;
+      if (!subject || !schoolYear || !startTime) return setMessage('Choisis une matière, une année et une heure.', true);
+      if (reservations.some(item => isOverlapping(item, startTime))) return setMessage('Ce créneau est déjà réservé.', true);
+      const startSlotMinutes = Number(startTime.slice(0, 2)) * 60 + Number(startTime.slice(3)) + (Number(startTime.slice(0, 2)) < 18 ? 1440 : 0);
+      const endSlotMinutes = startSlotMinutes + 30;
+      const endTime = `${String(Math.floor((endSlotMinutes % 1440) / 60)).padStart(2, '0')}:${String(endSlotMinutes % 60).padStart(2, '0')}`;
+      const payload = { date: dateKey(selectedDate), start_time: startTime, end_time: endTime, subject, school_year: schoolYear, teacher_email: currentUser.email, teacher_name: currentUser.name || currentUser.email, note: document.getElementById('booking-note').value.trim() || null };
+      const { error } = await database.from('lesson_slots').insert(payload);
+      if (error) return setMessage(error.message, true);
+      document.getElementById('booking-note').value = '';
+      setMessage('Créneau réservé.');
+      await loadData();
+    });
+
+    function setupPlanningRealtime() {
+      if (!DataStore.subscribeTable) return;
+      planningRealtimeChannel = DataStore.subscribeTable({
+        table: 'lesson_slots',
+        events: ['INSERT', 'UPDATE', 'DELETE'],
+        onEvent: () => loadData().catch(error => setMessage(error.message, true))
+      });
+      window.addEventListener('beforeunload', () => {
+        if (planningRealtimeChannel && DataStore.unsubscribeChannel) DataStore.unsubscribeChannel(planningRealtimeChannel);
+      });
+    }
+
+    populateTimeOptions();
+    setupPlanningRealtime();
+    loadData().catch(error => { console.error('Erreur planning:', error); setMessage(`Impossible de charger le planning : ${error.message}`, true); });
+  </script>
+</body>
+</html>
