@@ -629,5 +629,119 @@ const DataStore = {
     const { error } = await window.supabaseClient
       .from('session_answers').update({ grade, feedback }).eq('id', answerId);
     return !error;
+  },
+
+  // ── Communauté du Club ──────────────────────────────────────
+
+  async getClubMessages(clubId, limit = 50) {
+    const { data, error } = await window.supabaseClient
+      .from('club_messages')
+      .select('*')
+      .eq('club_id', clubId)
+      .gt('expires_at', new Date().toISOString())
+      .order('created_at', { ascending: true })
+      .limit(limit);
+    if (error) { console.error('Error fetching club messages:', error); return []; }
+    return data || [];
+  },
+
+  async sendClubMessage(clubId, authorEmail, authorName, message) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('club_messages')
+        .insert([{ club_id: clubId, author_email: authorEmail, author_name: authorName, message }])
+        .select()
+        .single();
+      if (error) return { ok: false, error: error.message };
+      return { ok: true, data };
+    } catch (err) {
+      console.error('Error sending club message:', err);
+      return { ok: false, error: String(err) };
+    }
+  },
+
+  async getClubPosts(clubId, limit = 50) {
+    const { data, error } = await window.supabaseClient
+      .from('club_posts')
+      .select('*')
+      .eq('club_id', clubId)
+      .order('is_announcement', { ascending: false })
+      .order('created_at', { ascending: false })
+      .limit(limit);
+    if (error) { console.error('Error fetching club posts:', error); return []; }
+    return data || [];
+  },
+
+  async createClubPost(clubId, authorEmail, authorName, post) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('club_posts')
+        .insert([{
+          club_id: clubId,
+          author_email: authorEmail,
+          author_name: authorName,
+          title: post.title,
+          content: post.content,
+          image_url: post.image_url,
+          is_announcement: post.is_announcement || false
+        }])
+        .select()
+        .single();
+      if (error) return { ok: false, error: error.message };
+      return { ok: true, data };
+    } catch (err) {
+      console.error('Error creating club post:', err);
+      return { ok: false, error: String(err) };
+    }
+  },
+
+  async getPostVotes(postId) {
+    const { data, error } = await window.supabaseClient
+      .from('club_post_votes')
+      .select('*')
+      .eq('post_id', postId);
+    if (error) { console.error('Error fetching post votes:', error); return []; }
+    return data || [];
+  },
+
+  async voteOnPost(postId, voterEmail, voteType) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('club_post_votes')
+        .upsert([{ post_id: postId, voter_email: voterEmail, vote_type: voteType }], { onConflict: 'post_id,voter_email' })
+        .select()
+        .single();
+      if (error) return { ok: false, error: error.message };
+      return { ok: true, data };
+    } catch (err) {
+      console.error('Error voting on post:', err);
+      return { ok: false, error: String(err) };
+    }
+  },
+
+  async getPostComments(postId, limit = 100) {
+    const { data, error } = await window.supabaseClient
+      .from('club_post_comments')
+      .select('*')
+      .eq('post_id', postId)
+      .order('created_at', { ascending: true })
+      .limit(limit);
+    if (error) { console.error('Error fetching post comments:', error); return []; }
+    return data || [];
+  },
+
+  async addPostComment(postId, authorEmail, authorName, content) {
+    try {
+      const { data, error } = await window.supabaseClient
+        .from('club_post_comments')
+        .insert([{ post_id: postId, author_email: authorEmail, author_name: authorName, content }])
+        .select()
+        .single();
+      if (error) return { ok: false, error: error.message };
+      return { ok: true, data };
+    } catch (err) {
+      console.error('Error adding post comment:', err);
+      return { ok: false, error: String(err) };
+    }
   }
 };
