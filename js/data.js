@@ -376,8 +376,39 @@ const DataStore = {
         recipient: missive.recipient || 'tous les professeurs',
         missiveId: missive.id
       });
+      let discordMissive = { ...missive };
+      if (missive.audience === 'club') {
+        const { data: clubProfile } = await window.supabaseClient
+          .from('club_members')
+          .select('name, rank, house, club_id, club_name')
+          .ilike('email', missive.author || '')
+          .maybeSingle();
+        if (clubProfile) {
+          let clubName = clubProfile.club_name || clubProfile.club_id || '';
+          if (clubProfile.club_id && !clubProfile.club_name) {
+            const { data: club } = await window.supabaseClient
+              .from('clubs')
+              .select('name')
+              .eq('club_id', clubProfile.club_id)
+              .maybeSingle();
+            clubName = club?.name || clubName;
+          }
+          discordMissive = {
+            ...discordMissive,
+            sender_name: clubProfile.name || missive.author,
+            sender_email: missive.author || '',
+            sender_club: clubName,
+            sender_school_year: clubProfile.rank || '',
+            sender_house: clubProfile.house || ''
+          };
+        }
+      }
       const { data, error } = await window.supabaseClient.functions.invoke('notify-missive', {
-        body: { missive },
+        body: {
+          missive: discordMissive,
+          audience: discordMissive.audience || 'prof',
+          portal_source: discordMissive.audience === 'club' ? 'Portail Club' : 'Portail Professeur'
+        },
         headers: { Authorization: `Bearer ${activeSession.access_token}` }
       });
       if (error) {
