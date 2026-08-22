@@ -176,6 +176,49 @@
       color: #4caf50;
     }
 
+    .credentials-modal {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(0,0,0,0.82);
+      backdrop-filter: blur(5px);
+    }
+
+    .credentials-modal.is-open { display: flex; }
+
+    .credentials-dialog {
+      width: min(680px, 100%);
+      padding: 1.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-bright);
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.65);
+    }
+
+    .credentials-dialog textarea {
+      width: 100%;
+      min-height: 190px;
+      margin-top: 1rem;
+      padding: 1rem;
+      resize: vertical;
+      color: var(--text);
+      background: rgba(8,8,18,0.9);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font: .85rem/1.5 monospace;
+    }
+
+    .credentials-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: .75rem;
+      margin-top: 1rem;
+    }
+
     /* ── Stats Row ── */
     .stats-row {
       display: grid;
@@ -862,6 +905,21 @@
     </div>
   </main>
 
+  <div class="credentials-modal" id="student-credentials-modal" role="dialog" aria-modal="true" aria-labelledby="student-credentials-title">
+    <div class="credentials-dialog">
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:1rem;">
+        <h2 id="student-credentials-title" style="margin:0; color:var(--gold);">Identifiants élève créés</h2>
+        <button type="button" class="btn" id="student-credentials-close" aria-label="Fermer">✕</button>
+      </div>
+      <p style="color:var(--text-dim); margin:.75rem 0 0;">Copiez ce message et envoyez-le à l’élève sur Discord.</p>
+      <textarea id="student-credentials-message" readonly></textarea>
+      <div class="credentials-actions">
+        <button type="button" class="btn btn-secondary" id="student-credentials-close-bottom">Fermer</button>
+        <button type="button" class="btn btn-primary" id="student-credentials-copy">📋 Copier le message</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Particles Background -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabaseClient.js"></script>
@@ -1118,6 +1176,7 @@
 
         if (error) throw error;
         showSuccess(`Élève créé et affecté au club : ${email}`);
+        showStudentCredentials(name, email, password);
 
         document.getElementById('student-creation-form').reset();
         document.getElementById('generated-student-id').textContent = '-';
@@ -1136,6 +1195,33 @@
         showError(message);
       }
     }
+
+    function showStudentCredentials(name, email, password) {
+      const modal = document.getElementById('student-credentials-modal');
+      const message = document.getElementById('student-credentials-message');
+      if (!modal || !message) return;
+      message.value = `Bonjour ${name},\n\nVoici tes identifiants pour rejoindre l'espace club Mysteria RP :\n\n\`\`\`\nIdentifiant : ${email}\nMot de passe : ${password}\n\`\`\`\n\nConnexion : https://aarnvx.github.io/Mysteria-Professeur/index.html\n\nLors de ta première connexion, renseigne ton prénom et ton nom RP, ton année et ta maison.`;
+      modal.classList.add('is-open');
+      document.getElementById('student-credentials-copy').onclick = async () => {
+        try {
+          await navigator.clipboard.writeText(message.value);
+          document.getElementById('student-credentials-copy').textContent = '✅ Message copié';
+        } catch (error) {
+          message.select();
+          alert('Copie automatique impossible. Utilisez Ctrl+C.');
+        }
+      };
+    }
+
+    function closeStudentCredentials() {
+      document.getElementById('student-credentials-modal')?.classList.remove('is-open');
+    }
+
+    document.getElementById('student-credentials-close')?.addEventListener('click', closeStudentCredentials);
+    document.getElementById('student-credentials-close-bottom')?.addEventListener('click', closeStudentCredentials);
+    document.getElementById('student-credentials-modal')?.addEventListener('click', event => {
+      if (event.target.id === 'student-credentials-modal') closeStudentCredentials();
+    });
 
     // ── Render Clubs List ──
     function renderClubsList() {
