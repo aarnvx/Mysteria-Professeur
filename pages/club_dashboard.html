@@ -242,11 +242,13 @@
       </div>
     </div>
     <ul class="navbar-nav">
-      <li><a href="club_dashboard.html" class="active">🏠 Accueil</a></li>
+      <li><a href="club_dashboard.html">🏠 Accueil</a></li>
       <li><a href="club_members.html">👥 Membres</a></li>
       <li id="club-config-nav-link" style="display:none;"><a href="configuration-clubs.html">⚙️ Configuration</a></li>
-      <li><a href="hiboux.html">🦉 Hiboux</a></li>
-      <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
+      <li><button type="button" id="club-logout-button" class="btn-logout">↩ Déconnexion</button></li>
     </ul>
   </nav>
 
@@ -297,12 +299,12 @@
           <div class="action-title">Nouvelles Sessions</div>
           <div class="action-desc">Planifier une séance</div>
         </a>
-        <a href="#" class="action-card" onclick="alert('📋 Tableau des points - À venir'); return false;">
+        <a href="club_points.html" class="action-card">
           <div class="action-icon">📊</div>
           <div class="action-title">Points & Classements</div>
           <div class="action-desc">Voir les scores actuels</div>
         </a>
-        <a href="#" class="action-card" onclick="alert('📅 Calendrier - À venir'); return false;">
+        <a href="club_calendar.html" class="action-card">
           <div class="action-icon">📅</div>
           <div class="action-title">Calendrier</div>
           <div class="action-desc">Événements à venir</div>
@@ -327,6 +329,19 @@
     </section>
 
   </main>
+
+  <div class="modal-overlay" id="club-discord-modal" aria-hidden="true">
+    <div class="modal" style="max-width:520px;">
+      <button class="modal-close" type="button" onclick="closeClubDiscordPrompt()">✕</button>
+      <h3>🔗 Connecter Discord</h3>
+      <p>Reliez votre compte Discord pour recevoir les notifications de hiboux en message privé.</p>
+      <div id="club-discord-error" class="form-error" style="display:none; margin-bottom:1rem;"></div>
+      <div style="display:flex; gap:0.75rem; flex-wrap:wrap;">
+        <button class="btn btn-primary" id="club-discord-button" type="button">Connecter mon Discord</button>
+        <button class="btn" id="club-discord-later" type="button">Plus tard</button>
+      </div>
+    </div>
+  </div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="../js/supabaseClient.js"></script>
@@ -388,28 +403,92 @@
           renderClubUser(currentUser);
         });
 
+        setupClubDiscordConnection();
+        await completeClubDiscordConnection();
+
         // Initialize dashboard
-        await initDashboard();
+        await initDashboard(currentUser);
+        const clubMember = await DataStore.getClubMemberByEmail(currentUser.email);
+        const isClubUser = Auth.isClubContextUser(currentUser);
+        if (isClubUser && !currentUser.discord_id && (!clubMember || !clubMember.discord_id)) {
+          showClubDiscordPrompt();
+        }
       } catch (err) {
         console.error('Dashboard init error:', err);
         document.getElementById('club-role').textContent = 'Erreur de chargement';
       }
     })();
 
-    async function initDashboard() {
-      try {
-        // Load club data from the 'clubs' table instead of non-existent 'club_members'
-        let clubStats = {
-          members: 0,
-          events: 0,
-          sessions: 0
-        };
+    const DISCORD_CLIENT_ID = '1540008220758904913';
+    const DISCORD_REDIRECT_URI = 'https://aarnvx.github.io/Mysteria-Professeur/index.html';
 
-        // For now, just set default stats
-        // TODO: Connect to proper club data once tables are set up
-        document.getElementById('stat-members').textContent = clubStats.members || '0';
-        document.getElementById('stat-sessions').textContent = clubStats.sessions || '0';
-        document.getElementById('stat-events').textContent = clubStats.events || '0';
+    document.getElementById('club-logout-button')?.addEventListener('click', () => {
+      Auth.logout();
+    });
+
+    function showClubDiscordPrompt() {
+      const modal = document.getElementById('club-discord-modal');
+      if (modal) {
+        modal.classList.add('active');
+        modal.setAttribute('aria-hidden', 'false');
+      }
+    }
+
+    function closeClubDiscordPrompt() {
+      const modal = document.getElementById('club-discord-modal');
+      if (modal) {
+        modal.classList.remove('active');
+        modal.setAttribute('aria-hidden', 'true');
+      }
+    }
+
+    async function completeClubDiscordConnection() {
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (!code) return false;
+      const result = await DataStore.connectDiscord(code, DISCORD_REDIRECT_URI, 'club_members');
+      window.history.replaceState({}, document.title, window.location.pathname);
+      if (!result.ok) {
+        const errorEl = document.getElementById('club-discord-error');
+        if (errorEl) {
+          errorEl.textContent = result.error || 'Connexion Discord impossible.';
+          errorEl.style.display = 'block';
+        }
+        showClubDiscordPrompt();
+        return false;
+      }
+      const updatedUser = { ...Auth.getCurrentUser(), discord_id: result.discord_id };
+      localStorage.setItem('Mysteria_auth', JSON.stringify(updatedUser));
+      closeClubDiscordPrompt();
+      showToast('Compte Discord connecté.', 'success');
+      return true;
+    }
+
+    function setupClubDiscordConnection() {
+      document.getElementById('club-discord-button')?.addEventListener('click', () => {
+        localStorage.setItem('Mysteria_discord_target', 'club_members');
+        const params = new URLSearchParams({
+          client_id: DISCORD_CLIENT_ID,
+          response_type: 'code',
+          redirect_uri: DISCORD_REDIRECT_URI,
+          scope: 'identify'
+        });
+        window.location.href = `https://discord.com/oauth2/authorize?${params}`;
+      });
+      document.getElementById('club-discord-later')?.addEventListener('click', closeClubDiscordPrompt);
+    }
+
+    async function initDashboard(currentUser) {
+      try {
+        const members = await DataStore.getClubMembers();
+        const supabase = window.supabaseClient;
+        const [{ count: eventCount }, { count: sessionCount }] = await Promise.all([
+          supabase.from('calendar_events').select('id', { count: 'exact', head: true }),
+          supabase.from('sessions').select('id', { count: 'exact', head: true })
+        ]);
+
+        document.getElementById('stat-members').textContent = members.length;
+        document.getElementById('stat-sessions').textContent = sessionCount || '0';
+        document.getElementById('stat-events').textContent = eventCount || '0';
 
         // Categories
         const CLUB_CATEGORIES = [
@@ -426,21 +505,25 @@
         categoriesContainer.innerHTML = '';
 
         CLUB_CATEGORIES.forEach(cat => {
+          const memberCount = members.filter(member => {
+            const memberRole = (member.role || '').toLowerCase();
+            return memberRole.includes(cat.key.toLowerCase());
+          }).length;
           const card = document.createElement('div');
           card.className = 'category-card';
           card.innerHTML = `
             <div class="category-icon">${cat.icon}</div>
             <div class="category-name">${cat.label}</div>
-            <div class="category-count">0 membre</div>
+            <div class="category-count">${memberCount} membre${memberCount === 1 ? '' : 's'}</div>
           `;
           categoriesContainer.appendChild(card);
         });
 
         // Activity
         const activity = [
-          { icon: '✨', badge: 'Bienvenue', title: `${currentUser.name} a rejoint le club`, time: 'Juste maintenant' },
-          { icon: '📝', badge: 'Annonce', title: 'Nouvelle session planifiée', time: 'Aujourd\'hui' },
-          { icon: '🎉', badge: 'Événement', title: 'Événement du club créé', time: 'Hier' }
+          { icon: '👥', badge: 'Membres', title: `${members.length} membre${members.length === 1 ? '' : 's'} enregistré${members.length === 1 ? '' : 's'}`, time: 'Maintenant' },
+          { icon: '📝', badge: 'Sessions', title: `${sessionCount || 0} session${sessionCount === 1 ? '' : 's'} planifiée${sessionCount === 1 ? '' : 's'}`, time: 'Maintenant' },
+          { icon: '🎉', badge: 'Événements', title: `${eventCount || 0} événement${eventCount === 1 ? '' : 's'} au calendrier`, time: 'Maintenant' }
         ];
 
         const activityContainer = document.getElementById('activity-container');
@@ -459,8 +542,6 @@
         console.error('Erreur initialisation dashboard:', err);
       }
     }
-
-    initDashboard();
 
     // Particles
     (function() {
@@ -506,6 +587,12 @@
       init();
       animate();
     })();
+  </script>
+  <script>
+    const currentPage = window.location.pathname.split('/').pop() || 'club_dashboard.html';
+    document.querySelectorAll('.navbar a[href]').forEach(link => {
+      if (link.getAttribute('href') === currentPage) link.classList.add('active');
+    });
   </script>
 </body>
 </html>
