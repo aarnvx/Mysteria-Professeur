@@ -425,7 +425,7 @@
     }
   </style>
 </head>
-<body>
+<body class="club-page">
   <!-- Navigation -->
   <nav class="navbar" role="navigation" aria-label="Navigation principale">
     <div class="navbar-brand">
@@ -442,6 +442,7 @@
       <li><a href="club_points.html">⭐ Points</a></li>
       <li><a href="club_calendar.html">📅 Calendrier</a></li>
       <li><a href="club_community.html">💬 Communauté</a></li>
+      <li><a href="club_sessions.html">⚡ Sessions</a></li>
       <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
       <li><a href="#" class="btn-logout" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
     </ul>
@@ -489,7 +490,7 @@
             <label class="form-label">Image (URL)</label>
             <input class="form-input" id="post-image" type="url" placeholder="https://..." />
           </div>
-          <div class="form-group form-checkbox">
+          <div class="form-group form-checkbox" id="announcement-field">
             <input type="checkbox" id="post-is-announcement" />
             <label for="post-is-announcement" style="margin: 0; cursor: pointer;">📢 Marquer comme annonce</label>
           </div>
@@ -584,8 +585,11 @@
         // Afficher le lien config si manager
         const roleStr = (clubInfo.role || '').toLowerCase();
         const rankStr = (clubInfo.rank || '').toLowerCase();
-        if (roleStr.includes('manager') || rankStr.includes('manager') || roleStr.includes('gérant')) {
+        const canAnnounce = roleStr.includes('manager') || rankStr.includes('manager') || roleStr.includes('gérant') || rankStr.includes('gérant') || (clubInfo.manager_email || '').toLowerCase() === user.email.toLowerCase() || (user.role || '').toLowerCase().includes('admin');
+        if (canAnnounce) {
           document.getElementById('club-config-nav-link').style.display = 'block';
+        } else {
+          document.getElementById('announcement-field').style.display = 'none';
         }
 
         loadChatMessages();
@@ -756,7 +760,8 @@
       const title = document.getElementById('post-title').value.trim();
       const content = document.getElementById('post-content').value.trim();
       const imageUrl = document.getElementById('post-image').value.trim();
-      const isAnnouncement = document.getElementById('post-is-announcement').checked;
+      const canAnnounce = document.getElementById('announcement-field').style.display !== 'none';
+      const isAnnouncement = canAnnounce && document.getElementById('post-is-announcement').checked;
 
       if (!title) {
         alert('Le titre est requis.');

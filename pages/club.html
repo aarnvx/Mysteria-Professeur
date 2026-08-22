@@ -337,19 +337,46 @@
         <div class="card" style="padding:1.2rem;">
           <form id="club-setup-form" novalidate>
             <div class="form-group">
-              <label class="form-label" for="club-setup-name" style="font-size:0.75rem;">Prénom et Nom RP</label>
+              <label class="form-label" for="club-setup-first-name" style="font-size:0.75rem;">Prénom RP</label>
               <div class="input-icon-wrapper">
                 <span class="input-prefix">✍️</span>
-                <input class="form-input" type="text" id="club-setup-name" name="club-setup-name"
-                  placeholder="ex: Severus Rogue" autocomplete="name" />
+                <input class="form-input" type="text" id="club-setup-first-name" name="club-setup-first-name"
+                  placeholder="ex: Harry" autocomplete="given-name" />
               </div>
-              <div class="form-error" id="club-setup-name-error"></div>
+              <div class="form-error" id="club-setup-first-name-error"></div>
             </div>
 
             <div class="form-group">
-              <label class="form-label" for="club-setup-role" style="font-size:0.75rem;">Rôle de club</label>
-              <input class="form-input" type="text" id="club-setup-role" name="club-setup-role"
-                placeholder="ex: Club de Musique, Gérant de club de Duel" />
+              <label class="form-label" for="club-setup-last-name" style="font-size:0.75rem;">Nom RP</label>
+              <input class="form-input" type="text" id="club-setup-last-name" name="club-setup-last-name"
+                placeholder="ex: Potter" autocomplete="family-name" />
+              <div class="form-error" id="club-setup-last-name-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="club-setup-year" style="font-size:0.75rem;">Année scolaire</label>
+              <select class="form-input" id="club-setup-year" name="club-setup-year">
+                <option value="">-- Choisir une année --</option>
+                <option value="1ère année">1ère année</option>
+                <option value="2ème année">2ème année</option>
+                <option value="3ème année">3ème année</option>
+                <option value="4ème année">4ème année</option>
+                <option value="5ème année">5ème année</option>
+                <option value="6ème année">6ème année</option>
+                <option value="7ème année">7ème année</option>
+              </select>
+              <div class="form-error" id="club-setup-year-error"></div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label" for="club-setup-house" style="font-size:0.75rem;">Maison</label>
+              <select class="form-input" id="club-setup-house" name="club-setup-house">
+                <option value="">-- Choisir une maison --</option>
+                <option value="Gryffondor">🦁 Gryffondor</option>
+                <option value="Serpentard">🐍 Serpentard</option>
+                <option value="Serdaigle">🦅 Serdaigle</option>
+                <option value="Poufsouffle">🦡 Poufsouffle</option>
+              </select>
             </div>
 
             <div class="form-group">
@@ -599,10 +626,14 @@
 
     let clubCurrentUser = null;
     function resetClubSetupForm() {
-      document.getElementById('club-setup-name').value = '';
-      document.getElementById('club-setup-role').value = '';
+      document.getElementById('club-setup-first-name').value = '';
+      document.getElementById('club-setup-last-name').value = '';
+      document.getElementById('club-setup-year').value = '';
+      document.getElementById('club-setup-house').value = '';
       document.getElementById('club-setup-password').value = '';
-      document.getElementById('club-setup-name-error').style.display = 'none';
+      document.getElementById('club-setup-first-name-error').style.display = 'none';
+      document.getElementById('club-setup-last-name-error').style.display = 'none';
+      document.getElementById('club-setup-year-error').style.display = 'none';
       document.getElementById('club-setup-password-error').style.display = 'none';
       document.getElementById('club-setup-error').style.display = 'none';
     }
@@ -612,28 +643,34 @@
       resetClubSetupForm();
       document.getElementById('club-form').style.display = 'none';
       document.getElementById('club-setup-section').style.display = 'block';
-      document.getElementById('club-setup-name').value = user.name || '';
-      document.getElementById('club-setup-role').value = defaultRole || user.role || '';
-      document.getElementById('club-setup-name').focus();
+      document.getElementById('club-setup-first-name').focus();
     }
 
     async function handleClubSetupSubmit(e) {
       e.preventDefault();
       try { prepareLoginTransition(); } catch (err) { console.warn('prepareLoginTransition call failed', err); }
-      const name = document.getElementById('club-setup-name').value.trim();
-      const role = document.getElementById('club-setup-role').value.trim() || clubCurrentUser.role || 'Membre de club';
+      const firstName = document.getElementById('club-setup-first-name').value.trim();
+      const lastName = document.getElementById('club-setup-last-name').value.trim();
+      const name = `${firstName} ${lastName}`.trim();
+      const year = document.getElementById('club-setup-year').value;
+      const house = document.getElementById('club-setup-house').value;
+      const role = clubCurrentUser.role || 'Membre de club';
       const password = document.getElementById('club-setup-password').value;
       const errEl = document.getElementById('club-setup-error');
       const btn = document.getElementById('club-setup-btn');
 
       errEl.style.display = 'none';
-      document.getElementById('club-setup-name').classList.remove('error');
+      document.getElementById('club-setup-first-name').classList.remove('error');
+      document.getElementById('club-setup-last-name').classList.remove('error');
+      document.getElementById('club-setup-year').classList.remove('error');
+      document.getElementById('club-setup-house').classList.remove('error');
       document.getElementById('club-setup-password').classList.remove('error');
 
-      if (!name) {
-        document.getElementById('club-setup-name').classList.add('error');
-        document.getElementById('club-setup-name-error').textContent = 'Champ requis.';
-        document.getElementById('club-setup-name-error').style.display = 'block';
+      if (!firstName || !lastName || !year || !house) {
+        if (!firstName) { document.getElementById('club-setup-first-name').classList.add('error'); document.getElementById('club-setup-first-name-error').textContent = 'Prénom requis.'; document.getElementById('club-setup-first-name-error').style.display = 'block'; }
+        if (!lastName) { document.getElementById('club-setup-last-name').classList.add('error'); document.getElementById('club-setup-last-name-error').textContent = 'Nom requis.'; document.getElementById('club-setup-last-name-error').style.display = 'block'; }
+        if (!year) { document.getElementById('club-setup-year').classList.add('error'); document.getElementById('club-setup-year-error').textContent = 'Année requise.'; document.getElementById('club-setup-year-error').style.display = 'block'; }
+        if (!house) { document.getElementById('club-setup-house').classList.add('error'); }
         return;
       }
       if (!password || password.length < 6) {
@@ -646,7 +683,7 @@
       btn.textContent = 'Enregistrement…';
       btn.disabled = true;
 
-      const setupResult = await Auth.setupClubProfile(clubCurrentUser.email, name, clubCurrentUser.rank, role, clubCurrentUser.house, password);
+      const setupResult = await Auth.setupClubProfile(clubCurrentUser.email, name, year, role, house, password);
       if (setupResult.ok) {
         btn.textContent = '✨ Profil club créé !';
         playLoginTransition(() => {

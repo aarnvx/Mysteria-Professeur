@@ -67,15 +67,16 @@ const Auth = {
       }
 
       const emailRole = this.getEmailRoleFromAddress(authData.user.email);
-      if (!profile) {
+      const needsClubSetup = preferredArea === 'club' && clubProfile && clubProfile.profile_completed !== true;
+      if (!profile || needsClubSetup) {
         const pendingSession = {
           id: authData.user.id,
           email: authData.user.email,
-          name: emailRole?.defaultName || 'Membre de club',
-          rank: emailRole?.rank || 'Membre de club',
-          role: emailRole?.role || 'club',
-          house: null,
-          avatar: emailRole?.avatar || '🎭',
+          name: clubProfile?.name || emailRole?.defaultName || 'Membre de club',
+          rank: clubProfile?.rank || emailRole?.rank || 'Membre de club',
+          role: clubProfile?.role || emailRole?.role || 'club',
+          house: clubProfile?.house || null,
+          avatar: clubProfile?.avatar || emailRole?.avatar || '🎭',
           loggedAt: new Date().toISOString(),
           setupPending: true
         };
@@ -193,7 +194,7 @@ const Auth = {
       if (!authData?.user) return { ok: false, error: 'Session expirée, veuillez vous reconnecter.' };
       const insertEmail = authData.user.email || normalizedEmail;
 
-      const profilePayload = { name: finalName, rank: finalRank, role: finalRole, house, avatar: finalAvatar };
+      const profilePayload = { name: finalName, rank: finalRank, role: finalRole, house, avatar: finalAvatar, profile_completed: true };
       const { data: existingProfile, error: existingError } = await window.supabaseClient
         .from('club_members')
         .select('id')

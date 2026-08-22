@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sessions du club - Mysteria RP</title>
+  <link rel="stylesheet" href="../css/style.css">
+  <style>
+    .sessions-page { max-width: 980px; margin: 0 auto; padding: 3rem 1rem; }
+    .sessions-hero, .session-card { background: rgba(10,10,25,.78); border: 1px solid var(--border); border-radius: 12px; padding: 1.5rem; }
+    .sessions-hero { display:flex; justify-content:space-between; align-items:center; gap:1rem; margin-bottom:1.5rem; background:linear-gradient(135deg,rgba(201,168,76,.14),rgba(18,18,45,.82)); }
+    .sessions-hero h1 { color:var(--gold); margin:.25rem 0; }
+    .sessions-hero p, .session-meta, .empty-state { color:var(--text-dim); }
+    .session-list { display:grid; gap:.75rem; }
+    .session-card { display:flex; justify-content:space-between; align-items:center; gap:1rem; }
+    .session-label { color:var(--gold); font-family:'Cinzel',serif; }
+    .session-actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+    @media (max-width:700px) { .sessions-hero,.session-card { align-items:stretch; flex-direction:column; } .session-actions .btn { flex:1; } }
+  </style>
+</head>
+<body class="club-page">
+  <nav class="navbar" role="navigation" aria-label="Navigation principale">
+    <div class="navbar-brand"><img src="../img/logo.png" alt="Logo" style="width:42px;height:42px;object-fit:cover;border-radius:8px;"><div><div class="navbar-title">MYSTERIA CLUB</div><div class="navbar-subtitle">Sessions du club</div></div></div>
+    <ul class="navbar-nav">
+      <li><a href="club_dashboard.html">🏠 Accueil</a></li>
+      <li><a href="club_members.html">👥 Membres</a></li>
+      <li><a href="club_points.html">⭐ Points</a></li>
+      <li><a href="club_calendar.html">📅 Calendrier</a></li>
+      <li><a href="club_community.html">💬 Communauté</a></li>
+      <li><a href="club_sessions.html" class="active">⚡ Sessions</a></li>
+      <li><a href="club_hiboux.html">🦉 Hiboux</a></li>
+      <li><a href="#" onclick="Auth.logout(); return false;">↩ Déconnexion</a></li>
+    </ul>
+  </nav>
+  <main class="sessions-page">
+    <section class="sessions-hero"><div><div class="page-title-small">Espace club</div><h1 id="club-title">Sessions</h1><p>Créez une activité, préparez ses questions et suivez les réponses.</p></div><button class="btn btn-primary" onclick="createSessionForClub()">+ Nouvelle session</button></section>
+    <h2>Mes sessions</h2>
+    <section id="session-list" class="session-list"><div class="empty-state">Chargement...</div></section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="../js/supabaseClient.js"></script>
+  <script src="../js/auth.js"></script>
+  <script src="../js/data.js"></script>
+  <script>
+    let user = null;
+    let club = null;
+    async function init() {
+      user = await Auth.getCurrentUser();
+      if (!user || !Auth.isClubContextUser(user)) { window.location.href = 'club_dashboard.html'; return; }
+      const clubs = await DataStore.getClubs();
+      const member = await DataStore.getClubMemberByEmail(user.email);
+      club = clubs.find(item => (item.manager_email || '').toLowerCase() === (user.email || '').toLowerCase()) || clubs.find(item => item.club_id === member?.club_id);
+      if (!club) { document.getElementById('session-list').innerHTML = '<div class="empty-state">Aucun club associé à ce compte.</div>'; return; }
+      document.getElementById('club-title').textContent = club.name || 'Sessions';
+      await loadSessions();
+    }
+    async function loadSessions() {
+      const sessions = await DataStore.getSessions(null, club.club_id);
+      const list = document.getElementById('session-list');
+      if (!sessions.length) { list.innerHTML = '<div class="empty-state">Aucune session créée pour ce club.</div>'; return; }
+      list.innerHTML = sessions.map(session => `<article class="session-card"><div><div class="session-label">${escapeHtml(session.label || 'Session sans titre')}</div><div class="session-meta">Code : <strong>${escapeHtml(session.code)}</strong> · ${session.active ? 'Ouverte' : 'Fermée'}</div></div><div class="session-actions"><a class="btn btn-sm" href="session_builder.html?area=club&code=${encodeURIComponent(session.code)}&id=${encodeURIComponent(session.id)}">Modifier</a><a class="btn btn-sm btn-primary" href="session_results.html?area=club&code=${encodeURIComponent(session.code)}&id=${encodeURIComponent(session.id)}">Suivre</a><button class="btn btn-sm" onclick="deleteClubSession('${session.id}')">🗑</button></div></article>`).join('');
+    }
+    async function createSessionForClub() {
+      const label = prompt('Titre de la session :');
+      if (!label || !label.trim()) return;
+      const code = 'CLB-' + Math.random().toString(36).toUpperCase().slice(2, 7);
+      const result = await DataStore.createSession(code, label.trim(), 'activite', user.name || user.email, club.club_id);
+      if (!result.ok) { alert(result.error); return; }
+      window.location.href = `session_builder.html?area=club&code=${encodeURIComponent(code)}&id=${encodeURIComponent(result.session.id)}`;
+    }
+    async function deleteClubSession(id) { if (confirm('Supprimer cette session ?')) { if (!await DataStore.deleteSession(id)) alert('Suppression impossible.'); else await loadSessions(); } }
+    function escapeHtml(value) { return String(value || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+    init().catch(error => { console.error(error); document.getElementById('session-list').innerHTML = '<div class="empty-state">Impossible de charger les sessions.</div>'; });
+  </script>
+</body>
+</html>
