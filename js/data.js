@@ -244,8 +244,23 @@ const DataStore = {
   async getClubMembers() {
     const { data, error } = await window.supabaseClient
       .from('club_members').select('*').order('id', { ascending: true });
-    if (error) { console.error('Error fetching club members:', error); return []; }
-    return data;
+    if (error) {
+      console.error('Error fetching club members:', error);
+      throw error;
+    }
+    return data || [];
+  },
+
+  async getClubs() {
+    const { data, error } = await window.supabaseClient
+      .from('clubs')
+      .select('club_id, name, status, manager_email')
+      .order('name', { ascending: true });
+    if (error) {
+      console.error('Error fetching clubs:', error);
+      throw error;
+    }
+    return data || [];
   },
 
   async getClubMembersByRole(role) {
@@ -341,12 +356,26 @@ const DataStore = {
   async notifyMissiveOnDiscord(missive) {
     if (!missive) return { ok: true, skipped: true };
     try {
+      const { data: currentSession } = await window.supabaseClient.auth.getSession();
+      let activeSession = currentSession?.session || null;
+      const currentAccessToken = activeSession?.access_token;
+      const expiresAt = Number(activeSession?.expires_at || 0);
+      if (!currentAccessToken || (expiresAt && expiresAt <= Math.floor(Date.now() / 1000) + 30)) {
+        const { data: sessionData, error: sessionError } = await window.supabaseClient.auth.refreshSession();
+        if (sessionError || !sessionData?.session?.access_token) {
+          await window.supabaseClient.auth.signOut({ scope: 'local' });
+          localStorage.removeItem('Mysteria_auth');
+          return { ok: false, error: 'Session Supabase expirée. Reconnecte-toi au portail.' };
+        }
+        activeSession = sessionData.session;
+      }
       console.info('[Hiboux] Appel de la fonction Discord', {
         recipient: missive.recipient || 'tous les professeurs',
         missiveId: missive.id
       });
       const { data, error } = await window.supabaseClient.functions.invoke('notify-missive', {
-        body: { missive }
+        body: { missive },
+        headers: { Authorization: `Bearer ${activeSession.access_token}` }
       });
       if (error) {
         let details = '';
@@ -369,10 +398,10 @@ const DataStore = {
     }
   },
 
-  async connectDiscord(code, redirectUri) {
+  async connectDiscord(code, redirectUri, profileTable = 'professors') {
     try {
       const { data, error } = await window.supabaseClient.functions.invoke('discord-connect', {
-        body: { code, redirect_uri: redirectUri }
+        body: { code, redirect_uri: redirectUri, profile_table: profileTable }
       });
       if (error) return { ok: false, error: error.message || String(error) };
       return data || { ok: false, error: 'Réponse Discord vide.' };
