@@ -486,19 +486,39 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/supabaseClient.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/data.js"></script>
   <script src="js/global-sound.js"></script>
   <script>
+    const DISCORD_INDEX_REDIRECT_URI = 'https://aarnvx.github.io/Mysteria-Professeur/index.html';
+    const discordCode = new URLSearchParams(window.location.search).get('code');
+    if (discordCode) {
+      (async () => {
+        const target = localStorage.getItem('Mysteria_discord_target') || 'professors';
+        const result = await DataStore.connectDiscord(discordCode, DISCORD_INDEX_REDIRECT_URI, target);
+        localStorage.removeItem('Mysteria_discord_target');
+        window.history.replaceState({}, document.title, window.location.pathname);
+        if (result.ok) {
+          const updatedUser = { ...Auth.getCurrentUser(), discord_id: result.discord_id };
+          localStorage.setItem('Mysteria_auth', JSON.stringify(updatedUser));
+          window.location.href = target === 'club_members' ? 'pages/club_dashboard.html' : 'pages/dashboard.html';
+        } else {
+          alert(result.error || 'Connexion Discord impossible.');
+        }
+      })();
+    }
+
     // Redirect si déjà connecté
-    if (Auth.isLoggedIn()) {
+    if (Auth.isLoggedIn() && !discordCode) {
       const currentUser = Auth.getCurrentUser();
       const currentRole = (currentUser?.role || '').toString().toLowerCase();
       const currentRank = (currentUser?.rank || '').toString().toLowerCase();
       // Check if user is a club member/manager
       const isClub = currentRole.includes('club') || currentRank.includes('club') || currentRole === 'club_member' || currentRole === 'club_manager';
-      if (isClub) {
-        window.location.href = 'pages/club_dashboard.html';
-      } else {
+      const isProfessor = currentRole.includes('prof') || currentRank.includes('professeur') || currentRole === 'staff' || currentRole === 'admin';
+      if (isProfessor || !isClub) {
         window.location.href = 'pages/dashboard.html';
+      } else {
+        window.location.href = 'pages/club_dashboard.html';
       }
     }
 
@@ -728,7 +748,7 @@
     }
 
     // Prof login
-    document.getElementById('prof-form').addEventListener('submit', function(e) {
+    document.getElementById('prof-form').addEventListener('submit', async function(e) {
       e.preventDefault();
       // Try to prepare transition within the user gesture to satisfy autoplay policies
       try { prepareLoginTransition(); } catch (err) { console.warn('prepareLoginTransition call failed', err); }
@@ -757,7 +777,7 @@
       btn.textContent = 'Vérification…';
       btn.disabled = true;
 
-      setTimeout(async () => {
+      try {
         const result = await Auth.login(email, password, 'prof');
         if (result.ok) {
           if (result.requireSetup) {
@@ -768,13 +788,8 @@
             window.tempEmailRole = result.emailRole;
           } else {
             btn.textContent = '✨ Connexion réussie !';
-            const currentUser = Auth.getCurrentUser ? Auth.getCurrentUser() : null;
-            const currentRole = (currentUser?.role || '').toString().toLowerCase();
-            const currentRank = (currentUser?.rank || '').toString().toLowerCase();
-            const isClub = currentRole.includes('club') || currentRank.includes('club') || currentRole === 'club_member' || currentRole === 'club_manager';
-            const redirectUrl = isClub ? 'pages/club_dashboard.html' : 'pages/dashboard.html';
             playLoginTransition(() => {
-              window.location.href = redirectUrl;
+              window.location.href = 'pages/dashboard.html';
             });
           }
         } else {
@@ -785,7 +800,13 @@
           btn.textContent = '🔓 Accéder à l\'espace professoral';
           btn.disabled = false;
         }
-      }, 600);
+      } catch (error) {
+        console.error('Erreur inattendue de connexion professeur:', error);
+        errEl.textContent = 'Connexion impossible. Réessayez dans quelques instants.';
+        errEl.style.display = 'block';
+        btn.textContent = '🔓 Accéder à l\'espace professoral';
+        btn.disabled = false;
+      }
     });
 
     // Sélection de maison (visuel)
