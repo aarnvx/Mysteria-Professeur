@@ -224,14 +224,25 @@
           </div>
           <div class="form-error" id="error-name"></div>
 
-          <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Maison <span id="house-optional" class="mandatory-badge">Optionnel</span></label>
-          <select id="setup-house" class="form-select">
-            <option value="">Aucune</option>
-            <option value="Gryffondor">🦁 Gryffondor</option>
-            <option value="Serpentard">🐍 Serpentard</option>
-            <option value="Serdaigle">🦅 Serdaigle</option>
-            <option value="Poufsouffle">🦡 Poufsouffle</option>
-          </select>
+          <div id="professor-house-field">
+            <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Maison <span id="house-optional" class="mandatory-badge">Optionnel</span></label>
+            <select id="setup-house" class="form-select">
+              <option value="">Aucune</option>
+              <option value="Gryffondor">🦁 Gryffondor</option>
+              <option value="Serpentard">🐍 Serpentard</option>
+              <option value="Serdaigle">🦅 Serdaigle</option>
+              <option value="Poufsouffle">🦡 Poufsouffle</option>
+            </select>
+          </div>
+          <div id="student-house-field" style="display:none;">
+            <label class="form-label" style="margin-bottom: 0.4rem; margin-top: 1rem;">Maison</label>
+            <div style="display:flex; gap:1rem; align-items:center; justify-content:center; padding:.5rem 0;">
+              <img src="img/gryffindor.png" alt="Gryffondor" class="setup-house-choice" data-house="gryffondor" title="Gryffondor" style="width:45px;height:45px;cursor:pointer;opacity:.4;filter:grayscale(100%);transition:all .3s;" onclick="selectSetupHouse(this)">
+              <img src="img/slytherin.png" alt="Serpentard" class="setup-house-choice" data-house="serpentard" title="Serpentard" style="width:45px;height:45px;cursor:pointer;opacity:.4;filter:grayscale(100%);transition:all .3s;" onclick="selectSetupHouse(this)">
+              <img src="img/ravenclaw.png" alt="Serdaigle" class="setup-house-choice" data-house="serdaigle" title="Serdaigle" style="width:45px;height:45px;cursor:pointer;opacity:.4;filter:grayscale(100%);transition:all .3s;" onclick="selectSetupHouse(this)">
+              <img src="img/hufflepuff.png" alt="Poufsouffle" class="setup-house-choice" data-house="poufsouffle" title="Poufsouffle" style="width:45px;height:45px;cursor:pointer;opacity:.4;filter:grayscale(100%);transition:all .3s;" onclick="selectSetupHouse(this)">
+            </div>
+          </div>
         </div>
 
         <!-- Actions -->
@@ -249,13 +260,28 @@
   <script src="js/global-sound.js"></script>
   <script>
     const setupUser = Auth.getCurrentUser();
-    const isStudentSetup = setupUser && ((setupUser.role || '').toLowerCase().includes('club') || (setupUser.email || '').toLowerCase().endsWith('@mysteria.club'));
+    const setupEmailRole = Auth.getEmailRoleFromAddress(setupUser?.email);
+    const isStudentSetup = setupEmailRole?.role === 'club';
     if (isStudentSetup) {
       document.getElementById('professor-fields').style.display = 'none';
       document.getElementById('student-fields').style.display = 'block';
+      document.getElementById('professor-house-field').style.display = 'none';
+      document.getElementById('student-house-field').style.display = 'block';
       document.querySelector('.setup-title').textContent = 'Configuration du profil élève';
       document.querySelector('.setup-desc').textContent = 'Renseignez vos informations RP pour accéder à Mysteria RP';
       document.getElementById('house-optional').textContent = 'Obligatoire';
+    }
+
+    function selectSetupHouse(imgEl) {
+      document.querySelectorAll('.setup-house-choice').forEach(element => {
+        element.style.opacity = '0.4';
+        element.style.filter = 'grayscale(100%)';
+        element.style.transform = 'scale(1)';
+      });
+      imgEl.style.opacity = '1';
+      imgEl.style.filter = 'grayscale(0%) drop-shadow(0 0 8px rgba(201,168,76,0.6))';
+      imgEl.style.transform = 'scale(1.15)';
+      document.getElementById('setup-house').value = imgEl.dataset.house;
     }
 
     function showError(fieldId, message) {
